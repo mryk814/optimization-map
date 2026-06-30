@@ -74,6 +74,19 @@ npm run build
 - `npm run dev`: static explorer を `http://127.0.0.1:5173/` で起動します。
 - `npm run build`: validation 後に production build を作ります。
 
+## 起動と検証
+
+```bash
+npm install
+npm run validate
+npm run dev
+npm run build
+```
+
+- `npm run validate`: YAML の件数、ID 参照、source policy、relation endpoint を検査します。
+- `npm run dev`: static explorer を `http://127.0.0.1:5173/` で起動します。
+- `npm run build`: validation 後に production build を作ります。
+
 ## Repo 構成
 
 ```txt
