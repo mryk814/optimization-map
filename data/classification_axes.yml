@@ -1,226 +1,316 @@
-# Initial classification axes for Optimization Map
-# Keep this file reviewable. Add sources and examples as data matures.
-
-- id: variable_domain
-  name_ja: 変数の値域
-  name_en: Variable domain
-  description: 決定変数が連続値、整数、二値、離散集合、混合のどれか。
-  values: [continuous, integer, binary, categorical, permutation, mixed]
-  diagnosis_questions:
-    - 決めたい値は連続量ですか、個数や yes/no ですか？
-    - 順序や組合せそのものを決めますか？
-
-- id: variable_shape
-  name_ja: 変数の形
-  name_en: Variable shape
-  description: 決定変数がスカラー、ベクトル、行列、関数、方策、グラフ、集合などのどれか。
-  values: [scalar, vector, matrix, tensor, function, distribution, policy, graph, set, sequence]
-  diagnosis_questions:
-    - 決めたいものは数値、表、関数、経路、方策のどれですか？
-
-- id: objective_count
-  name_ja: 目的関数の数
-  name_en: Number of objectives
-  description: 単目的、多目的、階層的目的、制約化された目的のどれか。
-  values: [single, multiple, lexicographic, hierarchical, satisficing]
-  diagnosis_questions:
-    - 目的は一つですか、複数のトレードオフがありますか？
-
-- id: objective_form
-  name_ja: 目的関数の形
-  name_en: Objective form
-  description: 目的関数の代数的・情報的な形。
-  values: [linear, quadratic, convex, nonlinear, nonconvex, nonsmooth, black_box, simulation_based]
-  diagnosis_questions:
-    - 目的関数を数式で書けますか？
-    - 線形・二次・一般非線形・評価だけ可能のどれですか？
-
-- id: constraint_presence
-  name_ja: 制約の有無
-  name_en: Constraint presence
-  description: 制約なし、制約あり、制約充足中心のどれか。
-  values: [unconstrained, constrained, feasibility_only]
-  diagnosis_questions:
-    - 必ず守るべき条件はありますか？
-    - 目的よりも実行可能性が重要ですか？
-
-- id: constraint_type
-  name_ja: 制約の種類
-  name_en: Constraint type
-  description: 等式、不等式、論理、確率、動的、物理、円錐など。
-  values: [equality, inequality, bound, logical, conic, semidefinite, chance, robust, dynamic, physical, pde]
-  diagnosis_questions:
-    - 制約は数式ですか、論理条件ですか、確率条件ですか？
-
-- id: linearity
-  name_ja: 線形性
-  name_en: Linearity
-  description: 目的関数と制約が線形か非線形か。
-  values: [linear, affine, quadratic, nonlinear, unknown]
-  diagnosis_questions:
-    - 変数同士の積や非線形関数が出ますか？
-
-- id: convexity
-  name_ja: 凸性
-  name_en: Convexity
-  description: 問題が凸構造を持つか、非凸か、不明か。
-  values: [convex, nonconvex, convex_after_reformulation, unknown]
-  diagnosis_questions:
-    - 局所最適解が大域最適解と言えますか？
-    - 整数変数や非凸制約がありますか？
-
-- id: smoothness
-  name_ja: 滑らかさ
-  name_en: Smoothness
-  description: 目的・制約が微分可能か、非滑らかな max / abs / indicator を含むか。
-  values: [smooth, nonsmooth, discontinuous, unknown]
-  diagnosis_questions:
-    - 絶対値、max、閾値、if 文のような角がありますか？
-
-- id: gradient_availability
-  name_ja: 勾配利用可能性
-  name_en: Gradient availability
-  description: 勾配が解析的・自動微分・有限差分・取得不能のどれか。
-  values: [analytic, automatic_differentiation, finite_difference, unavailable, expensive]
-  diagnosis_questions:
-    - 勾配は計算できますか？
-    - 自動微分できるコードですか？
-
-- id: hessian_availability
-  name_ja: ヘシアン利用可能性
-  name_en: Hessian availability
-  description: 二階情報が使えるかどうか。
-  values: [exact, approximate, hessian_vector_product, unavailable]
-  diagnosis_questions:
-    - 二階微分やヘシアン近似を使えますか？
-
-- id: blackboxness
-  name_ja: ブラックボックス性
-  name_en: Black-boxness
-  description: 目的・制約の内部構造がどの程度見えるか。
-  values: [white_box, gray_box, black_box]
-  diagnosis_questions:
-    - 評価関数の中身は数式として分かりますか？
-    - 入力を入れて結果を見るだけですか？
-
-- id: evaluation_cost
-  name_ja: 評価コスト
-  name_en: Evaluation cost
-  description: 目的関数や制約評価が安いか高いか。
-  values: [cheap, moderate, expensive, very_expensive]
-  diagnosis_questions:
-    - 1 回の評価にどれくらい時間や費用がかかりますか？
-
-- id: noise
-  name_ja: ノイズの有無
-  name_en: Noise
-  description: 目的・制約・観測にランダムノイズがあるか。
-  values: [deterministic, noisy_observation, stochastic_objective, stochastic_constraints]
-  diagnosis_questions:
-    - 同じ入力でも結果が変わりますか？
-
-- id: uncertainty_representation
-  name_ja: 不確実性の表現
-  name_en: Uncertainty representation
-  description: 未来の不確実性を分布、シナリオ、不確実集合、曖昧集合のどれで表すか。
-  values: [none, scenarios, known_distribution, samples_only, uncertainty_set, ambiguity_set]
-  diagnosis_questions:
-    - 将来の需要や価格などは確定ですか？
-    - 分布が分かりますか、範囲だけですか？
-
-- id: risk_measure
-  name_ja: リスク尺度
-  name_en: Risk measure
-  description: 期待値、最悪ケース、CVaR、chance constraint などのリスクの見方。
-  values: [expectation, variance, cvar, chance_constraint, worst_case, regret]
-  diagnosis_questions:
-    - 平均的に良ければよいですか、悪いケースを避けたいですか？
-
-- id: time_structure
-  name_ja: 時間構造
-  name_en: Time structure
-  description: 静的、一回限り、逐次、動的、閉ループのどれか。
-  values: [static, two_stage, multistage, dynamic, online, closed_loop]
-  diagnosis_questions:
-    - 一回だけ決めますか、観測しながら繰り返し決めますか？
-
-- id: feedback
-  name_ja: フィードバック
-  name_en: Feedback
-  description: 決定後に状態を観測して次の決定に反映するか。
-  values: [none, delayed_feedback, bandit_feedback, full_state_feedback]
-  diagnosis_questions:
-    - 行動後の結果を見て次の判断を変えますか？
-
-- id: structure
-  name_ja: 構造
-  name_en: Structure
-  description: 問題に疎性、分解可能性、ネットワーク、低ランク、単調性、サブモジュラ性などがあるか。
-  values: [sparse, decomposable, network, low_rank, monotone, submodular, separable, dense, unknown]
-  diagnosis_questions:
-    - ネットワーク、地域、商品、期間などで分解できますか？
-
-- id: exactness_requirement
-  name_ja: 厳密性要求
-  name_en: Exactness requirement
-  description: 厳密最適解、最適性ギャップ付き解、十分良い解のどれが必要か。
-  values: [exact_optimum, certified_gap, high_quality_heuristic, feasible_solution_enough]
-  diagnosis_questions:
-    - 最適性証明が必要ですか？
-    - 十分良い解でよいですか？
-
-- id: latency_requirement
-  name_ja: レイテンシ要求
-  name_en: Latency requirement
-  description: 解を出すまでに許される時間。
-  values: [milliseconds, seconds, minutes, hours, offline]
-  diagnosis_questions:
-    - 何秒・何分以内に答えが必要ですか？
-
-- id: scale
-  name_ja: 問題規模
-  name_en: Scale
-  description: 変数数、制約数、シナリオ数、評価回数の規模。
-  values: [tiny, small, medium, large, huge]
-  diagnosis_questions:
-    - 変数や制約は何個くらいありますか？
-
-- id: safety_criticality
-  name_ja: 安全性・制約違反リスク
-  name_en: Safety criticality
-  description: 制約違反がどれくらい危険か。
-  values: [low, medium, high, catastrophic]
-  diagnosis_questions:
-    - 制約違反は単なるコストですか、危険・違法・事故につながりますか？
-
-- id: interpretability
-  name_ja: 解釈可能性
-  name_en: Interpretability
-  description: 推薦理由や制約・目的の説明責任が必要か。
-  values: [low, medium, high, regulated]
-  diagnosis_questions:
-    - 意思決定の理由を説明する必要がありますか？
-
-- id: human_in_loop
-  name_ja: 人間の関与
-  name_en: Human in the loop
-  description: 完全自動化か、人間の最終判断を前提とするか。
-  values: [fully_automated, recommendation, decision_support, human_final_decision]
-  diagnosis_questions:
-    - 最終判断は人間がしますか？
-
-- id: data_availability
-  name_ja: データ利用可能性
-  name_en: Data availability
-  description: パラメータや需要、シミュレーション、履歴データがあるか。
-  values: [known_parameters, historical_data, simulator, online_data, scarce_data]
-  diagnosis_questions:
-    - 過去データ、シミュレータ、実験環境はありますか？
-
-- id: implementation_context
-  name_ja: 実装文脈
-  name_en: Implementation context
-  description: 使用言語、ライセンス、既存スタック、商用利用可否。
-  values: [python, julia, matlab, commercial_ok, oss_only, cloud_ok, local_only]
-  diagnosis_questions:
-    - Python / Julia / 商用ソルバー / OSS の制約はありますか？
+axes:
+  - id: linearity
+    name_ja: 線形性
+    name_en: Linearity
+    category: model_structure
+    core: true
+    description: 目的関数と制約が線形に書けるかを分ける。
+    diagnostic_question: 目的関数と制約は足し算と定数倍だけで表せますか。
+    ui_widget: segmented
+    values:
+      - { id: linear, name_ja: 線形, description: LP/MILP/一部のSPへ進みやすい }
+      - { id: convex_nonlinear, name_ja: 凸非線形, description: 凸最適化や円錐最適化の候補 }
+      - { id: nonlinear, name_ja: 非線形, description: NLP/非凸最適化/制御の候補 }
+      - { id: unknown, name_ja: 不明, description: 診断で追加質問する }
+  - id: convexity
+    name_ja: 凸性
+    name_en: Convexity
+    category: model_structure
+    core: true
+    description: 局所解が大域解と一致する構造かを分ける。
+    diagnostic_question: feasible set と目的関数に凸性を期待できますか。
+    ui_widget: segmented
+    values:
+      - { id: convex, name_ja: 凸, description: LP/QP/SOCP/SDP/凸NLP }
+      - { id: nonconvex, name_ja: 非凸, description: MINLP/NLP/BO/RL など }
+      - { id: mixed, name_ja: 部分的, description: 緩和や分解を検討する }
+  - id: variable_domain
+    name_ja: 変数領域
+    name_en: Variable domain
+    category: model_structure
+    core: true
+    description: 連続・整数・カテゴリなど決定変数の値域を表す。
+    diagnostic_question: 決定変数に整数、binary、カテゴリ選択はありますか。
+    ui_widget: checklist
+    values:
+      - { id: continuous, name_ja: 連続, description: LP/QP/NLP/制御 }
+      - { id: integer, name_ja: 整数, description: IP/MILP/MINLP }
+      - { id: binary, name_ja: binary, description: MILP/CP-SAT/SAT }
+      - { id: categorical, name_ja: カテゴリ, description: CP-SAT/BO/HPO }
+      - { id: permutation, name_ja: 順列, description: 組合せ最適化 }
+  - id: constraint_structure
+    name_ja: 制約構造
+    name_en: Constraint structure
+    category: model_structure
+    core: true
+    description: 制約の表現形式と強さを表す。
+    diagnostic_question: 制約は等式/不等式、論理、資源容量、時系列のどれに近いですか。
+    ui_widget: checklist
+    values:
+      - { id: algebraic, name_ja: 代数制約, description: LP/QP/NLP }
+      - { id: logical, name_ja: 論理制約, description: SAT/SMT/CP-SAT }
+      - { id: resource, name_ja: 資源制約, description: scheduling/MILP/CP }
+      - { id: dynamics, name_ja: 動的制約, description: control/MPC/RL }
+      - { id: chance, name_ja: 確率制約, description: SP/RO/DRO }
+  - id: objective_structure
+    name_ja: 目的関数
+    name_en: Objective structure
+    category: model_structure
+    core: true
+    description: 単一目的、多目的、制約充足など目的の性質を表す。
+    diagnostic_question: 最小化/最大化したい量は明確ですか。
+    ui_widget: segmented
+    values:
+      - { id: scalar, name_ja: 単一目的, description: 多くの数理最適化 }
+      - { id: multi_objective, name_ja: 多目的, description: Pareto/重み付け/制約化 }
+      - { id: feasibility, name_ja: 充足のみ, description: CSP/SAT/SMT }
+      - { id: blackbox_metric, name_ja: 評価値のみ, description: BO/DFO/HPO }
+  - id: differentiability
+    name_ja: 微分可能性
+    name_en: Differentiability
+    category: information
+    core: true
+    description: 勾配を使えるか、または微分可能な計算グラフかを表す。
+    diagnostic_question: 勾配や感度を計算できますか。
+    ui_widget: segmented
+    values:
+      - { id: gradient_available, name_ja: 勾配あり, description: NLP/凸最適化/微分可能最適化 }
+      - { id: derivative_free, name_ja: 勾配なし, description: DFO/BO/シミュレーション最適化 }
+      - { id: noisy_gradient, name_ja: ノイズあり, description: stochastic approximation/RL }
+  - id: blackboxness
+    name_ja: ブラックボックス性
+    name_en: Black-boxness
+    category: information
+    core: true
+    description: モデル式の内部が見えるか、評価結果だけかを分ける。
+    diagnostic_question: 式や制約を直接書けますか、それとも実験・シミュレーション結果だけですか。
+    ui_widget: segmented
+    values:
+      - { id: whitebox, name_ja: 式がある, description: 数理最適化へ進める }
+      - { id: graybox, name_ja: 一部見える, description: surrogate/分解/感度を検討 }
+      - { id: blackbox, name_ja: 評価のみ, description: BO/DFO/HPO }
+  - id: evaluation_cost
+    name_ja: 評価コスト
+    name_en: Evaluation cost
+    category: information
+    core: true
+    description: 1回の評価にかかる時間・費用・リスクを表す。
+    diagnostic_question: 1回の試行は安いですか、高いですか。
+    ui_widget: segmented
+    values:
+      - { id: cheap, name_ja: 安い, description: grid/random/local search も候補 }
+      - { id: expensive, name_ja: 高い, description: BO/実験計画が候補 }
+      - { id: dangerous, name_ja: 危険, description: safety constraints/robustness が重要 }
+  - id: uncertainty_representation
+    name_ja: 不確実性
+    name_en: Uncertainty representation
+    category: uncertainty
+    core: true
+    description: 不確実性を確率分布、集合、データ駆動で表すかを分ける。
+    diagnostic_question: 需要や外乱などの不確実性をどう表せますか。
+    ui_widget: segmented
+    values:
+      - { id: none, name_ja: ほぼなし, description: deterministic optimization }
+      - { id: scenarios, name_ja: シナリオ/分布, description: stochastic programming }
+      - { id: uncertainty_set, name_ja: 不確実集合, description: robust optimization }
+      - { id: ambiguity_set, name_ja: 分布集合, description: DRO }
+  - id: risk_measure
+    name_ja: リスク尺度
+    name_en: Risk measure
+    category: uncertainty
+    core: true
+    description: 期待値、最悪値、CVaRなど不確実性下の判断基準を表す。
+    diagnostic_question: 平均を良くしたいですか、悪いケースを抑えたいですか。
+    ui_widget: segmented
+    values:
+      - { id: expectation, name_ja: 期待値, description: SP/平均性能 }
+      - { id: worst_case, name_ja: 最悪ケース, description: RO }
+      - { id: tail_risk, name_ja: tail risk, description: CVaR/DRO }
+      - { id: constraint_violation, name_ja: 違反確率, description: chance constraints }
+  - id: time_structure
+    name_ja: 時間構造
+    name_en: Time structure
+    category: dynamics
+    core: true
+    description: 一回限り、時系列、逐次意思決定かを表す。
+    diagnostic_question: 意思決定は一回ですか、時間とともに繰り返しますか。
+    ui_widget: segmented
+    values:
+      - { id: static, name_ja: 静的, description: LP/MILP/NLP }
+      - { id: finite_horizon, name_ja: 有限ホライズン, description: MPC/DP/SP }
+      - { id: sequential, name_ja: 逐次, description: RL/Bandits/online optimization }
+      - { id: continuous_time, name_ja: 連続時間, description: optimal control }
+  - id: feedback
+    name_ja: フィードバック
+    name_en: Feedback
+    category: dynamics
+    core: true
+    description: 結果を見て次の行動を更新するかを表す。
+    diagnostic_question: 行動後の観測を使って次の行動を変えますか。
+    ui_widget: segmented
+    values:
+      - { id: open_loop, name_ja: open-loop, description: 計画を事前に固定 }
+      - { id: receding_horizon, name_ja: receding horizon, description: MPC }
+      - { id: online_feedback, name_ja: online feedback, description: online/RL/bandits }
+  - id: solution_guarantee
+    name_ja: 解保証
+    name_en: Solution guarantee
+    category: decision
+    core: true
+    description: 厳密最適性、gap、近似、良さそうな解のどれが必要かを表す。
+    diagnostic_question: 最適性証明や gap は必要ですか。
+    ui_widget: segmented
+    values:
+      - { id: exact, name_ja: 厳密, description: LP/MIP/CP-SAT }
+      - { id: gap_bound, name_ja: gap, description: MIP/branch-and-bound }
+      - { id: approximate, name_ja: 近似, description: heuristic/metaheuristic/BO }
+      - { id: policy_quality, name_ja: 方策品質, description: RL/Control }
+  - id: scale
+    name_ja: 規模
+    name_en: Scale
+    category: decision
+    core: false
+    description: 変数数、制約数、シナリオ数、評価回数の大きさ。
+    diagnostic_question: 変数・制約・ケース数はどの程度ですか。
+    ui_widget: segmented
+    values:
+      - { id: small, name_ja: 小, description: exact/modeling-first }
+      - { id: medium, name_ja: 中, description: standard solvers }
+      - { id: large, name_ja: 大, description: decomposition/heuristics }
+  - id: data_availability
+    name_ja: データ量
+    name_en: Data availability
+    category: information
+    core: false
+    description: 過去データやシミュレーションデータが利用できるか。
+    diagnostic_question: 学習や推定に使える履歴データはありますか。
+    ui_widget: segmented
+    values:
+      - { id: none, name_ja: なし, description: model-based }
+      - { id: sparse, name_ja: 少量, description: BO/robustness }
+      - { id: rich, name_ja: 十分, description: predict-then-optimize/RL }
+  - id: stochasticity_source
+    name_ja: 確率性の源
+    name_en: Stochasticity source
+    category: uncertainty
+    core: false
+    description: 需要、外乱、評価ノイズ、環境遷移など確率性の出所。
+    diagnostic_question: 何がランダムに変わりますか。
+    ui_widget: checklist
+    values:
+      - { id: demand, name_ja: 需要, description: inventory/SP }
+      - { id: disturbance, name_ja: 外乱, description: control/RO }
+      - { id: measurement_noise, name_ja: 測定ノイズ, description: BO/simulation }
+      - { id: transition, name_ja: 状態遷移, description: RL/MDP }
+  - id: explainability_need
+    name_ja: 説明責任
+    name_en: Explainability need
+    category: decision
+    core: false
+    description: なぜその解になったかを説明する必要度。
+    diagnostic_question: 判断理由を人に説明する必要がありますか。
+    ui_widget: segmented
+    values:
+      - { id: low, name_ja: 低, description: black-box heuristics も許容 }
+      - { id: medium, name_ja: 中, description: sensitivity/reason codes }
+      - { id: high, name_ja: 高, description: exact model/duals/gap }
+  - id: feasibility_strictness
+    name_ja: 制約違反許容
+    name_en: Feasibility strictness
+    category: decision
+    core: false
+    description: 制約違反が許されるか、ペナルティ化できるかを表す。
+    diagnostic_question: 制約違反は絶対禁止ですか。
+    ui_widget: segmented
+    values:
+      - { id: hard, name_ja: hard, description: CP/MIP/安全制約 }
+      - { id: soft, name_ja: soft, description: penalty/goal programming }
+      - { id: tradeoff, name_ja: tradeoff, description: multi-objective }
+  - id: solver_runtime
+    name_ja: 実行時間
+    name_en: Runtime budget
+    category: decision
+    core: false
+    description: 秒、分、時間、オフラインなど許容計算時間。
+    diagnostic_question: 解を出すまでに使える時間はどれくらいですか。
+    ui_widget: segmented
+    values:
+      - { id: realtime, name_ja: リアルタイム, description: MPC/heuristic }
+      - { id: interactive, name_ja: 対話的, description: 秒〜分 }
+      - { id: batch, name_ja: バッチ, description: 分〜時間 }
+      - { id: offline, name_ja: オフライン, description: 学習/設計 }
+  - id: model_confidence
+    name_ja: モデル信頼度
+    name_en: Model confidence
+    category: information
+    core: false
+    description: モデル式が現実をどれだけ表すかへの自信。
+    diagnostic_question: モデル式は信頼できますか。
+    ui_widget: segmented
+    values:
+      - { id: high, name_ja: 高, description: deterministic/model-based }
+      - { id: medium, name_ja: 中, description: robust/sensitivity }
+      - { id: low, name_ja: 低, description: data-driven/experiment }
+  - id: interaction_mode
+    name_ja: 実験方式
+    name_en: Interaction mode
+    category: information
+    core: false
+    description: オフライン解析、実験、シミュレーション、オンライン運用の違い。
+    diagnostic_question: 解候補はどこで評価しますか。
+    ui_widget: segmented
+    values:
+      - { id: offline_model, name_ja: モデル内, description: solver }
+      - { id: simulator, name_ja: シミュレーション, description: simulation optimization }
+      - { id: physical_experiment, name_ja: 実験, description: BO/safe optimization }
+      - { id: live_system, name_ja: 本番, description: bandits/online }
+  - id: decomposition_potential
+    name_ja: 分解可能性
+    name_en: Decomposition potential
+    category: model_structure
+    core: false
+    description: サブ問題に分けられる構造があるか。
+    diagnostic_question: 時間、地域、商品などで分割できますか。
+    ui_widget: segmented
+    values:
+      - { id: separable, name_ja: 分離可能, description: decomposition/ADMM/Benders }
+      - { id: weakly_coupled, name_ja: 弱結合, description: decomposition candidate }
+      - { id: tightly_coupled, name_ja: 強結合, description: monolithic/relaxation }
+  - id: discreteness_source
+    name_ja: 離散性の源
+    name_en: Discreteness source
+    category: model_structure
+    core: false
+    description: on/off、割当、順序、論理など離散性の理由。
+    diagnostic_question: 離散判断は何から来ていますか。
+    ui_widget: checklist
+    values:
+      - { id: selection, name_ja: 選択, description: facility/location/knapsack }
+      - { id: assignment, name_ja: 割当, description: matching/scheduling }
+      - { id: ordering, name_ja: 順序, description: routing/sequencing }
+      - { id: logic, name_ja: 論理, description: SAT/CP-SAT }
+  - id: state_dimension
+    name_ja: 状態次元
+    name_en: State dimension
+    category: dynamics
+    core: false
+    description: 制御/RL/DPで扱う状態の大きさ。
+    diagnostic_question: 状態は少数の変数で表せますか。
+    ui_widget: segmented
+    values:
+      - { id: low, name_ja: 低次元, description: DP/MPC }
+      - { id: high, name_ja: 高次元, description: approximate DP/RL }
+      - { id: partial, name_ja: 部分観測, description: POMDP/filtering }
+  - id: deployment_stage
+    name_ja: 利用段階
+    name_en: Deployment stage
+    category: decision
+    core: false
+    description: 教材、設計、運用、監査など利用目的。
+    diagnostic_question: 今ほしいのは理解、設計、運用、監査のどれですか。
+    ui_widget: segmented
+    values:
+      - { id: learning, name_ja: 学習, description: comparison/explanation }
+      - { id: modeling, name_ja: モデリング, description: formulation support }
+      - { id: operations, name_ja: 運用, description: solver/pipeline }
+      - { id: audit, name_ja: 監査, description: explanation/sources }

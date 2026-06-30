@@ -1,0 +1,63 @@
+questions:
+  - id: q_decision
+    label: 決定するもの
+    axis: deployment_stage
+    text: まず意思決定変数が明確ですか。
+    answers:
+      - { id: clear, label: 明確, class_scores: { linear_programming: 1, mixed_integer_linear_programming: 1, convex_optimization: 1 } }
+      - { id: unclear, label: 不明, warning: 先に分析・因果・予測問題として整理する方がよい可能性があります。, class_scores: { not_optimization: 3 } }
+  - id: q_integer
+    label: 整数/選択
+    axis: variable_domain
+    text: 整数、binary、割当、順序の判断がありますか。
+    answers:
+      - { id: none, label: ほぼない, class_scores: { linear_programming: 1, convex_optimization: 1, nonlinear_programming: 1 } }
+      - { id: binary, label: ある, class_scores: { mixed_integer_linear_programming: 3, combinatorial_optimization: 2, constraint_programming_sat_smt: 2 } }
+      - { id: logical, label: 論理制約が中心, class_scores: { constraint_programming_sat_smt: 3, mixed_integer_linear_programming: 1 } }
+  - id: q_linearity
+    label: 線形性
+    axis: linearity
+    text: 目的と制約は線形に書けそうですか。
+    answers:
+      - { id: linear, label: 線形, class_scores: { linear_programming: 3, mixed_integer_linear_programming: 2 } }
+      - { id: convex, label: 凸非線形, class_scores: { convex_optimization: 3, quadratic_programming: 2, socp_sdp: 2 } }
+      - { id: nonlinear, label: 一般非線形, class_scores: { nonlinear_programming: 3, nonconvex_optimization: 2 } }
+  - id: q_blackbox
+    label: 評価の見え方
+    axis: blackboxness
+    text: 式を書けますか、それとも評価値だけですか。
+    answers:
+      - { id: whitebox, label: 式がある, class_scores: { convex_optimization: 1, nonlinear_programming: 1, mixed_integer_linear_programming: 1 } }
+      - { id: blackbox, label: 評価値だけ, class_scores: { blackbox_derivative_free: 3, bayesian_optimization_problem: 2, simulation_optimization: 2 } }
+  - id: q_cost
+    label: 評価コスト
+    axis: evaluation_cost
+    text: 1回の評価は高価ですか。
+    answers:
+      - { id: cheap, label: 安い, class_scores: { blackbox_derivative_free: 2, nonconvex_optimization: 1 } }
+      - { id: expensive, label: 高い, class_scores: { bayesian_optimization_problem: 3, simulation_optimization: 2, hpo_automl: 2 } }
+  - id: q_uncertainty
+    label: 不確実性
+    axis: uncertainty_representation
+    text: 不確実性はどう表せますか。
+    answers:
+      - { id: none, label: ほぼない, class_scores: { linear_programming: 1, convex_optimization: 1 } }
+      - { id: scenarios, label: シナリオ/分布, class_scores: { stochastic_programming: 3, distributionally_robust_optimization: 1 } }
+      - { id: set, label: 範囲/集合, class_scores: { robust_optimization: 3 } }
+      - { id: ambiguity, label: 分布が曖昧, class_scores: { distributionally_robust_optimization: 3, robust_optimization: 1 } }
+  - id: q_time
+    label: 時間構造
+    axis: time_structure
+    text: 意思決定は時間とともに更新しますか。
+    answers:
+      - { id: static, label: 一回の計画, class_scores: { linear_programming: 1, mixed_integer_linear_programming: 1, convex_optimization: 1 } }
+      - { id: control, label: ダイナミクスあり, class_scores: { optimal_control: 3, nonlinear_programming: 1 } }
+      - { id: sequential, label: 観測しながら学習, class_scores: { dynamic_programming_rl: 3, online_optimization_bandits: 2 } }
+  - id: q_ml
+    label: ML パイプライン
+    axis: interaction_mode
+    text: 機械学習モデルの設定や学習と接続していますか。
+    answers:
+      - { id: hpo, label: HPO/AutoML, class_scores: { hpo_automl: 3, bayesian_optimization_problem: 2 } }
+      - { id: decision_focused, label: 下流最適化に接続, class_scores: { differentiable_optimization: 3, convex_optimization: 1 } }
+      - { id: no, label: 直接は関係ない, class_scores: {} }

@@ -1,59 +1,48 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optimization-map.local/schemas/problem_class.schema.json",
   "title": "ProblemClass",
   "type": "object",
-  "required": ["id", "name", "summary", "tags"],
+  "required": [
+    "id",
+    "name_ja",
+    "name_en",
+    "summary",
+    "definition",
+    "canonical_form",
+    "tags",
+    "typical_when",
+    "not_good_when",
+    "why_hard",
+    "candidate_algorithms",
+    "candidate_solvers",
+    "confused_with",
+    "relaxations_or_reformulations",
+    "sources"
+  ],
   "properties": {
-    "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9_]+$"
-    },
-    "name": {
-      "type": "string"
-    },
-    "aliases": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "summary": {
-      "type": "string"
-    },
-    "tags": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "typical_when": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "not_good_when": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "why_hard": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "candidate_algorithms": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "candidate_solvers": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "confused_with": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "relaxations_or_reformulations": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "name_ja": { "type": "string", "minLength": 1 },
+    "name_en": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "definition": { "type": "string", "minLength": 1 },
+    "canonical_form": { "type": "string", "minLength": 1 },
+    "tags": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "candidate_algorithms": { "type": "array", "items": { "type": "string" } },
+    "candidate_solvers": { "type": "array", "items": { "type": "string" } },
     "sources": {
       "type": "array",
-      "items": { "type": "string", "format": "uri" }
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "type", "trust"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "type": { "type": "string" },
+          "trust": { "enum": ["high", "medium", "low"] }
+        }
+      }
     }
-  },
-  "additionalProperties": true
+  }
 }

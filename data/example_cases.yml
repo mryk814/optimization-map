@@ -1,85 +1,139 @@
-# Initial diagnostic and educational cases
-
-- id: factory_production_plan
-  title: 工場の生産計画
-  narrative: 複数製品の生産量を、設備容量・需要・在庫制約を守りながら利益最大化したい。
-  decision_variables: [production_quantity, inventory]
-  likely_problem_classes: [linear_programming, mixed_integer_linear_programming, stochastic_programming]
-  diagnostic_tags: [allocation, capacity_constraints, possible_integer, possible_uncertainty]
-
-- id: delivery_routing
-  title: 配送ルート設計
-  narrative: 複数車両で顧客を訪問し、容量と時間窓を守りながら移動距離を最小化したい。
-  decision_variables: [route, visit_order, vehicle_assignment]
-  likely_problem_classes: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming]
-  diagnostic_tags: [routing, discrete, time_windows, capacity]
-
-- id: staff_scheduling
-  title: 人員シフト作成
-  narrative: 勤務希望、必要人数、労務制約を守りつつシフト表を作りたい。
-  decision_variables: [worker_shift_assignment]
-  likely_problem_classes: [constraint_programming, mixed_integer_linear_programming]
-  diagnostic_tags: [scheduling, binary_variables, logical_constraints, feasibility]
-
-- id: portfolio_risk
-  title: ポートフォリオ最適化
-  narrative: 期待リターンを高めつつ、分散や下方リスクを抑えた資産配分を決めたい。
-  decision_variables: [asset_weights]
-  likely_problem_classes: [quadratic_programming, convex_optimization, robust_optimization, stochastic_programming]
-  diagnostic_tags: [continuous, risk_measure, uncertainty]
-
-- id: lab_experiment_conditions
-  title: 実験条件探索
-  narrative: 1 回の実験が高価なので、少ない試行回数で良い材料条件を見つけたい。
-  decision_variables: [experiment_parameters]
-  likely_problem_classes: [bayesian_optimization, black_box_optimization]
-  diagnostic_tags: [expensive_evaluation, black_box, sequential]
-
-- id: ml_hyperparameter_tuning
-  title: ML ハイパーパラメータ調整
-  narrative: モデルの検証性能を最大化する学習率や正則化係数を探したい。
-  decision_variables: [hyperparameters]
-  likely_problem_classes: [hyperparameter_optimization, bayesian_optimization, black_box_optimization]
-  diagnostic_tags: [ml, expensive_evaluation, black_box, sequential]
-
-- id: demand_uncertain_inventory
-  title: 需要不確実な在庫計画
-  narrative: 将来需要が不確実な中で、欠品と在庫過多を避ける発注量を決めたい。
-  decision_variables: [order_quantity, inventory]
-  likely_problem_classes: [stochastic_programming, robust_optimization, distributionally_robust_optimization]
-  diagnostic_tags: [uncertainty, scenarios_or_distribution, recourse]
-
-- id: robot_mpc
-  title: ロボットの安全制御
-  narrative: 状態方程式と安全制約を守りながら、ロボットの制御入力をリアルタイムに決めたい。
-  decision_variables: [control_inputs, state_trajectory]
-  likely_problem_classes: [optimal_control, nonlinear_programming]
-  diagnostic_tags: [dynamic, feedback, safety, realtime]
-
-- id: ad_budget_allocation
-  title: 広告予算配分
-  narrative: 複数チャネルに予算を配分して、制約内で売上や CV を最大化したい。
-  decision_variables: [channel_budget]
-  likely_problem_classes: [linear_programming, nonlinear_programming, online_optimization]
-  diagnostic_tags: [allocation, continuous, possible_online]
-
-- id: ab_test_allocation
-  title: A/B テスト配分
-  narrative: 複数施策へのユーザー配分を、結果を見ながら逐次的に変えたい。
-  decision_variables: [traffic_allocation]
-  likely_problem_classes: [online_optimization, bandit_optimization, bayesian_optimization]
-  diagnostic_tags: [sequential, partial_feedback, experimentation]
-
-- id: supply_chain_network
-  title: サプライチェーンネットワーク設計
-  narrative: 工場・倉庫・店舗の流れと設備開設を決め、コストとサービスレベルを最適化したい。
-  decision_variables: [facility_open_binary, shipment_flow]
-  likely_problem_classes: [mixed_integer_linear_programming, network_optimization, stochastic_programming]
-  diagnostic_tags: [network, mixed_integer, capacity, uncertainty]
-
-- id: price_optimization
-  title: 価格最適化
-  narrative: 需要反応を考慮し、売上・利益・在庫・公平性制約を見ながら価格を決めたい。
-  decision_variables: [price]
-  likely_problem_classes: [nonlinear_programming, stochastic_programming, online_optimization, bilevel_optimization]
-  diagnostic_tags: [pricing, demand_model, uncertainty, possible_online]
+example_cases:
+  - id: vehicle_routing
+    title: 配送ルートを容量制約つきで決める
+    description: 複数車両で顧客を回り、移動距離を短くしたい。
+    signals: [ordering, capacity, binary, exact_gap]
+    expected_top3: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming_sat_smt]
+    likely_traps: [linear_programming]
+  - id: workforce_shift
+    title: 人員シフトを作る
+    description: スキル、休暇、最低人数、連勤制約を守りながら割当を決める。
+    signals: [assignment, logical, binary, feasibility]
+    expected_top3: [constraint_programming_sat_smt, mixed_integer_linear_programming, combinatorial_optimization]
+    likely_traps: [linear_programming]
+  - id: production_planning
+    title: 生産計画の数量配分
+    description: 材料と設備容量の下で利益を最大化する。
+    signals: [linear, resource, continuous]
+    expected_top3: [linear_programming, mixed_integer_linear_programming, stochastic_programming]
+    likely_traps: [bayesian_optimization_problem]
+  - id: experiment_design
+    title: 高価な実験条件を探索する
+    description: 1回の実験に数時間かかり、反応値だけが得られる。
+    signals: [blackbox, expensive, sequential]
+    expected_top3: [bayesian_optimization_problem, blackbox_derivative_free, simulation_optimization]
+    likely_traps: [linear_programming]
+  - id: hyperparameter_tuning
+    title: モデルのハイパーパラメータを調整する
+    description: 学習率、木の深さ、特徴量処理を validation loss で選ぶ。
+    signals: [blackbox, categorical, expensive, ml]
+    expected_top3: [hpo_automl, bayesian_optimization_problem, blackbox_derivative_free]
+    likely_traps: [differentiable_optimization]
+  - id: uncertain_inventory
+    title: 需要不確実な在庫計画
+    description: 需要シナリオを使って欠品と在庫コストを調整する。
+    signals: [scenarios, recourse, expectation]
+    expected_top3: [stochastic_programming, robust_optimization, distributionally_robust_optimization]
+    likely_traps: [linear_programming]
+  - id: robot_control
+    title: ロボットの軌道と入力を決める
+    description: ダイナミクスと入力制限を守りながら目標姿勢へ動かす。
+    signals: [dynamics, continuous_time, constraints]
+    expected_top3: [optimal_control, nonlinear_programming, dynamic_programming_rl]
+    likely_traps: [linear_programming]
+  - id: ab_allocation
+    title: A/B テスト配分を途中で更新する
+    description: 結果を見ながら配分を変え、機会損失を抑えたい。
+    signals: [online_feedback, regret, experiment]
+    expected_top3: [online_optimization_bandits, bayesian_optimization_problem, dynamic_programming_rl]
+    likely_traps: [stochastic_programming]
+  - id: price_optimization
+    title: 価格を需要曲線に合わせて決める
+    description: 需要反応が非線形で、制約下で利益最大化したい。
+    signals: [nonlinear, continuous, revenue]
+    expected_top3: [nonlinear_programming, nonconvex_optimization, online_optimization_bandits]
+    likely_traps: [linear_programming]
+  - id: portfolio
+    title: ポートフォリオのリスクと収益を調整する
+    description: 期待収益と分散リスクの tradeoff を取りたい。
+    signals: [quadratic, convex, risk]
+    expected_top3: [quadratic_programming, convex_optimization, distributionally_robust_optimization]
+    likely_traps: [mixed_integer_linear_programming]
+  - id: robust_supply_chain
+    title: 供給途絶に備えたサプライチェーン設計
+    description: 需要と供給の範囲を仮定し、悪いケースでも破綻しない設計にする。
+    signals: [uncertainty_set, worst_case, network]
+    expected_top3: [robust_optimization, mixed_integer_linear_programming, stochastic_programming]
+    likely_traps: [bayesian_optimization_problem]
+  - id: facility_location
+    title: 施設配置を決める
+    description: どの拠点を開き、顧客をどこへ割り当てるか決める。
+    signals: [selection, assignment, fixed_cost]
+    expected_top3: [mixed_integer_linear_programming, combinatorial_optimization, linear_programming]
+    likely_traps: [nonlinear_programming]
+  - id: shortest_path
+    title: 最短経路を求める
+    description: グラフ上で出発点から到着点までの最短経路を探す。
+    signals: [graph, path, discrete]
+    expected_top3: [combinatorial_optimization, linear_programming, dynamic_programming_rl]
+    likely_traps: [bayesian_optimization_problem]
+  - id: matching
+    title: 参加者同士を条件つきでマッチングする
+    description: 希望、制約、公平性を考慮して割当を作る。
+    signals: [assignment, discrete, fairness]
+    expected_top3: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming_sat_smt]
+    likely_traps: [convex_optimization]
+  - id: fair_resource_allocation
+    title: 公平性制約つき資源配分
+    description: 効率と公平性を両立しながら限られた資源を配る。
+    signals: [multi_objective, constraints, fairness]
+    expected_top3: [convex_optimization, linear_programming, mixed_integer_linear_programming]
+    likely_traps: [hpo_automl]
+  - id: not_optimization_reporting
+    title: 売上低下の原因を説明したい
+    description: まだ意思決定変数や目的関数がなく、まず分析が必要。
+    signals: [no_decision_variable, diagnosis_first]
+    expected_top3: [not_optimization, linear_programming, stochastic_programming]
+    likely_traps: [bayesian_optimization_problem]
+  - id: pde_design
+    title: 形状を変えて物理シミュレーション結果を改善する
+    description: PDE シミュレータは重く、勾配はまだ取れていない。
+    signals: [simulator, expensive, derivative_free]
+    expected_top3: [simulation_optimization, bayesian_optimization_problem, blackbox_derivative_free]
+    likely_traps: [linear_programming]
+  - id: model_training_loss
+    title: ニューラルネットの学習損失を下げる
+    description: 勾配計算できる大規模非凸最適化。
+    signals: [gradient, nonconvex, large_scale]
+    expected_top3: [nonconvex_optimization, nonlinear_programming, differentiable_optimization]
+    likely_traps: [linear_programming]
+  - id: maintenance_scheduling
+    title: 設備メンテナンスの時期を決める
+    description: 稼働停止を避けながら保全作業を割り当てる。
+    signals: [scheduling, binary, resource]
+    expected_top3: [mixed_integer_linear_programming, constraint_programming_sat_smt, combinatorial_optimization]
+    likely_traps: [bayesian_optimization_problem]
+  - id: ad_budget_online
+    title: 広告予算を日次で配分し直す
+    description: クリックやCVの観測を見ながら配分を変える。
+    signals: [online_feedback, budget, regret]
+    expected_top3: [online_optimization_bandits, stochastic_programming, linear_programming]
+    likely_traps: [optimal_control]
+  - id: config_validation
+    title: 製品構成がルールを満たすか判定する
+    description: オプションの依存・排他・必須条件を満たす組合せを探す。
+    signals: [logical, feasibility, discrete]
+    expected_top3: [constraint_programming_sat_smt, combinatorial_optimization, mixed_integer_linear_programming]
+    likely_traps: [nonlinear_programming]
+  - id: decision_focused_forecast
+    title: 予測モデルを配分最適化の損失で学習する
+    description: 予測誤差ではなく、予測後の意思決定損失を下げたい。
+    signals: [decision_focused, differentiable, rich_data]
+    expected_top3: [differentiable_optimization, convex_optimization, hpo_automl]
+    likely_traps: [bayesian_optimization_problem]
+  - id: tail_risk_portfolio
+    title: 分布推定に不安があるポートフォリオを組む
+    description: 履歴データはあるが外れ値と分布ずれに備えたい。
+    signals: [ambiguity_set, tail_risk, portfolio]
+    expected_top3: [distributionally_robust_optimization, robust_optimization, quadratic_programming]
+    likely_traps: [linear_programming]
