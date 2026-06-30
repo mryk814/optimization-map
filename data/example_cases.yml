@@ -1,0 +1,85 @@
+# Initial diagnostic and educational cases
+
+- id: factory_production_plan
+  title: 工場の生産計画
+  narrative: 複数製品の生産量を、設備容量・需要・在庫制約を守りながら利益最大化したい。
+  decision_variables: [production_quantity, inventory]
+  likely_problem_classes: [linear_programming, mixed_integer_linear_programming, stochastic_programming]
+  diagnostic_tags: [allocation, capacity_constraints, possible_integer, possible_uncertainty]
+
+- id: delivery_routing
+  title: 配送ルート設計
+  narrative: 複数車両で顧客を訪問し、容量と時間窓を守りながら移動距離を最小化したい。
+  decision_variables: [route, visit_order, vehicle_assignment]
+  likely_problem_classes: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming]
+  diagnostic_tags: [routing, discrete, time_windows, capacity]
+
+- id: staff_scheduling
+  title: 人員シフト作成
+  narrative: 勤務希望、必要人数、労務制約を守りつつシフト表を作りたい。
+  decision_variables: [worker_shift_assignment]
+  likely_problem_classes: [constraint_programming, mixed_integer_linear_programming]
+  diagnostic_tags: [scheduling, binary_variables, logical_constraints, feasibility]
+
+- id: portfolio_risk
+  title: ポートフォリオ最適化
+  narrative: 期待リターンを高めつつ、分散や下方リスクを抑えた資産配分を決めたい。
+  decision_variables: [asset_weights]
+  likely_problem_classes: [quadratic_programming, convex_optimization, robust_optimization, stochastic_programming]
+  diagnostic_tags: [continuous, risk_measure, uncertainty]
+
+- id: lab_experiment_conditions
+  title: 実験条件探索
+  narrative: 1 回の実験が高価なので、少ない試行回数で良い材料条件を見つけたい。
+  decision_variables: [experiment_parameters]
+  likely_problem_classes: [bayesian_optimization, black_box_optimization]
+  diagnostic_tags: [expensive_evaluation, black_box, sequential]
+
+- id: ml_hyperparameter_tuning
+  title: ML ハイパーパラメータ調整
+  narrative: モデルの検証性能を最大化する学習率や正則化係数を探したい。
+  decision_variables: [hyperparameters]
+  likely_problem_classes: [hyperparameter_optimization, bayesian_optimization, black_box_optimization]
+  diagnostic_tags: [ml, expensive_evaluation, black_box, sequential]
+
+- id: demand_uncertain_inventory
+  title: 需要不確実な在庫計画
+  narrative: 将来需要が不確実な中で、欠品と在庫過多を避ける発注量を決めたい。
+  decision_variables: [order_quantity, inventory]
+  likely_problem_classes: [stochastic_programming, robust_optimization, distributionally_robust_optimization]
+  diagnostic_tags: [uncertainty, scenarios_or_distribution, recourse]
+
+- id: robot_mpc
+  title: ロボットの安全制御
+  narrative: 状態方程式と安全制約を守りながら、ロボットの制御入力をリアルタイムに決めたい。
+  decision_variables: [control_inputs, state_trajectory]
+  likely_problem_classes: [optimal_control, nonlinear_programming]
+  diagnostic_tags: [dynamic, feedback, safety, realtime]
+
+- id: ad_budget_allocation
+  title: 広告予算配分
+  narrative: 複数チャネルに予算を配分して、制約内で売上や CV を最大化したい。
+  decision_variables: [channel_budget]
+  likely_problem_classes: [linear_programming, nonlinear_programming, online_optimization]
+  diagnostic_tags: [allocation, continuous, possible_online]
+
+- id: ab_test_allocation
+  title: A/B テスト配分
+  narrative: 複数施策へのユーザー配分を、結果を見ながら逐次的に変えたい。
+  decision_variables: [traffic_allocation]
+  likely_problem_classes: [online_optimization, bandit_optimization, bayesian_optimization]
+  diagnostic_tags: [sequential, partial_feedback, experimentation]
+
+- id: supply_chain_network
+  title: サプライチェーンネットワーク設計
+  narrative: 工場・倉庫・店舗の流れと設備開設を決め、コストとサービスレベルを最適化したい。
+  decision_variables: [facility_open_binary, shipment_flow]
+  likely_problem_classes: [mixed_integer_linear_programming, network_optimization, stochastic_programming]
+  diagnostic_tags: [network, mixed_integer, capacity, uncertainty]
+
+- id: price_optimization
+  title: 価格最適化
+  narrative: 需要反応を考慮し、売上・利益・在庫・公平性制約を見ながら価格を決めたい。
+  decision_variables: [price]
+  likely_problem_classes: [nonlinear_programming, stochastic_programming, online_optimization, bilevel_optimization]
+  diagnostic_tags: [pricing, demand_model, uncertainty, possible_online]
