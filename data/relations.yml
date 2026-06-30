@@ -1,0 +1,256 @@
+# Initial relations between problem classes, algorithms, solvers, and concepts
+
+- source: linear_programming
+  target: convex_optimization
+  relation_type: is_a
+  explanation: 線形目的関数と線形制約は凸構造を持つため、LP は凸最適化の一部。
+
+- source: quadratic_programming
+  target: nonlinear_programming
+  relation_type: is_a
+  explanation: QP は二次関数を含むため、広義には NLP の特殊例。
+
+- source: quadratic_programming
+  target: convex_optimization
+  relation_type: overlaps_with
+  explanation: 二次形式が凸なら QP は凸最適化になるが、非凸 QP も存在する。
+
+- source: conic_optimization
+  target: convex_optimization
+  relation_type: is_a
+  explanation: 円錐最適化は凸錐制約に基づく凸最適化の一群。
+
+- source: semidefinite_programming
+  target: conic_optimization
+  relation_type: is_a
+  explanation: SDP は半正定値錐を使う円錐最適化の一種。
+
+- source: semidefinite_programming
+  target: combinatorial_optimization
+  relation_type: relaxes
+  explanation: SDP は組合せ最適化や非凸問題の緩和として使われることがある。
+
+- source: mixed_integer_linear_programming
+  target: linear_programming
+  relation_type: relaxes_to
+  explanation: 整数制約を外すと LP 緩和になる。
+
+- source: mixed_integer_linear_programming
+  target: combinatorial_optimization
+  relation_type: overlaps_with
+  explanation: MILP は割当・選択・スケジューリングなど組合せ構造を表現できる。
+
+- source: constraint_programming
+  target: combinatorial_optimization
+  relation_type: overlaps_with
+  explanation: CP/SAT/SMT は離散制約や論理制約を扱い、組合せ最適化と重なる。
+
+- source: constraint_programming
+  target: mixed_integer_linear_programming
+  relation_type: confused_with
+  explanation: どちらも離散意思決定を扱うが、表現・探索・得意な制約が異なる。
+
+- source: nonlinear_programming
+  target: nonconvex_optimization
+  relation_type: overlaps_with
+  explanation: NLP は凸の場合も非凸の場合もある。非線形と非凸は同義ではない。
+
+- source: black_box_optimization
+  target: nonconvex_optimization
+  relation_type: overlaps_with
+  explanation: ブラックボックス問題は非凸であることが多いが、同義ではない。
+
+- source: bayesian_optimization
+  target: black_box_optimization
+  relation_type: is_a
+  explanation: BO は高価な black-box 関数に代理モデルを使う一種の black-box optimization。
+
+- source: bayesian_optimization
+  target: hyperparameter_optimization
+  relation_type: used_in
+  explanation: BO は HPO の代表的手法の一つ。
+
+- source: hyperparameter_optimization
+  target: black_box_optimization
+  relation_type: overlaps_with
+  explanation: HPO は多くの場合、学習・検証を評価関数とする black-box optimization として扱える。
+
+- source: simulation_optimization
+  target: black_box_optimization
+  relation_type: overlaps_with
+  explanation: シミュレーション評価は black-box になることが多いが、シミュレーション内部構造を使える場合もある。
+
+- source: stochastic_programming
+  target: robust_optimization
+  relation_type: compared_with
+  explanation: SP は分布・シナリオを使い、RO は不確実集合を使うことが多い。
+
+- source: distributionally_robust_optimization
+  target: stochastic_programming
+  relation_type: overlaps_with
+  explanation: DRO は確率分布を扱うが、その分布自体の曖昧性を考える。
+
+- source: distributionally_robust_optimization
+  target: robust_optimization
+  relation_type: overlaps_with
+  explanation: DRO は分布集合に対する最悪ケースを扱う点で RO とも近い。
+
+- source: robust_optimization
+  target: conic_optimization
+  relation_type: reformulates_to
+  explanation: 不確実集合の形によっては robust counterpart が円錐最適化になる。
+
+- source: optimal_control
+  target: nonlinear_programming
+  relation_type: reformulates_to
+  explanation: direct transcription により最適制御は大規模 NLP として解けることがある。
+
+- source: optimal_control
+  target: reinforcement_learning
+  relation_type: confused_with
+  explanation: どちらも逐次意思決定を扱うが、モデル既知か学習中心かで違いがある。
+
+- source: reinforcement_learning
+  target: online_optimization
+  relation_type: overlaps_with
+  explanation: どちらも逐次意思決定だが、RL は状態遷移と方策学習を強く扱う。
+
+- source: online_optimization
+  target: bayesian_optimization
+  relation_type: overlaps_with
+  explanation: BO は逐次実験設計の一種で、bandit 的な見方と重なる場合がある。
+
+- source: differentiable_optimization
+  target: convex_optimization
+  relation_type: overlaps_with
+  explanation: 微分可能最適化レイヤでは凸最適化問題を埋め込むことが多い。
+
+- source: differentiable_optimization
+  target: bilevel_optimization
+  relation_type: overlaps_with
+  explanation: 学習と最適化をつなぐ設定は双レベル構造として見えることがある。
+
+- source: linear_programming
+  target: simplex_method
+  relation_type: commonly_solved_by
+  explanation: 単体法は LP の代表的解法。
+
+- source: linear_programming
+  target: interior_point
+  relation_type: commonly_solved_by
+  explanation: 内点法も LP の代表的解法。
+
+- source: convex_optimization
+  target: proximal_gradient
+  relation_type: commonly_solved_by
+  explanation: 近接勾配法は滑らか + 近接可能な凸問題で重要。
+
+- source: convex_optimization
+  target: admm
+  relation_type: commonly_solved_by
+  explanation: ADMM は分解可能な凸最適化でよく使われる。
+
+- source: nonlinear_programming
+  target: sqp
+  relation_type: commonly_solved_by
+  explanation: SQP は滑らかな制約付き NLP の代表的手法。
+
+- source: nonlinear_programming
+  target: bfgs
+  relation_type: commonly_solved_by
+  explanation: BFGS は勾配を使う準 Newton 法。
+
+- source: mixed_integer_linear_programming
+  target: branch_and_bound
+  relation_type: commonly_solved_by
+  explanation: branch-and-bound は整数計画の基本的枠組み。
+
+- source: mixed_integer_linear_programming
+  target: cutting_planes
+  relation_type: commonly_solved_by
+  explanation: cutting planes は MIP の緩和を強化する。
+
+- source: stochastic_programming
+  target: sample_average_approximation
+  relation_type: commonly_solved_by
+  explanation: SAA はサンプルやシナリオで確率問題を近似する。
+
+- source: robust_optimization
+  target: robust_counterpart
+  relation_type: commonly_solved_by
+  explanation: robust counterpart は RO の基本的定式化。
+
+- source: bayesian_optimization
+  target: gaussian_process_bo
+  relation_type: commonly_solved_by
+  explanation: Gaussian Process BO は BO の代表的構成。
+
+- source: black_box_optimization
+  target: cma_es
+  relation_type: commonly_solved_by
+  explanation: CMA-ES は連続 black-box optimization でよく使われる。
+
+- source: optimal_control
+  target: direct_transcription
+  relation_type: commonly_solved_by
+  explanation: direct transcription は軌道最適化で重要。
+
+- source: reinforcement_learning
+  target: policy_gradient
+  relation_type: commonly_solved_by
+  explanation: policy gradient は方策を直接最適化する RL 手法。
+
+- source: linear_programming
+  target: highs
+  relation_type: implemented_by
+  explanation: HiGHS は LP/QP/MIP を扱う OSS ソルバー。
+
+- source: mixed_integer_linear_programming
+  target: gurobi
+  relation_type: implemented_by
+  explanation: Gurobi は高性能 MIP ソルバーとして広く使われる。
+
+- source: mixed_integer_linear_programming
+  target: cplex
+  relation_type: implemented_by
+  explanation: CPLEX は LP/MIP/QP/CP に対応する商用ソルバー。
+
+- source: constraint_programming
+  target: ortools_cp_sat
+  relation_type: implemented_by
+  explanation: OR-Tools CP-SAT は CP/SAT/MIP 的な離散制約に強い。
+
+- source: convex_optimization
+  target: cvxpy
+  relation_type: implemented_by
+  explanation: CVXPY は Python の convex modeling language。
+
+- source: nonlinear_programming
+  target: ipopt
+  relation_type: implemented_by
+  explanation: Ipopt は大規模滑らか NLP 用の OSS ソルバー。
+
+- source: bayesian_optimization
+  target: botorch
+  relation_type: implemented_by
+  explanation: BoTorch は PyTorch ベースの BO ライブラリ。
+
+- source: hyperparameter_optimization
+  target: optuna
+  relation_type: implemented_by
+  explanation: Optuna は HPO フレームワーク。
+
+- source: black_box_optimization
+  target: nevergrad
+  relation_type: implemented_by
+  explanation: Nevergrad は derivative-free optimization ライブラリ。
+
+- source: optimal_control
+  target: casadi
+  relation_type: implemented_by
+  explanation: CasADi は AD と NLP を使う最適制御に強い。
+
+- source: simulation_optimization
+  target: openmdao
+  relation_type: implemented_by
+  explanation: OpenMDAO は工学設計・MDO・シミュレーション連成に強い。
