@@ -1,0 +1,231 @@
+# Initial algorithm catalog
+
+- id: simplex_method
+  name: Simplex Method
+  family: linear_programming
+  suitable_for: [linear_programming]
+  requires: [linear_objective, linear_constraints]
+  notes: LP の古典的かつ実務的に重要な解法。
+
+- id: interior_point
+  name: Interior-point Method
+  family: continuous_convex_optimization
+  suitable_for: [linear_programming, quadratic_programming, conic_optimization, semidefinite_programming, convex_optimization]
+  requires: [structured_constraints]
+  notes: LP, QP, SOCP, SDP などで重要。
+
+- id: projected_gradient
+  name: Projected Gradient Method
+  family: first_order_methods
+  suitable_for: [convex_optimization, nonlinear_programming]
+  requires: [gradient_available, projection_available]
+
+- id: proximal_gradient
+  name: Proximal Gradient Method
+  family: first_order_methods
+  suitable_for: [convex_optimization, nonsmooth_optimization]
+  requires: [smooth_plus_proximable_structure]
+
+- id: admm
+  name: ADMM
+  family: decomposition_methods
+  suitable_for: [convex_optimization, distributed_optimization]
+  requires: [decomposable_structure]
+
+- id: gradient_descent
+  name: Gradient Descent
+  family: first_order_methods
+  suitable_for: [nonlinear_programming, machine_learning_optimization]
+  requires: [gradient_available]
+
+- id: newton_method
+  name: Newton Method
+  family: second_order_methods
+  suitable_for: [nonlinear_programming, convex_optimization]
+  requires: [hessian_available_or_approximable]
+
+- id: bfgs
+  name: BFGS / Quasi-Newton
+  family: second_order_methods
+  suitable_for: [nonlinear_programming]
+  requires: [gradient_available]
+
+- id: sqp
+  name: Sequential Quadratic Programming
+  family: constrained_nonlinear_optimization
+  suitable_for: [nonlinear_programming, optimal_control]
+  requires: [smooth_objective, smooth_constraints]
+
+- id: trust_region
+  name: Trust-region Method
+  family: nonlinear_optimization
+  suitable_for: [nonlinear_programming, nonconvex_optimization, black_box_optimization]
+  requires: [local_model]
+
+- id: branch_and_bound
+  name: Branch-and-Bound
+  family: exact_discrete_optimization
+  suitable_for: [mixed_integer_linear_programming, combinatorial_optimization, nonconvex_optimization]
+  requires: [bounds_or_relaxations]
+
+- id: cutting_planes
+  name: Cutting Planes
+  family: exact_discrete_optimization
+  suitable_for: [mixed_integer_linear_programming, combinatorial_optimization]
+  requires: [valid_inequalities]
+
+- id: branch_and_cut
+  name: Branch-and-Cut
+  family: exact_discrete_optimization
+  suitable_for: [mixed_integer_linear_programming]
+  requires: [branching, cutting_planes]
+
+- id: dynamic_programming
+  name: Dynamic Programming
+  family: sequential_decision
+  suitable_for: [combinatorial_optimization, optimal_control, reinforcement_learning]
+  requires: [optimal_substructure]
+
+- id: benders_decomposition
+  name: Benders Decomposition
+  family: decomposition_methods
+  suitable_for: [stochastic_programming, mixed_integer_linear_programming]
+  requires: [decomposable_master_subproblem_structure]
+
+- id: sddp
+  name: Stochastic Dual Dynamic Programming
+  family: stochastic_programming
+  suitable_for: [stochastic_programming]
+  requires: [multistage_structure]
+
+- id: sample_average_approximation
+  name: Sample Average Approximation
+  family: stochastic_programming
+  suitable_for: [stochastic_programming]
+  requires: [scenario_samples]
+
+- id: robust_counterpart
+  name: Robust Counterpart Reformulation
+  family: robust_optimization
+  suitable_for: [robust_optimization]
+  requires: [uncertainty_set]
+
+- id: wasserstein_dro
+  name: Wasserstein DRO
+  family: distributionally_robust_optimization
+  suitable_for: [distributionally_robust_optimization]
+  requires: [samples_or_empirical_distribution]
+
+- id: direct_search
+  name: Direct Search
+  family: derivative_free_optimization
+  suitable_for: [black_box_optimization]
+  requires: [function_evaluations]
+
+- id: nelder_mead
+  name: Nelder-Mead
+  family: derivative_free_optimization
+  suitable_for: [black_box_optimization, nonlinear_programming]
+  requires: [function_evaluations]
+
+- id: cma_es
+  name: CMA-ES
+  family: evolutionary_optimization
+  suitable_for: [black_box_optimization, nonconvex_optimization]
+  requires: [function_evaluations]
+
+- id: genetic_algorithm
+  name: Genetic Algorithm
+  family: metaheuristics
+  suitable_for: [combinatorial_optimization, black_box_optimization, multiobjective_optimization]
+  requires: [fitness_evaluation]
+
+- id: simulated_annealing
+  name: Simulated Annealing
+  family: metaheuristics
+  suitable_for: [combinatorial_optimization, nonconvex_optimization]
+  requires: [neighbor_generator]
+
+- id: particle_swarm_optimization
+  name: Particle Swarm Optimization
+  family: metaheuristics
+  suitable_for: [black_box_optimization, nonconvex_optimization]
+  requires: [function_evaluations]
+
+- id: gaussian_process_bo
+  name: Gaussian Process Bayesian Optimization
+  family: bayesian_optimization
+  suitable_for: [bayesian_optimization]
+  requires: [expensive_black_box_evaluation]
+
+- id: expected_improvement
+  name: Expected Improvement
+  family: acquisition_functions
+  suitable_for: [bayesian_optimization]
+  requires: [surrogate_model]
+
+- id: ucb
+  name: Upper Confidence Bound
+  family: bandit_and_bo
+  suitable_for: [bayesian_optimization, online_optimization]
+  requires: [uncertainty_estimate]
+
+- id: thompson_sampling
+  name: Thompson Sampling
+  family: bandit_and_bo
+  suitable_for: [bayesian_optimization, online_optimization]
+  requires: [posterior_or_uncertainty_model]
+
+- id: online_mirror_descent
+  name: Online Mirror Descent
+  family: online_optimization
+  suitable_for: [online_optimization]
+  requires: [online_losses_or_gradients]
+
+- id: follow_the_regularized_leader
+  name: Follow-the-Regularized-Leader
+  family: online_optimization
+  suitable_for: [online_optimization]
+  requires: [online_losses]
+
+- id: value_iteration
+  name: Value Iteration
+  family: reinforcement_learning
+  suitable_for: [reinforcement_learning, dynamic_programming]
+  requires: [mdp_model_or_estimates]
+
+- id: policy_gradient
+  name: Policy Gradient
+  family: reinforcement_learning
+  suitable_for: [reinforcement_learning]
+  requires: [policy_parameterization]
+
+- id: actor_critic
+  name: Actor-Critic
+  family: reinforcement_learning
+  suitable_for: [reinforcement_learning]
+  requires: [policy_and_value_function]
+
+- id: direct_transcription
+  name: Direct Transcription
+  family: optimal_control
+  suitable_for: [optimal_control]
+  requires: [dynamic_model]
+
+- id: shooting_method
+  name: Shooting Method
+  family: optimal_control
+  suitable_for: [optimal_control]
+  requires: [dynamic_model]
+
+- id: implicit_differentiation
+  name: Implicit Differentiation
+  family: differentiable_optimization
+  suitable_for: [differentiable_optimization]
+  requires: [optimality_conditions]
+
+- id: successive_halving
+  name: Successive Halving / Hyperband
+  family: hyperparameter_optimization
+  suitable_for: [hyperparameter_optimization]
+  requires: [iterative_training_or_budget_allocation]
