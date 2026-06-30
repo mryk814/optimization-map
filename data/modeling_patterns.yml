@@ -1,0 +1,106 @@
+# Initial modeling patterns
+
+- id: allocation
+  name: Resource Allocation
+  summary: 限られた資源を需要・候補・活動に配分する。
+  natural_language_triggers:
+    - 予算を配分したい
+    - 人や機械を割り当てたい
+    - 容量制約の中で最大化したい
+  likely_problem_classes: [linear_programming, mixed_integer_linear_programming, convex_optimization]
+  common_variables: [x_i, x_ij]
+  common_constraints: [budget, capacity, demand]
+
+- id: assignment
+  name: Assignment
+  summary: 人・タスク・資源などの対応関係を決める。
+  natural_language_triggers:
+    - 誰をどの仕事に割り当てるか
+    - どの商品をどの倉庫から出すか
+  likely_problem_classes: [linear_programming, mixed_integer_linear_programming, combinatorial_optimization]
+  common_variables: [x_ij_binary]
+  common_constraints: [assign_once, capacity]
+
+- id: routing
+  name: Routing
+  summary: グラフや地理空間上で経路・順序を決める。
+  natural_language_triggers:
+    - 配送ルートを決めたい
+    - 訪問順序を決めたい
+    - 最短経路を探したい
+  likely_problem_classes: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming]
+  common_variables: [edge_selected, visit_order]
+  common_constraints: [flow_conservation, visit_once, capacity, time_windows]
+
+- id: scheduling
+  name: Scheduling
+  summary: タスク・人員・機械・時間枠の割当を決める。
+  natural_language_triggers:
+    - シフトを組みたい
+    - ジョブの順序を決めたい
+    - 時間窓や休憩条件を守りたい
+  likely_problem_classes: [mixed_integer_linear_programming, constraint_programming, combinatorial_optimization]
+  common_variables: [start_time, assignment_binary, order_binary]
+  common_constraints: [precedence, no_overlap, capacity, time_window]
+
+- id: portfolio
+  name: Portfolio / Risk Allocation
+  summary: リターンとリスクのトレードオフを考慮して重みを決める。
+  natural_language_triggers:
+    - ポートフォリオを最適化したい
+    - リスクを抑えて期待リターンを最大化したい
+  likely_problem_classes: [quadratic_programming, convex_optimization, robust_optimization, stochastic_programming]
+  common_variables: [asset_weights]
+  common_constraints: [budget, long_only, exposure, risk_limit]
+
+- id: experimental_design
+  name: Experimental Design / Sequential Tuning
+  summary: 高価な実験や評価を少数回で効率よく探索する。
+  natural_language_triggers:
+    - 少ない実験回数で条件を探したい
+    - 評価が高いブラックボックスを最適化したい
+  likely_problem_classes: [bayesian_optimization, black_box_optimization, simulation_optimization]
+  common_variables: [experiment_parameters]
+  common_constraints: [bounds, safety_constraints]
+
+- id: hyperparameter_tuning
+  name: Hyperparameter Tuning
+  summary: ML モデルやパイプラインの設定を探索する。
+  natural_language_triggers:
+    - ハイパーパラメータを調整したい
+    - AutoML したい
+  likely_problem_classes: [hyperparameter_optimization, bayesian_optimization, black_box_optimization]
+  common_variables: [learning_rate, depth, regularization, model_choice]
+  common_constraints: [training_budget, validation_metric]
+
+- id: robust_planning
+  name: Robust Planning
+  summary: 不確実な需要・価格・供給のもとで安全側の計画を立てる。
+  natural_language_triggers:
+    - 需要が不確実
+    - 悪いケースでも制約を守りたい
+    - 分布は分からないが範囲はある
+  likely_problem_classes: [robust_optimization, stochastic_programming, distributionally_robust_optimization]
+  common_variables: [first_stage_decision, recourse_decision]
+  common_constraints: [uncertainty_set, service_level, chance_constraint]
+
+- id: control
+  name: Dynamic Control
+  summary: 状態方程式を持つシステムに対して制御入力系列や方策を決める。
+  natural_language_triggers:
+    - ロボットを制御したい
+    - 動的システムの入力を決めたい
+    - フィードバック制御したい
+  likely_problem_classes: [optimal_control, nonlinear_programming, reinforcement_learning]
+  common_variables: [control_input, state_trajectory, policy]
+  common_constraints: [dynamics, state_bounds, input_bounds, safety]
+
+- id: pricing
+  name: Pricing Optimization
+  summary: 価格と需要・在庫・収益の関係を考慮して価格を決める。
+  natural_language_triggers:
+    - 価格を最適化したい
+    - 需要反応を考慮したい
+  likely_problem_classes: [nonlinear_programming, stochastic_programming, bandit_optimization, bilevel_optimization]
+  common_variables: [price]
+  common_constraints: [price_bounds, inventory, fairness_or_policy]
