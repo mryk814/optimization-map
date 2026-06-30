@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optimization-map.local/schemas/classification_axis.schema.json",
+  "title": "ClassificationAxis",
+  "type": "object",
+  "required": ["id", "name_ja", "name_en", "category", "core", "description", "diagnostic_question", "ui_widget", "values"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "name_ja": { "type": "string" },
+    "name_en": { "type": "string" },
+    "category": { "type": "string" },
+    "core": { "type": "boolean" },
+    "description": { "type": "string" },
+    "diagnostic_question": { "type": "string" },
+    "ui_widget": { "enum": ["segmented", "checklist", "slider", "select"] },
+    "values": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "name_ja", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "name_ja": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

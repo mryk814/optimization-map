@@ -1,0 +1,96 @@
+solvers:
+  - id: scipy_linprog
+    name: SciPy linprog
+    type: open_source
+    url: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
+    supports: [linear_programming]
+  - id: scipy_optimize
+    name: SciPy optimize
+    type: open_source
+    url: https://docs.scipy.org/doc/scipy/reference/optimize.html
+    supports: [nonlinear_programming, blackbox_derivative_free]
+  - id: cvxpy
+    name: CVXPY
+    type: open_source
+    url: https://www.cvxpy.org/
+    supports: [convex_optimization, socp_sdp, differentiable_optimization]
+  - id: gurobi
+    name: Gurobi
+    type: commercial
+    url: https://docs.gurobi.com/projects/optimizer/en/current/
+    supports: [linear_programming, mixed_integer_linear_programming, quadratic_programming]
+  - id: cplex
+    name: IBM CPLEX
+    type: commercial
+    url: https://www.ibm.com/docs/en/icos
+    supports: [linear_programming, mixed_integer_linear_programming, quadratic_programming]
+  - id: scip
+    name: SCIP
+    type: open_source
+    url: https://www.scipopt.org/
+    supports: [mixed_integer_linear_programming, nonlinear_programming, minlp]
+  - id: highs
+    name: HiGHS
+    type: open_source
+    url: https://highs.dev/
+    supports: [linear_programming, mixed_integer_linear_programming]
+  - id: ortools
+    name: OR-Tools
+    type: open_source
+    url: https://developers.google.com/optimization
+    supports: [constraint_programming_sat_smt, mixed_integer_linear_programming, combinatorial_optimization]
+  - id: z3
+    name: Z3
+    type: open_source
+    url: https://microsoft.github.io/z3guide/
+    supports: [constraint_programming_sat_smt]
+  - id: pyomo
+    name: Pyomo
+    type: open_source
+    url: https://pyomo.readthedocs.io/
+    supports: [linear_programming, mixed_integer_linear_programming, stochastic_programming]
+  - id: ipopt
+    name: Ipopt
+    type: open_source
+    url: https://coin-or.github.io/Ipopt/
+    supports: [nonlinear_programming, optimal_control]
+  - id: casadi
+    name: CasADi
+    type: open_source
+    url: https://web.casadi.org/docs/
+    supports: [nonlinear_programming, optimal_control]
+  - id: mosek
+    name: MOSEK
+    type: commercial
+    url: https://docs.mosek.com/
+    supports: [convex_optimization, socp_sdp]
+  - id: sdpa
+    name: SDPA
+    type: open_source
+    url: http://sdpa.sourceforge.net/
+    supports: [socp_sdp]
+  - id: botorch
+    name: BoTorch
+    type: open_source
+    url: https://botorch.org/docs/introduction
+    supports: [bayesian_optimization_problem, hpo_automl]
+  - id: optuna
+    name: Optuna
+    type: open_source
+    url: https://optuna.readthedocs.io/
+    supports: [bayesian_optimization_problem, hpo_automl]
+  - id: nevergrad
+    name: Nevergrad
+    type: open_source
+    url: https://facebookresearch.github.io/nevergrad/
+    supports: [blackbox_derivative_free]
+  - id: stable_baselines3
+    name: Stable-Baselines3
+    type: open_source
+    url: https://stable-baselines3.readthedocs.io/
+    supports: [dynamic_programming_rl]
+  - id: jaxopt
+    name: JAXopt
+    type: open_source
+    url: https://jaxopt.github.io/
+    supports: [differentiable_optimization, nonlinear_programming]

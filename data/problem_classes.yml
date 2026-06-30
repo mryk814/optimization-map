@@ -1,0 +1,461 @@
+problem_classes:
+  - id: linear_programming
+    name_ja: 線形計画
+    name_en: Linear Programming
+    summary: 線形目的関数を線形制約の下で最適化する基礎クラス。
+    definition: 決定変数が連続で、目的関数と制約が線形式で表される最適化問題。
+    canonical_form: minimize c^T x subject to A x <= b, x >= 0
+    tags: [continuous, linear, convex, exact]
+    axes: { linearity: linear, convexity: convex, variable_domain: continuous, time_structure: static }
+    typical_when:
+      - 生産量、輸送量、配分量などが連続量として扱える。
+      - 制約と目的が足し算と定数倍で近似できる。
+    not_good_when:
+      - on/off、割当、順序などの整数判断が本質的。
+      - 非線形の物理・リスク・効用が支配的。
+    why_hard:
+      - 理論的には多項式時間で解けるが、数値スケールやモデル化ミスで実務上は崩れる。
+    candidate_algorithms: [simplex, interior_point]
+    candidate_solvers: [scipy_linprog, highs, gurobi, cplex, pyomo]
+    confused_with: [convex_optimization, mixed_integer_linear_programming]
+    relaxations_or_reformulations: [linearization, relaxation]
+    sources:
+      - { title: MIT OCW 15.053 Optimization Methods, url: "https://ocw.mit.edu/courses/15-053-optimization-methods-in-management-science-spring-2013/", type: university_course, trust: high }
+      - { title: SciPy linprog documentation, url: "https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html", type: official_docs, trust: high }
+  - id: quadratic_programming
+    name_ja: 二次計画
+    name_en: Quadratic Programming
+    summary: 二次目的関数と線形制約を持つ連続最適化。
+    definition: 目的関数が二次式で、制約が線形または凸二次制約として表される問題。
+    canonical_form: minimize 1/2 x^T Q x + c^T x subject to A x <= b
+    tags: [continuous, quadratic, convex_when_psd]
+    axes: { linearity: convex_nonlinear, convexity: convex, variable_domain: continuous, time_structure: static }
+    typical_when:
+      - portfolio variance、least squares、MPC の局所問題など。
+      - tradeoff が二乗ペナルティで自然に書ける。
+    not_good_when:
+      - Q が非半正定値で大域解が必要。
+      - 整数変数が支配的。
+    why_hard:
+      - 凸 QP は扱いやすいが、非凸 QP は一般に難しい。
+    candidate_algorithms: [interior_point, sequential_quadratic_programming]
+    candidate_solvers: [cvxpy, gurobi, cplex, mosek]
+    confused_with: [convex_optimization, nonlinear_programming]
+    relaxations_or_reformulations: [convexification, relaxation]
+    sources:
+      - { title: CVXPY documentation, url: "https://www.cvxpy.org/", type: official_docs, trust: high }
+      - { title: MOSEK Modeling Cookbook, url: "https://docs.mosek.com/modeling-cookbook/", type: official_docs, trust: high }
+  - id: convex_optimization
+    name_ja: 凸最適化
+    name_en: Convex Optimization
+    summary: 凸構造により局所最適解が大域最適解になる広いクラス。
+    definition: 凸目的関数を凸集合上で最小化する、または凹目的を最大化する問題。
+    canonical_form: minimize f0(x) subject to fi(x) <= 0, Ax = b, where f_i are convex
+    tags: [continuous, convex, explainable]
+    axes: { linearity: convex_nonlinear, convexity: convex, variable_domain: continuous, solution_guarantee: exact }
+    typical_when:
+      - 最適性保証、双対、感度分析が重要。
+      - 線形、二次、円錐、log-sum-exp などの凸構造がある。
+    not_good_when:
+      - 離散判断や非凸シミュレータが本質。
+      - 評価関数がブラックボックス。
+    why_hard:
+      - 凸性の証明、DCP ルール、数値条件が実装品質を左右する。
+    candidate_algorithms: [interior_point, conic_solvers]
+    candidate_solvers: [cvxpy, mosek, jaxopt]
+    confused_with: [linear_programming, nonlinear_programming, socp_sdp]
+    relaxations_or_reformulations: [convexification, relaxation]
+    sources:
+      - { title: Boyd and Vandenberghe Convex Optimization, url: "https://web.stanford.edu/~boyd/cvxbook/", type: textbook, trust: high }
+      - { title: Stanford EE364a Convex Optimization, url: "https://web.stanford.edu/class/ee364a/", type: university_course, trust: high }
+  - id: socp_sdp
+    name_ja: 円錐最適化 / 半正定値計画
+    name_en: SOCP / SDP
+    summary: 二次錐や半正定値錐を使う凸最適化の表現力が高いクラス。
+    definition: conic constraints または行列の半正定値制約を含む凸最適化問題。
+    canonical_form: minimize c^T x subject to Ax + b in K
+    tags: [convex, conic, relaxation]
+    axes: { linearity: convex_nonlinear, convexity: convex, variable_domain: continuous, solution_guarantee: exact }
+    typical_when:
+      - robust constraints、control、matrix inequalities、combinatorial relaxation。
+      - LP/QP では表現しにくい凸制約を扱う。
+    not_good_when:
+      - 行列サイズが大きく SDP が重すぎる。
+      - 整数判断が主役。
+    why_hard:
+      - SDP は数値的にも計算量的にも重く、スケーリングが難しい。
+    candidate_algorithms: [conic_solvers, interior_point]
+    candidate_solvers: [cvxpy, mosek, sdpa]
+    confused_with: [convex_optimization, linear_programming]
+    relaxations_or_reformulations: [relaxation, convexification]
+    sources:
+      - { title: MOSEK Modeling Cookbook, url: "https://docs.mosek.com/modeling-cookbook/", type: official_docs, trust: high }
+      - { title: CVXPY user guide, url: "https://www.cvxpy.org/tutorial/", type: official_docs, trust: high }
+  - id: nonlinear_programming
+    name_ja: 非線形計画
+    name_en: Nonlinear Programming
+    summary: 目的関数や制約に一般の非線形式を含む連続最適化。
+    definition: 連続変数を持ち、目的関数や制約が非線形で表される問題。
+    canonical_form: minimize f(x) subject to g(x) <= 0, h(x) = 0
+    tags: [continuous, nonlinear, local]
+    axes: { linearity: nonlinear, convexity: mixed, variable_domain: continuous, differentiability: gradient_available }
+    typical_when:
+      - 物理モデル、曲線フィット、制約付き連続設計。
+      - 微分可能な式がある。
+    not_good_when:
+      - 目的関数評価しかできない。
+      - 大域最適性が必須で非凸性が強い。
+    why_hard:
+      - 非凸なら局所解に落ちやすく、初期値とスケーリングが重要。
+    candidate_algorithms: [local_nlp, sequential_quadratic_programming, interior_point]
+    candidate_solvers: [ipopt, scipy_optimize, casadi, scip, jaxopt]
+    confused_with: [convex_optimization, nonconvex_optimization, quadratic_programming]
+    relaxations_or_reformulations: [convexification, penalty_softening]
+    sources:
+      - { title: Ipopt documentation, url: "https://coin-or.github.io/Ipopt/", type: official_docs, trust: high }
+      - { title: SciPy optimize documentation, url: "https://docs.scipy.org/doc/scipy/reference/optimize.html", type: official_docs, trust: high }
+  - id: nonconvex_optimization
+    name_ja: 非凸最適化
+    name_en: Non-convex Optimization
+    summary: 局所解と大域解が一致しない可能性がある広いクラス。
+    definition: feasible set または目的関数が非凸で、複数の局所解を持ちうる問題。
+    canonical_form: minimize f(x) over x in nonconvex feasible set
+    tags: [nonconvex, local_or_global, difficult]
+    axes: { linearity: nonlinear, convexity: nonconvex, solution_guarantee: approximate }
+    typical_when:
+      - 機械学習、設計最適化、非線形物理、MINLP。
+      - 良い解で十分な場合。
+    not_good_when:
+      - 大域最適性証明が必須で規模が大きい。
+      - モデルの不確実性の方が支配的。
+    why_hard:
+      - 局所解、鞍点、組合せ性が混ざり、探索空間が複雑になる。
+    candidate_algorithms: [local_nlp, evolutionary_search, bayesian_optimization]
+    candidate_solvers: [scipy_optimize, nevergrad, ipopt]
+    confused_with: [nonlinear_programming, blackbox_derivative_free]
+    relaxations_or_reformulations: [convexification, surrogate_modeling]
+    sources:
+      - { title: SciPy optimize documentation, url: "https://docs.scipy.org/doc/scipy/reference/optimize.html", type: official_docs, trust: high }
+      - { title: Nevergrad documentation, url: "https://facebookresearch.github.io/nevergrad/", type: official_docs, trust: medium }
+  - id: mixed_integer_linear_programming
+    name_ja: 混合整数線形計画
+    name_en: Mixed-Integer Linear Programming
+    summary: 線形式に整数・binary 決定を含む実務上重要なクラス。
+    definition: 連続変数と整数変数を持ち、目的関数と制約が線形で表される問題。
+    canonical_form: minimize c^T x + d^T y subject to A x + B y <= b, y integer
+    tags: [linear, integer, exact, np_hard]
+    axes: { linearity: linear, convexity: nonconvex, variable_domain: integer, solution_guarantee: gap_bound }
+    typical_when:
+      - 生産計画、設備選択、割当、シフト、在庫、ルーティング。
+      - gap と実行可能性が重要。
+    not_good_when:
+      - 非線形・連続ダイナミクスが中心。
+      - 問題が曖昧でモデル化前の段階。
+    why_hard:
+      - 整数性により組合せ爆発が起き、LP と違って一般に NP-hard。
+    candidate_algorithms: [branch_and_bound, cutting_planes, branch_cut, column_generation]
+    candidate_solvers: [gurobi, cplex, scip, highs, ortools, pyomo]
+    confused_with: [linear_programming, constraint_programming_sat_smt, combinatorial_optimization]
+    relaxations_or_reformulations: [linearization, relaxation, decomposition]
+    sources:
+      - { title: Gurobi Optimizer documentation, url: "https://docs.gurobi.com/projects/optimizer/en/current/", type: official_docs, trust: high }
+      - { title: SCIP Optimization Suite, url: "https://www.scipopt.org/", type: official_docs, trust: high }
+  - id: combinatorial_optimization
+    name_ja: 組合せ最適化
+    name_en: Combinatorial Optimization
+    summary: 選択、順序、割当など離散構造から最良の組合せを探す。
+    definition: 有限または可算の組合せ集合から目的を最適化する問題群。
+    canonical_form: optimize f(S) over feasible discrete structures S
+    tags: [discrete, graph, scheduling, routing]
+    axes: { variable_domain: permutation, convexity: nonconvex, discreteness_source: ordering, solution_guarantee: gap_bound }
+    typical_when:
+      - routing、matching、assignment、knapsack、scheduling。
+      - グラフや集合の構造が自然に出る。
+    not_good_when:
+      - ほぼ連続量だけで表せる。
+      - 評価関数が高価で式がない。
+    why_hard:
+      - 解候補数が指数的に増えやすい。
+    candidate_algorithms: [branch_and_bound, dynamic_programming, column_generation]
+    candidate_solvers: [ortools, gurobi, cplex, scip]
+    confused_with: [mixed_integer_linear_programming, constraint_programming_sat_smt]
+    relaxations_or_reformulations: [relaxation, decomposition, linearization]
+    sources:
+      - { title: OR-Tools Guides, url: "https://developers.google.com/optimization", type: official_docs, trust: high }
+      - { title: SCIP Book, url: "https://scipbook.readthedocs.io/", type: textbook, trust: high }
+  - id: constraint_programming_sat_smt
+    name_ja: CP / SAT / SMT
+    name_en: Constraint Programming / SAT / SMT
+    summary: 論理制約や制約充足を中心に扱う離散推論・最適化。
+    definition: 論理式、制約ネットワーク、充足可能性を扱い、目的がある場合は最適化も行う問題群。
+    canonical_form: find assignment satisfying constraints; optionally optimize objective
+    tags: [discrete, logical, feasibility]
+    axes: { objective_structure: feasibility, constraint_structure: logical, variable_domain: binary, solution_guarantee: exact }
+    typical_when:
+      - スケジューリング、論理制約、可否判定、設定問題。
+      - 線形目的より制約充足が主役。
+    not_good_when:
+      - 凸連続構造の双対や感度が重要。
+      - 大規模連続変数が中心。
+    why_hard:
+      - SAT 系は最悪ケースで指数的だが、制約伝播と探索で実用的に解ける範囲がある。
+    candidate_algorithms: [constraint_propagation, branch_and_bound]
+    candidate_solvers: [ortools, z3]
+    confused_with: [mixed_integer_linear_programming, combinatorial_optimization]
+    relaxations_or_reformulations: [linearization, penalty_softening]
+    sources:
+      - { title: OR-Tools CP-SAT Solver, url: "https://developers.google.com/optimization/cp/cp_solver", type: official_docs, trust: high }
+      - { title: Z3 Guide, url: "https://microsoft.github.io/z3guide/", type: official_docs, trust: high }
+  - id: stochastic_programming
+    name_ja: 確率計画
+    name_en: Stochastic Programming
+    summary: 確率分布やシナリオに基づいて期待性能を最適化する。
+    definition: 不確実パラメータの確率分布やシナリオを使い、期待値や recourse を含めて最適化する問題。
+    canonical_form: minimize c^T x + E_Q[Q(x, xi)]
+    tags: [uncertainty, scenarios, recourse]
+    axes: { uncertainty_representation: scenarios, risk_measure: expectation, time_structure: finite_horizon }
+    typical_when:
+      - 需要、価格、供給などのシナリオがある。
+      - 平均性能と recourse の設計が重要。
+    not_good_when:
+      - 分布が信用できず、最悪ケースを守りたい。
+      - データが少なすぎる。
+    why_hard:
+      - シナリオ数が増えると問題サイズが膨らみ、サンプリング誤差も出る。
+    candidate_algorithms: [sample_average_approximation, benders]
+    candidate_solvers: [pyomo, gurobi, cplex]
+    confused_with: [robust_optimization, distributionally_robust_optimization]
+    relaxations_or_reformulations: [scenario_modeling, decomposition]
+    sources:
+      - { title: Pyomo documentation, url: "https://pyomo.readthedocs.io/", type: official_docs, trust: high }
+      - { title: Birge and Louveaux, Introduction to Stochastic Programming, url: "https://link.springer.com/book/10.1007/978-1-4614-0237-4", type: textbook, trust: high }
+  - id: robust_optimization
+    name_ja: ロバスト最適化
+    name_en: Robust Optimization
+    summary: 不確実集合内の悪いケースでも制約や性能を守る。
+    definition: 不確実パラメータが集合内の任意の値を取るとして、最悪ケースに対して実行可能性や目的を最適化する問題。
+    canonical_form: minimize max_{u in U} f(x, u) subject to g(x, u) <= 0 for all u in U
+    tags: [uncertainty, worst_case, conservative]
+    axes: { uncertainty_representation: uncertainty_set, risk_measure: worst_case, solution_guarantee: exact }
+    typical_when:
+      - 分布より範囲・上限・安全余裕が信頼できる。
+      - 制約違反を避けたい。
+    not_good_when:
+      - 平均性能が重要で、保守性が許されない。
+      - 不確実集合が過度に粗い。
+    why_hard:
+      - 不確実集合の形により robust counterpart の解きやすさが大きく変わる。
+    candidate_algorithms: [robust_counterpart, conic_solvers]
+    candidate_solvers: [cvxpy, mosek, gurobi]
+    confused_with: [stochastic_programming, distributionally_robust_optimization]
+    relaxations_or_reformulations: [robust_counterpart_pattern, convexification]
+    sources:
+      - { title: Bertsimas, Brown, and Caramanis Robust Optimization, url: "https://doi.org/10.1137/080734510", type: survey, trust: high }
+      - { title: Ben-Tal, El Ghaoui, and Nemirovski Robust Optimization, url: "https://press.princeton.edu/books/hardcover/9780691143682/robust-optimization", type: textbook, trust: high }
+  - id: distributionally_robust_optimization
+    name_ja: 分布ロバスト最適化
+    name_en: Distributionally Robust Optimization
+    summary: 分布そのものに曖昧さがある前提で悪い分布に備える。
+    definition: 真の分布が ambiguity set の中にあるとして、最悪分布に対する期待損失やリスクを最適化する問題。
+    canonical_form: minimize sup_{P in P_set} E_P[l(x, xi)]
+    tags: [uncertainty, ambiguity_set, tail_risk]
+    axes: { uncertainty_representation: ambiguity_set, risk_measure: tail_risk, data_availability: sparse }
+    typical_when:
+      - データはあるが、経験分布だけを信じきれない。
+      - tail risk や外れ値に備えたい。
+    not_good_when:
+      - 分布が十分に既知で、単純な期待値最適化でよい。
+      - ambiguity set の説明が難しい。
+    why_hard:
+      - ambiguity set によって統計的意味と計算可能性のバランスが変わる。
+    candidate_algorithms: [sample_average_approximation, robust_counterpart]
+    candidate_solvers: [cvxpy, mosek, gurobi]
+    confused_with: [stochastic_programming, robust_optimization]
+    relaxations_or_reformulations: [robust_counterpart_pattern, scenario_modeling]
+    sources:
+      - { title: Rahimian and Mehrotra Distributionally Robust Optimization survey, url: "https://doi.org/10.1137/19M1265142", type: survey, trust: high }
+      - { title: Esfahani and Kuhn Data-driven DRO, url: "https://doi.org/10.1007/s10107-017-1172-1", type: paper, trust: high }
+  - id: blackbox_derivative_free
+    name_ja: ブラックボックス / 微分不要最適化
+    name_en: Black-box / Derivative-free Optimization
+    summary: 式や勾配がなく、評価関数の値だけで探索する。
+    definition: 目的関数や制約の解析形が使えず、評価値だけを観測して候補を改善する問題。
+    canonical_form: minimize f(x) where f is available only through evaluations
+    tags: [blackbox, derivative_free, approximate]
+    axes: { blackboxness: blackbox, differentiability: derivative_free, evaluation_cost: cheap }
+    typical_when:
+      - シミュレーション、実験、レガシーコード、微分不能指標。
+      - 評価コストが中程度以下。
+    not_good_when:
+      - 厳密な制約保証や最適性証明が必要。
+      - 評価が極端に高価で回数が限られる。
+    why_hard:
+      - 勾配も構造も使えず、次に試す点の情報効率が問題になる。
+    candidate_algorithms: [evolutionary_search, bayesian_optimization]
+    candidate_solvers: [nevergrad, scipy_optimize]
+    confused_with: [bayesian_optimization_problem, nonconvex_optimization]
+    relaxations_or_reformulations: [surrogate_modeling]
+    sources:
+      - { title: Nevergrad documentation, url: "https://facebookresearch.github.io/nevergrad/", type: official_docs, trust: medium }
+      - { title: SciPy optimize global optimization, url: "https://docs.scipy.org/doc/scipy/reference/optimize.html#global-optimization", type: official_docs, trust: high }
+  - id: bayesian_optimization_problem
+    name_ja: Bayesian Optimization
+    name_en: Bayesian Optimization
+    summary: 高価なブラックボックス評価を surrogate と acquisition で効率よく探索する。
+    definition: 確率的 surrogate model と acquisition function を使い、少ない評価で良い候補を探す black-box optimization。
+    canonical_form: choose x_{t+1} = argmax a_t(x) using posterior over f
+    tags: [blackbox, expensive, surrogate, sequential]
+    axes: { blackboxness: blackbox, evaluation_cost: expensive, data_availability: sparse, feedback: online_feedback }
+    typical_when:
+      - 実験条件探索、HPO、材料・製造条件、シミュレーション最適化。
+      - 1回の評価が高価で、少ない試行で進めたい。
+    not_good_when:
+      - 評価が安く高次元で、random/search が十分。
+      - 強い combinatorial constraints が支配的。
+    why_hard:
+      - surrogate の不確実性、制約、高次元、ノイズが探索効率を左右する。
+    candidate_algorithms: [bayesian_optimization, upper_confidence_bound]
+    candidate_solvers: [botorch, optuna]
+    confused_with: [blackbox_derivative_free, hpo_automl]
+    relaxations_or_reformulations: [surrogate_modeling]
+    sources:
+      - { title: Bayesian Optimization book, url: "https://bayesoptbook.com/", type: textbook, trust: high }
+      - { title: BoTorch documentation, url: "https://botorch.org/docs/introduction", type: official_docs, trust: high }
+  - id: simulation_optimization
+    name_ja: シミュレーション最適化
+    name_en: Simulation Optimization
+    summary: シミュレータの入力を変えながら出力指標を最適化する。
+    definition: 確率的または決定論的シミュレータを評価器として使い、設計変数を探索する問題。
+    canonical_form: minimize E[H(x, omega)] where H is simulator output
+    tags: [simulation, noisy, blackbox]
+    axes: { interaction_mode: simulator, evaluation_cost: expensive, stochasticity_source: measurement_noise }
+    typical_when:
+      - 離散イベント、交通、生産、流体、エージェントベースなどのシミュレータ。
+      - モデル式を直接最適化できない。
+    not_good_when:
+      - 解析式と勾配があり、NLP/凸最適化で足りる。
+      - 評価ノイズを扱う設計がない。
+    why_hard:
+      - 評価ノイズとコストがあり、統計的信頼区間と探索を同時に管理する。
+    candidate_algorithms: [bayesian_optimization, sample_average_approximation, evolutionary_search]
+    candidate_solvers: [botorch, nevergrad, optuna]
+    confused_with: [bayesian_optimization_problem, stochastic_programming]
+    relaxations_or_reformulations: [surrogate_modeling, scenario_modeling]
+    sources:
+      - { title: BoTorch documentation, url: "https://botorch.org/docs/introduction", type: official_docs, trust: high }
+      - { title: SimOpt library, url: "https://simopt.readthedocs.io/", type: official_docs, trust: medium }
+  - id: optimal_control
+    name_ja: 最適制御 / MPC
+    name_en: Optimal Control / MPC
+    summary: 動的システムの状態と入力を時間方向に最適化する。
+    definition: システムダイナミクスに従う状態遷移の下で、制御入力列や方策を最適化する問題。
+    canonical_form: minimize integral L(x,u,t) dt subject to x_dot = f(x,u,t)
+    tags: [dynamics, control, continuous_time, mpc]
+    axes: { time_structure: continuous_time, constraint_structure: dynamics, feedback: receding_horizon }
+    typical_when:
+      - ロボット、車両、プロセス制御、エネルギー管理。
+      - 物理モデルと制約がある。
+    not_good_when:
+      - モデルがほぼなく、試行錯誤から方策を学ぶしかない。
+      - 状態が巨大で完全観測できない。
+    why_hard:
+      - 非線形ダイナミクス、リアルタイム制約、安定性、安全性が絡む。
+    candidate_algorithms: [mpc, sequential_quadratic_programming, dynamic_programming]
+    candidate_solvers: [casadi, ipopt, cvxpy]
+    confused_with: [dynamic_programming_rl, online_optimization_bandits]
+    relaxations_or_reformulations: [receding_horizon, convexification]
+    sources:
+      - { title: MIT Underactuated Robotics, url: "https://underactuated.mit.edu/", type: university_course, trust: high }
+      - { title: CasADi documentation, url: "https://web.casadi.org/docs/", type: official_docs, trust: high }
+  - id: dynamic_programming_rl
+    name_ja: 動的計画 / 強化学習
+    name_en: Dynamic Programming / Reinforcement Learning
+    summary: 状態・行動・報酬・遷移に基づく逐次意思決定。
+    definition: MDP などの逐次意思決定モデルで、累積報酬やコストを最適化する方策を求める問題。
+    canonical_form: maximize E[sum gamma^t r(s_t, a_t)]
+    tags: [sequential, policy, feedback, learning]
+    axes: { time_structure: sequential, feedback: online_feedback, stochasticity_source: transition, solution_guarantee: policy_quality }
+    typical_when:
+      - 行動後の観測を使って方策を改善する。
+      - 環境遷移があり、長期報酬が重要。
+    not_good_when:
+      - 一回限りの静的配分問題。
+      - 安全な探索ができない本番環境。
+    why_hard:
+      - 状態空間、サンプル効率、探索安全性、報酬設計が難しい。
+    candidate_algorithms: [dynamic_programming, policy_gradient]
+    candidate_solvers: [stable_baselines3]
+    confused_with: [optimal_control, online_optimization_bandits]
+    relaxations_or_reformulations: [receding_horizon, surrogate_modeling]
+    sources:
+      - { title: Sutton and Barto Reinforcement Learning, url: "http://incompleteideas.net/book/the-book-2nd.html", type: textbook, trust: high }
+      - { title: Stable-Baselines3 documentation, url: "https://stable-baselines3.readthedocs.io/", type: official_docs, trust: high }
+  - id: online_optimization_bandits
+    name_ja: オンライン最適化 / Bandits
+    name_en: Online Optimization / Bandits
+    summary: 時々刻々入る観測の中で、探索と活用を両立する。
+    definition: データや損失が逐次到着する状況で、各時点の意思決定と後悔を管理する問題。
+    canonical_form: choose x_t, observe loss l_t(x_t), minimize regret
+    tags: [online, bandit, regret, feedback]
+    axes: { time_structure: sequential, feedback: online_feedback, interaction_mode: live_system }
+    typical_when:
+      - A/B テスト配分、推薦、広告、価格の逐次更新。
+      - regret や探索コストが重要。
+    not_good_when:
+      - 物理ダイナミクスの制約を厳密に満たす必要がある。
+      - オフラインで十分に最適化できる。
+    why_hard:
+      - 観測できる情報が限られ、探索と短期性能の tradeoff がある。
+    candidate_algorithms: [upper_confidence_bound, bayesian_optimization]
+    candidate_solvers: [optuna, botorch]
+    confused_with: [dynamic_programming_rl, optimal_control]
+    relaxations_or_reformulations: [surrogate_modeling]
+    sources:
+      - { title: Bandit Algorithms book, url: "https://tor-lattimore.com/downloads/book/book.pdf", type: textbook, trust: high }
+      - { title: Vowpal Wabbit contextual bandits, url: "https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/tutorials/python_Contextual_bandits_and_Vowpal_Wabbit.html", type: official_docs, trust: medium }
+  - id: differentiable_optimization
+    name_ja: 微分可能最適化 / Predict-then-Optimize
+    name_en: Differentiable Optimization / Predict-then-Optimize
+    summary: 最適化問題を学習パイプラインの一部として微分可能に扱う。
+    definition: 最適化 solver や argmin 写像を differentiable layer として組み込み、下流意思決定の損失で学習する方法群。
+    canonical_form: y(theta) = argmin_x f_theta(x), train theta through y
+    tags: [differentiable, learning, decision_focused]
+    axes: { differentiability: gradient_available, data_availability: rich, deployment_stage: modeling }
+    typical_when:
+      - 予測精度より下流の意思決定品質を最適化したい。
+      - convex layer や structured loss を使える。
+    not_good_when:
+      - solver が不安定で、微分可能性の条件が満たせない。
+      - データが少なく end-to-end 学習の意味が薄い。
+    why_hard:
+      - 解の一意性、制約資格条件、数値安定性、学習との責任分離が難しい。
+    candidate_algorithms: [differentiable_layer]
+    candidate_solvers: [cvxpy, jaxopt]
+    confused_with: [convex_optimization, hpo_automl]
+    relaxations_or_reformulations: [predict_then_optimize, convexification]
+    sources:
+      - { title: JAXopt documentation, url: "https://jaxopt.github.io/", type: official_docs, trust: high }
+      - { title: CVXPY Layers, url: "https://github.com/cvxpy/cvxpylayers", type: official_github, trust: high }
+  - id: hpo_automl
+    name_ja: HPO / AutoML
+    name_en: Hyperparameter Optimization / AutoML
+    summary: 機械学習パイプラインのハイパーパラメータや構成を探索する。
+    definition: 学習・検証ループの外側で、モデル構成やハイパーパラメータをブラックボックス的に最適化する問題。
+    canonical_form: minimize validation_loss(config) over mixed search space
+    tags: [blackbox, categorical, expensive, ml]
+    axes: { variable_domain: categorical, blackboxness: blackbox, evaluation_cost: expensive, objective_structure: blackbox_metric }
+    typical_when:
+      - モデル、前処理、学習率、木の深さなどの設定探索。
+      - 評価は学習ジョブの結果として得る。
+    not_good_when:
+      - モデル式そのものを設計する連続制御問題。
+      - 予測モデルなしの純粋な数理計画。
+    why_hard:
+      - 混合離散・連続空間、ノイズ、早期停止、予算配分が絡む。
+    candidate_algorithms: [bayesian_optimization, evolutionary_search]
+    candidate_solvers: [optuna, botorch]
+    confused_with: [bayesian_optimization_problem, differentiable_optimization]
+    relaxations_or_reformulations: [surrogate_modeling]
+    sources:
+      - { title: AutoML book, url: "https://www.automl.org/book/", type: textbook, trust: high }
+      - { title: Optuna documentation, url: "https://optuna.readthedocs.io/", type: official_docs, trust: high }

@@ -1,0 +1,101 @@
+algorithms:
+  - id: simplex
+    name_ja: 単体法
+    family: exact
+    good_for: [linear_programming]
+    tradeoffs: 大規模疎行列で実用的だが、問題構造により内点法も候補になる。
+  - id: interior_point
+    name_ja: 内点法
+    family: exact
+    good_for: [linear_programming, convex_optimization, socp_sdp]
+    tradeoffs: 凸問題で強いが、整数性や黒箱評価には直接使えない。
+  - id: branch_and_bound
+    name_ja: Branch-and-Bound
+    family: exact
+    good_for: [integer_programming, mixed_integer_linear_programming]
+    tradeoffs: 最適性 gap を返せるが、組合せ爆発に弱い。
+  - id: cutting_planes
+    name_ja: Cutting Planes
+    family: exact
+    good_for: [mixed_integer_linear_programming]
+    tradeoffs: 緩和を強められるが、問題固有のカット設計が効く。
+  - id: branch_cut
+    name_ja: Branch-and-Cut
+    family: exact
+    good_for: [mixed_integer_linear_programming]
+    tradeoffs: MILP solver の中核。モデル化品質に強く依存する。
+  - id: dynamic_programming
+    name_ja: 動的計画法
+    family: exact_or_approximate
+    good_for: [dynamic_programming_rl, optimal_control]
+    tradeoffs: 状態空間が大きいと curse of dimensionality が出る。
+  - id: constraint_propagation
+    name_ja: 制約伝播
+    family: exact
+    good_for: [constraint_programming_sat_smt]
+    tradeoffs: 論理/組合せ制約に強いが、連続凸構造の双対情報は得にくい。
+  - id: local_nlp
+    name_ja: 局所非線形最適化
+    family: local
+    good_for: [nonlinear_programming, nonconvex_optimization]
+    tradeoffs: 初期値に依存し、大域最適性は保証しにくい。
+  - id: sequential_quadratic_programming
+    name_ja: SQP
+    family: local
+    good_for: [nonlinear_programming, optimal_control]
+    tradeoffs: 滑らかな制約付き問題で強いが、微分可能性が必要。
+  - id: conic_solvers
+    name_ja: 円錐ソルバー
+    family: exact
+    good_for: [socp_sdp, convex_optimization]
+    tradeoffs: 表現力は高いが、SDP は規模で重くなりやすい。
+  - id: benders
+    name_ja: Benders 分解
+    family: decomposition
+    good_for: [stochastic_programming, mixed_integer_linear_programming]
+    tradeoffs: master/subproblem 構造があると効く。
+  - id: column_generation
+    name_ja: 列生成
+    family: decomposition
+    good_for: [combinatorial_optimization, mixed_integer_linear_programming]
+    tradeoffs: ルーティングやシフトなど巨大変数集合に向く。
+  - id: robust_counterpart
+    name_ja: Robust Counterpart
+    family: reformulation
+    good_for: [robust_optimization]
+    tradeoffs: 不確実集合の選び方で保守性と解きやすさが変わる。
+  - id: sample_average_approximation
+    name_ja: Sample Average Approximation
+    family: stochastic
+    good_for: [stochastic_programming, distributionally_robust_optimization]
+    tradeoffs: シナリオ数と統計誤差の管理が必要。
+  - id: bayesian_optimization
+    name_ja: Bayesian Optimization
+    family: blackbox
+    good_for: [bayesian_optimization_problem, hpo_automl]
+    tradeoffs: 高価な評価に向くが、高次元や強い制約には工夫が必要。
+  - id: evolutionary_search
+    name_ja: 進化的探索
+    family: heuristic
+    good_for: [blackbox_derivative_free, nonconvex_optimization]
+    tradeoffs: 汎用的だが評価回数が増えやすく保証は弱い。
+  - id: mpc
+    name_ja: Model Predictive Control
+    family: control
+    good_for: [optimal_control]
+    tradeoffs: 制約を扱えるが、リアルタイム性とモデル精度が重要。
+  - id: policy_gradient
+    name_ja: Policy Gradient
+    family: reinforcement_learning
+    good_for: [dynamic_programming_rl]
+    tradeoffs: 高次元方策に使えるが、サンプル効率と安全性に注意が必要。
+  - id: upper_confidence_bound
+    name_ja: UCB / Bandit
+    family: online
+    good_for: [online_optimization_bandits]
+    tradeoffs: 探索と活用のバランスを制御できる。
+  - id: differentiable_layer
+    name_ja: Differentiable Optimization Layer
+    family: differentiable
+    good_for: [differentiable_optimization]
+    tradeoffs: end-to-end 学習に組み込めるが、解写像の条件に注意する。

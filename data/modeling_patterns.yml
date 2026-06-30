@@ -1,0 +1,31 @@
+patterns:
+  - id: linearization
+    name_ja: 線形化
+    summary: 非線形や論理条件を線形制約に置き換え、LP/MILP として扱う。
+  - id: convexification
+    name_ja: 凸化
+    summary: 非凸構造を凸近似または凸包で扱い、安定した解法へ寄せる。
+  - id: relaxation
+    name_ja: 緩和
+    summary: 難しい制約を外すか弱めて下界・上界・候補解を得る。
+  - id: decomposition
+    name_ja: 分解
+    summary: master/subproblem、時間、シナリオ、地域などで問題を分ける。
+  - id: surrogate_modeling
+    name_ja: サロゲート
+    summary: 高価な評価関数を近似モデルで置き換えて探索効率を上げる。
+  - id: scenario_modeling
+    name_ja: シナリオ化
+    summary: 不確実性を代表シナリオに分けて期待値や制約を評価する。
+  - id: robust_counterpart_pattern
+    name_ja: ロバスト対応
+    summary: 不確実集合の全要素で制約を守る deterministic model に変換する。
+  - id: receding_horizon
+    name_ja: Receding Horizon
+    summary: 有限ホライズン問題を繰り返し解き、観測ごとに計画を更新する。
+  - id: penalty_softening
+    name_ja: ソフト制約化
+    summary: hard 制約をペナルティや slack で扱い、違反と目的を比較可能にする。
+  - id: predict_then_optimize
+    name_ja: Predict-then-Optimize
+    summary: 予測モデルの出力を下流の最適化に接続し、意思決定品質で評価する。
