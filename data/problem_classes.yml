@@ -1,0 +1,252 @@
+# Initial problem classes for Optimization Map
+
+- id: linear_programming
+  name: Linear Programming
+  aliases: [LP, 線形計画問題]
+  summary: 線形目的関数と線形制約を持つ連続最適化問題。
+  tags: [continuous, linear, convex, white_box, static]
+  typical_when:
+    - 資源配分や生産計画を線形近似できる
+    - 変数が連続で、制約も線形に書ける
+  candidate_algorithms: [simplex_method, interior_point]
+  candidate_solvers: [highs, gurobi, cplex, glpk, scipy_linprog]
+  confused_with: [convex_optimization, mixed_integer_linear_programming]
+
+- id: quadratic_programming
+  name: Quadratic Programming
+  aliases: [QP, 二次計画問題]
+  summary: 二次目的関数と線形または二次制約を持つ最適化問題。凸の場合と非凸の場合がある。
+  tags: [continuous, quadratic, convex_or_nonconvex, white_box]
+  typical_when:
+    - ポートフォリオ最適化
+    - 最小二乗と線形制約
+  candidate_algorithms: [interior_point, active_set, sqp]
+  candidate_solvers: [gurobi, cplex, mosek, osqp]
+  confused_with: [nonlinear_programming, convex_optimization]
+
+- id: conic_optimization
+  name: Conic Optimization
+  aliases: [Cone Programming, SOCP]
+  summary: 線形写像と円錐制約で表される凸最適化の一群。
+  tags: [continuous, convex, conic, white_box]
+  typical_when:
+    - 二次錐制約やロバスト制約が出る
+    - LP より表現力が必要だが凸性を保ちたい
+  candidate_algorithms: [interior_point, first_order_conic]
+  candidate_solvers: [mosek, scs, ecos, gurobi]
+  confused_with: [semidefinite_programming, convex_optimization]
+
+- id: semidefinite_programming
+  name: Semidefinite Programming
+  aliases: [SDP, 半正定値計画]
+  summary: 行列変数と半正定値制約を持つ凸最適化問題。
+  tags: [continuous, matrix_variable, convex, conic]
+  typical_when:
+    - 行列不等式が出る
+    - 組合せ最適化や非凸問題の緩和を使う
+  candidate_algorithms: [interior_point, low_rank_methods]
+  candidate_solvers: [mosek, scs, cvxpy, jump]
+  confused_with: [conic_optimization, convex_optimization]
+
+- id: convex_optimization
+  name: Convex Optimization
+  aliases: [凸最適化]
+  summary: 凸目的関数と凸実行可能領域を持つ最適化問題の総称。
+  tags: [continuous, convex, white_box]
+  typical_when:
+    - 局所解が大域解になる構造を利用したい
+    - LP/QP/SOCP/SDP などを統一的に扱いたい
+  candidate_algorithms: [interior_point, projected_gradient, proximal_gradient, admm]
+  candidate_solvers: [cvxpy, mosek, scs, gurobi, jump]
+  confused_with: [linear_programming, nonlinear_programming]
+
+- id: nonlinear_programming
+  name: Nonlinear Programming
+  aliases: [NLP, 非線形計画問題]
+  summary: 目的関数または制約に一般の非線形関数を含む連続最適化問題。
+  tags: [continuous, nonlinear, smooth_or_nonsmooth, convex_or_nonconvex]
+  typical_when:
+    - 工学設計や制御で非線形モデルが出る
+    - 勾配やヘシアンが使える
+  candidate_algorithms: [gradient_descent, newton_method, bfgs, sqp, trust_region]
+  candidate_solvers: [ipopt, knitro, casadi, scipy_optimize]
+  confused_with: [nonconvex_optimization, convex_optimization]
+
+- id: nonconvex_optimization
+  name: Non-convex Optimization
+  aliases: [非凸最適化]
+  summary: 局所最適解が大域最適解とは限らない最適化問題の総称。
+  tags: [nonconvex, local_optima, global_optimization_risk]
+  typical_when:
+    - 深層学習、非線形制約、整数性、双線形項がある
+    - global optimum より実用解が重要な場合もある
+  candidate_algorithms: [multi_start, branch_and_bound, trust_region, metaheuristics]
+  candidate_solvers: [ipopt, scip, baron, knitro, nevergrad]
+  confused_with: [nonlinear_programming, black_box_optimization]
+
+- id: mixed_integer_linear_programming
+  name: Mixed-Integer Linear Programming
+  aliases: [MILP, MIP, 混合整数線形計画]
+  summary: 線形目的・線形制約に整数または二値変数を含む最適化問題。
+  tags: [mixed_integer, linear, discrete, nonconvex_due_to_integrality, white_box]
+  typical_when:
+    - 割当、選択、スケジューリング、生産計画
+    - binary decision がある
+  candidate_algorithms: [branch_and_bound, cutting_planes, branch_and_cut]
+  candidate_solvers: [gurobi, cplex, scip, highs, ortools]
+  confused_with: [constraint_programming, combinatorial_optimization]
+
+- id: combinatorial_optimization
+  name: Combinatorial Optimization
+  aliases: [組合せ最適化]
+  summary: 離散構造、集合、順序、グラフ、組合せを対象とする最適化問題。
+  tags: [discrete, combinatorial, graph_or_set]
+  typical_when:
+    - 経路、順序、マッチング、割当、集合選択を決める
+  candidate_algorithms: [branch_and_bound, dynamic_programming, approximation_algorithms, local_search]
+  candidate_solvers: [ortools, scip, gurobi, cplex]
+  confused_with: [mixed_integer_linear_programming, constraint_programming]
+
+- id: constraint_programming
+  name: Constraint Programming / SAT / SMT
+  aliases: [CP, CSP, SAT, SMT, CP-SAT, 制約充足]
+  summary: 論理制約や充足可能性を中心に、実行可能解または最適解を探索する枠組み。
+  tags: [discrete, logical_constraints, feasibility, combinatorial]
+  typical_when:
+    - 論理条件や複雑なスケジューリング制約が多い
+    - 目的より実行可能性が重要
+  candidate_algorithms: [constraint_propagation, cdcl, cp_sat, branch_and_bound]
+  candidate_solvers: [ortools_cp_sat, z3, scip]
+  confused_with: [mixed_integer_linear_programming, satisfiability]
+
+- id: stochastic_programming
+  name: Stochastic Programming
+  aliases: [SP, 確率計画]
+  summary: 確率分布やシナリオを使って不確実性下の意思決定を扱う最適化。
+  tags: [uncertainty, scenarios, distribution, two_stage_or_multistage]
+  typical_when:
+    - 需要、価格、供給などの確率分布やシナリオがある
+    - 先に決めることと後で調整できることが分かれる
+  candidate_algorithms: [sample_average_approximation, benders_decomposition, sddp]
+  candidate_solvers: [pyomo, jump, ampl, gurobi, cplex]
+  confused_with: [robust_optimization, distributionally_robust_optimization]
+
+- id: robust_optimization
+  name: Robust Optimization
+  aliases: [RO, ロバスト最適化]
+  summary: 不確実性を集合として表し、最悪ケースでも制約や性能を守る最適化。
+  tags: [uncertainty_set, worst_case, safety]
+  typical_when:
+    - 分布は分からないが範囲は分かる
+    - 制約違反が危険
+  candidate_algorithms: [robust_counterpart, cutting_plane, min_max_optimization]
+  candidate_solvers: [cvxpy, pyomo, jump, mosek, gurobi]
+  confused_with: [stochastic_programming, distributionally_robust_optimization]
+
+- id: distributionally_robust_optimization
+  name: Distributionally Robust Optimization
+  aliases: [DRO, 分布ロバスト最適化]
+  summary: 分布そのものの不確実性を曖昧集合として扱うロバストな最適化。
+  tags: [ambiguity_set, uncertainty, minmax, samples]
+  typical_when:
+    - サンプルはあるが真の分布が不確か
+    - SP と RO の中間的な扱いをしたい
+  candidate_algorithms: [wasserstein_dro, moment_based_dro, conic_reformulation]
+  candidate_solvers: [cvxpy, pyomo, jump, mosek]
+  confused_with: [stochastic_programming, robust_optimization]
+
+- id: black_box_optimization
+  name: Black-box / Derivative-free Optimization
+  aliases: [BBO, DFO, ブラックボックス最適化]
+  summary: 目的関数や制約の内部構造・勾配が使えず、評価結果だけから最適化する。
+  tags: [black_box, derivative_free, evaluation_based]
+  typical_when:
+    - 実験、外部シミュレータ、API、レガシーコードを評価する
+    - 勾配が取れない
+  candidate_algorithms: [direct_search, cma_es, nelder_mead, pattern_search, trust_region_dfo]
+  candidate_solvers: [nevergrad, nlopt, scipy_optimize, optuna]
+  confused_with: [bayesian_optimization, simulation_optimization]
+
+- id: bayesian_optimization
+  name: Bayesian Optimization
+  aliases: [BO, ベイズ最適化]
+  summary: 高価なブラックボックス関数を、確率的代理モデルと獲得関数で逐次的に最適化する。
+  tags: [black_box, expensive_evaluation, sequential, surrogate_model]
+  typical_when:
+    - 評価回数が限られる
+    - 実験設計や HPO をしたい
+  candidate_algorithms: [gaussian_process_bo, expected_improvement, upper_confidence_bound, thompson_sampling]
+  candidate_solvers: [botorch, ax, optuna]
+  confused_with: [black_box_optimization, hyperparameter_optimization, bandit_optimization]
+
+- id: simulation_optimization
+  name: Simulation Optimization
+  aliases: [シミュレーション最適化]
+  summary: シミュレータの出力を評価関数として使う最適化。
+  tags: [simulation_based, noisy, black_box_or_gray_box]
+  typical_when:
+    - 現実実験の代わりにシミュレーションで評価する
+    - 評価にノイズや計算コストがある
+  candidate_algorithms: [ranking_and_selection, stochastic_approximation, surrogate_optimization, bayesian_optimization]
+  candidate_solvers: [openmdao, ax, botorch, nevergrad]
+  confused_with: [black_box_optimization, stochastic_programming]
+
+- id: optimal_control
+  name: Optimal Control / MPC
+  aliases: [最適制御, Model Predictive Control, MPC]
+  summary: 動的システムの状態遷移を考慮し、時間に沿った制御入力を最適化する。
+  tags: [dynamic, control, continuous_or_discrete_time, feedback]
+  typical_when:
+    - ロボット、車両、プロセス制御などの入力系列を決める
+    - 状態方程式や物理モデルがある
+  candidate_algorithms: [dynamic_programming, direct_transcription, shooting_method, sequential_quadratic_programming]
+  candidate_solvers: [casadi, acados, ipopt, openmdao]
+  confused_with: [reinforcement_learning, nonlinear_programming]
+
+- id: reinforcement_learning
+  name: Reinforcement Learning
+  aliases: [RL, 強化学習]
+  summary: 環境との相互作用から、長期報酬を最大化する方策を学習する逐次意思決定。
+  tags: [sequential_decision, policy, stochastic, learning, feedback]
+  typical_when:
+    - 環境モデルが未知または複雑
+    - 試行錯誤から policy を学ぶ
+  candidate_algorithms: [value_iteration, policy_gradient, actor_critic, q_learning]
+  candidate_solvers: [stable_baselines, rllib, cleanrl]
+  confused_with: [optimal_control, online_optimization, bandit_optimization]
+
+- id: online_optimization
+  name: Online Optimization / Bandits
+  aliases: [Online Convex Optimization, Bandits, オンライン最適化]
+  summary: データや損失が逐次的に現れ、regret などを最小化する枠組み。
+  tags: [online, sequential, regret, partial_feedback]
+  typical_when:
+    - A/B テスト、広告配信、逐次実験配分
+    - 未来のデータを見ずに意思決定する
+  candidate_algorithms: [online_mirror_descent, follow_the_regularized_leader, ucb, thompson_sampling]
+  candidate_solvers: [ax, vowpal_wabbit, custom_bandit_libraries]
+  confused_with: [reinforcement_learning, bayesian_optimization]
+
+- id: differentiable_optimization
+  name: Differentiable Optimization / Predict-then-Optimize
+  aliases: [微分可能最適化, End-to-end Optimization]
+  summary: 最適化問題を機械学習パイプライン内の微分可能レイヤとして扱う領域。
+  tags: [machine_learning, differentiable, optimization_layer]
+  typical_when:
+    - 予測モデルと意思決定モデルを end-to-end に学習したい
+    - 最適化解に対して勾配を流したい
+  candidate_algorithms: [implicit_differentiation, differentiable_convex_layers, decision_focused_learning]
+  candidate_solvers: [cvxpylayers, pyepo, jaxopt]
+  confused_with: [convex_optimization, bilevel_optimization]
+
+- id: hyperparameter_optimization
+  name: Hyperparameter Optimization / AutoML
+  aliases: [HPO, AutoML, ハイパーパラメータ最適化]
+  summary: 機械学習モデルやパイプラインの設定を探索する最適化。
+  tags: [machine_learning, black_box, expensive_evaluation, sequential]
+  typical_when:
+    - 学習率、モデル構造、前処理、探索空間を調整する
+    - 評価が訓練・検証により高価
+  candidate_algorithms: [random_search, bayesian_optimization, hyperband, successive_halving]
+  candidate_solvers: [optuna, ax, botorch, auto_sklearn, flaml]
+  confused_with: [bayesian_optimization, black_box_optimization, bilevel_optimization]
