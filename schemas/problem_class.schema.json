@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProblemClass",
+  "type": "object",
+  "required": ["id", "name", "summary", "tags"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "summary": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "typical_when": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "not_good_when": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "why_hard": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidate_algorithms": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidate_solvers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "confused_with": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "relaxations_or_reformulations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" }
+    }
+  },
+  "additionalProperties": true
+}
