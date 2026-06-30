@@ -1,181 +1,96 @@
-# Initial solver and library catalog
-
-- id: cvxpy
-  name: CVXPY
-  kind: modeling_language
-  ecosystem: Python
-  supported_problem_classes: [convex_optimization, linear_programming, quadratic_programming, conic_optimization, semidefinite_programming]
-  url: https://www.cvxpy.org/
-  strengths: [educational, mathematical_syntax, convex_modeling]
-  caveats: [mostly_convex_world]
-
-- id: jump
-  name: JuMP
-  kind: modeling_language
-  ecosystem: Julia
-  supported_problem_classes: [linear_programming, mixed_integer_linear_programming, nonlinear_programming, semidefinite_programming]
-  url: https://jump.dev/JuMP.jl/stable/
-  strengths: [broad_solver_support, high_performance, research_friendly]
-  caveats: [requires_julia]
-
-- id: pyomo
-  name: Pyomo
-  kind: modeling_framework
-  ecosystem: Python
-  supported_problem_classes: [linear_programming, mixed_integer_linear_programming, nonlinear_programming, stochastic_programming]
-  url: https://www.pyomo.org/
-  strengths: [expressive, extensible, python_ecosystem]
-  caveats: [steeper_learning_curve]
-
-- id: ampl
-  name: AMPL
-  kind: modeling_language
-  ecosystem: AMPL
-  supported_problem_classes: [linear_programming, mixed_integer_linear_programming, nonlinear_programming]
-  url: https://ampl.com/
-  strengths: [algebraic_modeling, education, solver_integration]
-  caveats: [commercial_platform]
-
-- id: gurobi
-  name: Gurobi Optimizer
-  kind: commercial_solver
-  ecosystem: multi_language
-  supported_problem_classes: [linear_programming, quadratic_programming, mixed_integer_linear_programming, nonconvex_optimization]
-  url: https://docs.gurobi.com/projects/optimizer/en/current/index.html
-  strengths: [high_performance_mip, industrial_use]
-  caveats: [commercial_license]
-
-- id: cplex
-  name: IBM ILOG CPLEX Optimization Studio
-  kind: commercial_solver
-  ecosystem: multi_language
-  supported_problem_classes: [linear_programming, quadratic_programming, mixed_integer_linear_programming, constraint_programming]
-  url: https://www.ibm.com/products/ilog-cplex-optimization-studio
-  strengths: [mip, cp, enterprise_features]
-  caveats: [commercial_license]
-
-- id: ortools
-  name: Google OR-Tools
-  kind: optimization_library
-  ecosystem: multi_language
-  supported_problem_classes: [constraint_programming, mixed_integer_linear_programming, combinatorial_optimization, graph_optimization]
-  url: https://developers.google.com/optimization
-  strengths: [routing, scheduling, cp_sat, practical_examples]
-  caveats: [not_a_general_modeling_language_like_ampl]
-
-- id: ortools_cp_sat
-  name: OR-Tools CP-SAT
-  kind: cp_sat_solver
-  ecosystem: multi_language
-  supported_problem_classes: [constraint_programming, mixed_integer_linear_programming, combinatorial_optimization]
-  url: https://developers.google.com/optimization/cp/cp_solver
-  strengths: [logical_constraints, scheduling, discrete_optimization]
-  caveats: [requires_modeling_style_fit]
-
-- id: scip
-  name: SCIP
-  kind: optimization_solver_framework
-  ecosystem: C_Cpp_Python_Julia
-  supported_problem_classes: [mixed_integer_linear_programming, nonlinear_programming, nonconvex_optimization]
-  url: https://www.scipopt.org/
-  strengths: [mip, minlp, research_flexibility]
-  caveats: [advanced_user_oriented]
-
-- id: highs
-  name: HiGHS
-  kind: open_source_solver
-  ecosystem: Cpp_Python_Julia
-  supported_problem_classes: [linear_programming, quadratic_programming, mixed_integer_linear_programming]
-  url: https://highs.dev/
-  strengths: [open_source, sparse_lp_qp_mip]
-  caveats: [less_educational_content]
-
-- id: mosek
-  name: MOSEK
-  kind: commercial_solver
-  ecosystem: multi_language
-  supported_problem_classes: [conic_optimization, semidefinite_programming, convex_optimization]
-  url: https://www.mosek.com/
-  strengths: [conic_optimization, numerical_robustness]
-  caveats: [commercial_license]
-
-- id: ipopt
-  name: Ipopt
-  kind: open_source_solver
-  ecosystem: COIN_OR
-  supported_problem_classes: [nonlinear_programming, optimal_control]
-  url: https://coin-or.github.io/Ipopt/
-  strengths: [large_scale_smooth_nlp]
-  caveats: [local_optimum_for_nonconvex]
-
-- id: botorch
-  name: BoTorch
-  kind: bayesian_optimization_library
-  ecosystem: Python_PyTorch
-  supported_problem_classes: [bayesian_optimization, black_box_optimization]
-  url: https://botorch.org/
-  strengths: [research_grade_bo, pytorch_integration]
-  caveats: [requires_bo_knowledge]
-
-- id: ax
-  name: Ax
-  kind: adaptive_experimentation_platform
-  ecosystem: Python
-  supported_problem_classes: [bayesian_optimization, online_optimization, hyperparameter_optimization]
-  url: https://ax.dev/
-  strengths: [experimentation_workflow, productionish_bo]
-  caveats: [not_general_mathematical_programming]
-
-- id: optuna
-  name: Optuna
-  kind: hpo_framework
-  ecosystem: Python
-  supported_problem_classes: [hyperparameter_optimization, black_box_optimization, bayesian_optimization]
-  url: https://optuna.org/
-  strengths: [hpo, pruning, easy_python_api]
-  caveats: [ml_tuning_oriented]
-
-- id: nevergrad
-  name: Nevergrad
-  kind: derivative_free_optimization_library
-  ecosystem: Python
-  supported_problem_classes: [black_box_optimization, nonconvex_optimization]
-  url: https://facebookresearch.github.io/nevergrad/
-  strengths: [many_dfo_algorithms, experimentation]
-  caveats: [less_structure_than_modeling_languages]
-
-- id: casadi
-  name: CasADi
-  kind: automatic_differentiation_and_optimization_tool
-  ecosystem: Python_MATLAB_Cpp
-  supported_problem_classes: [nonlinear_programming, optimal_control]
-  url: https://web.casadi.org/
-  strengths: [automatic_differentiation, optimal_control, nmpc]
-  caveats: [specialized_for_nlp_control]
-
-- id: openmdao
-  name: OpenMDAO
-  kind: multidisciplinary_design_optimization_framework
-  ecosystem: Python
-  supported_problem_classes: [simulation_optimization, nonlinear_programming, engineering_design]
-  url: https://openmdao.org/
-  strengths: [mdo, engineering_systems, derivatives]
-  caveats: [engineering_design_oriented]
-
-- id: cvxpylayers
-  name: CVXPYlayers
-  kind: differentiable_optimization_layer
-  ecosystem: Python_PyTorch_JAX_TensorFlow
-  supported_problem_classes: [differentiable_optimization, convex_optimization]
-  url: https://github.com/cvxpy/cvxpylayers
-  strengths: [optimization_layer, implicit_differentiation]
-  caveats: [convex_layer_scope]
-
-- id: pyepo
-  name: PyEPO
-  kind: predict_then_optimize_library
-  ecosystem: Python
-  supported_problem_classes: [differentiable_optimization, predict_then_optimize]
-  url: https://github.com/khalil-research/PyEPO
-  strengths: [decision_focused_learning, ml_or_bridge]
-  caveats: [research_oriented]
+solvers:
+  - id: scipy_linprog
+    name: SciPy linprog
+    type: open_source
+    url: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
+    supports: [linear_programming]
+  - id: scipy_optimize
+    name: SciPy optimize
+    type: open_source
+    url: https://docs.scipy.org/doc/scipy/reference/optimize.html
+    supports: [nonlinear_programming, blackbox_derivative_free]
+  - id: cvxpy
+    name: CVXPY
+    type: open_source
+    url: https://www.cvxpy.org/
+    supports: [convex_optimization, socp_sdp, differentiable_optimization]
+  - id: gurobi
+    name: Gurobi
+    type: commercial
+    url: https://docs.gurobi.com/projects/optimizer/en/current/
+    supports: [linear_programming, mixed_integer_linear_programming, quadratic_programming]
+  - id: cplex
+    name: IBM CPLEX
+    type: commercial
+    url: https://www.ibm.com/docs/en/icos
+    supports: [linear_programming, mixed_integer_linear_programming, quadratic_programming]
+  - id: scip
+    name: SCIP
+    type: open_source
+    url: https://www.scipopt.org/
+    supports: [mixed_integer_linear_programming, nonlinear_programming, minlp]
+  - id: highs
+    name: HiGHS
+    type: open_source
+    url: https://highs.dev/
+    supports: [linear_programming, mixed_integer_linear_programming]
+  - id: ortools
+    name: OR-Tools
+    type: open_source
+    url: https://developers.google.com/optimization
+    supports: [constraint_programming_sat_smt, mixed_integer_linear_programming, combinatorial_optimization]
+  - id: z3
+    name: Z3
+    type: open_source
+    url: https://microsoft.github.io/z3guide/
+    supports: [constraint_programming_sat_smt]
+  - id: pyomo
+    name: Pyomo
+    type: open_source
+    url: https://pyomo.readthedocs.io/
+    supports: [linear_programming, mixed_integer_linear_programming, stochastic_programming]
+  - id: ipopt
+    name: Ipopt
+    type: open_source
+    url: https://coin-or.github.io/Ipopt/
+    supports: [nonlinear_programming, optimal_control]
+  - id: casadi
+    name: CasADi
+    type: open_source
+    url: https://web.casadi.org/docs/
+    supports: [nonlinear_programming, optimal_control]
+  - id: mosek
+    name: MOSEK
+    type: commercial
+    url: https://docs.mosek.com/
+    supports: [convex_optimization, socp_sdp]
+  - id: sdpa
+    name: SDPA
+    type: open_source
+    url: http://sdpa.sourceforge.net/
+    supports: [socp_sdp]
+  - id: botorch
+    name: BoTorch
+    type: open_source
+    url: https://botorch.org/docs/introduction
+    supports: [bayesian_optimization_problem, hpo_automl]
+  - id: optuna
+    name: Optuna
+    type: open_source
+    url: https://optuna.readthedocs.io/
+    supports: [bayesian_optimization_problem, hpo_automl]
+  - id: nevergrad
+    name: Nevergrad
+    type: open_source
+    url: https://facebookresearch.github.io/nevergrad/
+    supports: [blackbox_derivative_free]
+  - id: stable_baselines3
+    name: Stable-Baselines3
+    type: open_source
+    url: https://stable-baselines3.readthedocs.io/
+    supports: [dynamic_programming_rl]
+  - id: jaxopt
+    name: JAXopt
+    type: open_source
+    url: https://jaxopt.github.io/
+    supports: [differentiable_optimization, nonlinear_programming]

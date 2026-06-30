@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optimization-map.local/schemas/relation.schema.json",
+  "title": "Relation",
+  "type": "object",
+  "required": ["id", "type", "source", "target", "explanation"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^r[0-9]{3,}$" },
+    "type": {
+      "enum": [
+        "is_a",
+        "overlaps_with",
+        "relaxes_to",
+        "reformulates_to",
+        "commonly_solved_by",
+        "implemented_by",
+        "confused_with",
+        "used_in"
+      ]
+    },
+    "source": { "type": "string" },
+    "target": { "type": "string" },
+    "explanation": { "type": "string", "minLength": 1 }
+  }
+}
