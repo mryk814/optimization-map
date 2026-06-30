@@ -1,0 +1,226 @@
+# Initial classification axes for Optimization Map
+# Keep this file reviewable. Add sources and examples as data matures.
+
+- id: variable_domain
+  name_ja: 変数の値域
+  name_en: Variable domain
+  description: 決定変数が連続値、整数、二値、離散集合、混合のどれか。
+  values: [continuous, integer, binary, categorical, permutation, mixed]
+  diagnosis_questions:
+    - 決めたい値は連続量ですか、個数や yes/no ですか？
+    - 順序や組合せそのものを決めますか？
+
+- id: variable_shape
+  name_ja: 変数の形
+  name_en: Variable shape
+  description: 決定変数がスカラー、ベクトル、行列、関数、方策、グラフ、集合などのどれか。
+  values: [scalar, vector, matrix, tensor, function, distribution, policy, graph, set, sequence]
+  diagnosis_questions:
+    - 決めたいものは数値、表、関数、経路、方策のどれですか？
+
+- id: objective_count
+  name_ja: 目的関数の数
+  name_en: Number of objectives
+  description: 単目的、多目的、階層的目的、制約化された目的のどれか。
+  values: [single, multiple, lexicographic, hierarchical, satisficing]
+  diagnosis_questions:
+    - 目的は一つですか、複数のトレードオフがありますか？
+
+- id: objective_form
+  name_ja: 目的関数の形
+  name_en: Objective form
+  description: 目的関数の代数的・情報的な形。
+  values: [linear, quadratic, convex, nonlinear, nonconvex, nonsmooth, black_box, simulation_based]
+  diagnosis_questions:
+    - 目的関数を数式で書けますか？
+    - 線形・二次・一般非線形・評価だけ可能のどれですか？
+
+- id: constraint_presence
+  name_ja: 制約の有無
+  name_en: Constraint presence
+  description: 制約なし、制約あり、制約充足中心のどれか。
+  values: [unconstrained, constrained, feasibility_only]
+  diagnosis_questions:
+    - 必ず守るべき条件はありますか？
+    - 目的よりも実行可能性が重要ですか？
+
+- id: constraint_type
+  name_ja: 制約の種類
+  name_en: Constraint type
+  description: 等式、不等式、論理、確率、動的、物理、円錐など。
+  values: [equality, inequality, bound, logical, conic, semidefinite, chance, robust, dynamic, physical, pde]
+  diagnosis_questions:
+    - 制約は数式ですか、論理条件ですか、確率条件ですか？
+
+- id: linearity
+  name_ja: 線形性
+  name_en: Linearity
+  description: 目的関数と制約が線形か非線形か。
+  values: [linear, affine, quadratic, nonlinear, unknown]
+  diagnosis_questions:
+    - 変数同士の積や非線形関数が出ますか？
+
+- id: convexity
+  name_ja: 凸性
+  name_en: Convexity
+  description: 問題が凸構造を持つか、非凸か、不明か。
+  values: [convex, nonconvex, convex_after_reformulation, unknown]
+  diagnosis_questions:
+    - 局所最適解が大域最適解と言えますか？
+    - 整数変数や非凸制約がありますか？
+
+- id: smoothness
+  name_ja: 滑らかさ
+  name_en: Smoothness
+  description: 目的・制約が微分可能か、非滑らかな max / abs / indicator を含むか。
+  values: [smooth, nonsmooth, discontinuous, unknown]
+  diagnosis_questions:
+    - 絶対値、max、閾値、if 文のような角がありますか？
+
+- id: gradient_availability
+  name_ja: 勾配利用可能性
+  name_en: Gradient availability
+  description: 勾配が解析的・自動微分・有限差分・取得不能のどれか。
+  values: [analytic, automatic_differentiation, finite_difference, unavailable, expensive]
+  diagnosis_questions:
+    - 勾配は計算できますか？
+    - 自動微分できるコードですか？
+
+- id: hessian_availability
+  name_ja: ヘシアン利用可能性
+  name_en: Hessian availability
+  description: 二階情報が使えるかどうか。
+  values: [exact, approximate, hessian_vector_product, unavailable]
+  diagnosis_questions:
+    - 二階微分やヘシアン近似を使えますか？
+
+- id: blackboxness
+  name_ja: ブラックボックス性
+  name_en: Black-boxness
+  description: 目的・制約の内部構造がどの程度見えるか。
+  values: [white_box, gray_box, black_box]
+  diagnosis_questions:
+    - 評価関数の中身は数式として分かりますか？
+    - 入力を入れて結果を見るだけですか？
+
+- id: evaluation_cost
+  name_ja: 評価コスト
+  name_en: Evaluation cost
+  description: 目的関数や制約評価が安いか高いか。
+  values: [cheap, moderate, expensive, very_expensive]
+  diagnosis_questions:
+    - 1 回の評価にどれくらい時間や費用がかかりますか？
+
+- id: noise
+  name_ja: ノイズの有無
+  name_en: Noise
+  description: 目的・制約・観測にランダムノイズがあるか。
+  values: [deterministic, noisy_observation, stochastic_objective, stochastic_constraints]
+  diagnosis_questions:
+    - 同じ入力でも結果が変わりますか？
+
+- id: uncertainty_representation
+  name_ja: 不確実性の表現
+  name_en: Uncertainty representation
+  description: 未来の不確実性を分布、シナリオ、不確実集合、曖昧集合のどれで表すか。
+  values: [none, scenarios, known_distribution, samples_only, uncertainty_set, ambiguity_set]
+  diagnosis_questions:
+    - 将来の需要や価格などは確定ですか？
+    - 分布が分かりますか、範囲だけですか？
+
+- id: risk_measure
+  name_ja: リスク尺度
+  name_en: Risk measure
+  description: 期待値、最悪ケース、CVaR、chance constraint などのリスクの見方。
+  values: [expectation, variance, cvar, chance_constraint, worst_case, regret]
+  diagnosis_questions:
+    - 平均的に良ければよいですか、悪いケースを避けたいですか？
+
+- id: time_structure
+  name_ja: 時間構造
+  name_en: Time structure
+  description: 静的、一回限り、逐次、動的、閉ループのどれか。
+  values: [static, two_stage, multistage, dynamic, online, closed_loop]
+  diagnosis_questions:
+    - 一回だけ決めますか、観測しながら繰り返し決めますか？
+
+- id: feedback
+  name_ja: フィードバック
+  name_en: Feedback
+  description: 決定後に状態を観測して次の決定に反映するか。
+  values: [none, delayed_feedback, bandit_feedback, full_state_feedback]
+  diagnosis_questions:
+    - 行動後の結果を見て次の判断を変えますか？
+
+- id: structure
+  name_ja: 構造
+  name_en: Structure
+  description: 問題に疎性、分解可能性、ネットワーク、低ランク、単調性、サブモジュラ性などがあるか。
+  values: [sparse, decomposable, network, low_rank, monotone, submodular, separable, dense, unknown]
+  diagnosis_questions:
+    - ネットワーク、地域、商品、期間などで分解できますか？
+
+- id: exactness_requirement
+  name_ja: 厳密性要求
+  name_en: Exactness requirement
+  description: 厳密最適解、最適性ギャップ付き解、十分良い解のどれが必要か。
+  values: [exact_optimum, certified_gap, high_quality_heuristic, feasible_solution_enough]
+  diagnosis_questions:
+    - 最適性証明が必要ですか？
+    - 十分良い解でよいですか？
+
+- id: latency_requirement
+  name_ja: レイテンシ要求
+  name_en: Latency requirement
+  description: 解を出すまでに許される時間。
+  values: [milliseconds, seconds, minutes, hours, offline]
+  diagnosis_questions:
+    - 何秒・何分以内に答えが必要ですか？
+
+- id: scale
+  name_ja: 問題規模
+  name_en: Scale
+  description: 変数数、制約数、シナリオ数、評価回数の規模。
+  values: [tiny, small, medium, large, huge]
+  diagnosis_questions:
+    - 変数や制約は何個くらいありますか？
+
+- id: safety_criticality
+  name_ja: 安全性・制約違反リスク
+  name_en: Safety criticality
+  description: 制約違反がどれくらい危険か。
+  values: [low, medium, high, catastrophic]
+  diagnosis_questions:
+    - 制約違反は単なるコストですか、危険・違法・事故につながりますか？
+
+- id: interpretability
+  name_ja: 解釈可能性
+  name_en: Interpretability
+  description: 推薦理由や制約・目的の説明責任が必要か。
+  values: [low, medium, high, regulated]
+  diagnosis_questions:
+    - 意思決定の理由を説明する必要がありますか？
+
+- id: human_in_loop
+  name_ja: 人間の関与
+  name_en: Human in the loop
+  description: 完全自動化か、人間の最終判断を前提とするか。
+  values: [fully_automated, recommendation, decision_support, human_final_decision]
+  diagnosis_questions:
+    - 最終判断は人間がしますか？
+
+- id: data_availability
+  name_ja: データ利用可能性
+  name_en: Data availability
+  description: パラメータや需要、シミュレーション、履歴データがあるか。
+  values: [known_parameters, historical_data, simulator, online_data, scarce_data]
+  diagnosis_questions:
+    - 過去データ、シミュレータ、実験環境はありますか？
+
+- id: implementation_context
+  name_ja: 実装文脈
+  name_en: Implementation context
+  description: 使用言語、ライセンス、既存スタック、商用利用可否。
+  values: [python, julia, matlab, commercial_ok, oss_only, cloud_ok, local_only]
+  diagnosis_questions:
+    - Python / Julia / 商用ソルバー / OSS の制約はありますか？
