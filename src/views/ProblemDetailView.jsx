@@ -13,6 +13,7 @@ import {
   getDefaultComparison,
   getProblemCases,
   getRelated,
+  getStoriesForProblem,
   labelFor,
   maps,
   relationLabels,
@@ -117,6 +118,7 @@ export function ProblemDetailView({ problemId }) {
   const comparison = getDefaultComparison(problem.id);
   const related = getRelated(problem.id).slice(0, 9);
   const cases = getProblemCases(problem.id).slice(0, 4);
+  const stories = getStoriesForProblem(problem.id).slice(0, 4);
   const sourceTypes = [...new Set(problem.sources.map((source) => source.type))];
 
   return (
@@ -164,7 +166,10 @@ export function ProblemDetailView({ problemId }) {
               <p className="eyebrow">Next Step</p>
               <h2>解き方へつなぐ</h2>
             </div>
-            <ButtonLink href={cases[0] ? `#/paths/${cases[0].id}` : "#/cases"} icon={IconRoute}>近いケースで見る</ButtonLink>
+            <div className="inline-actions">
+              {stories[0] && <ButtonLink href={`#/stories/${stories[0].id}`} icon={IconRoute}>小さく解く</ButtonLink>}
+              <ButtonLink href={cases[0] ? `#/paths/${cases[0].id}` : "#/cases"} icon={IconRoute}>近いケースで見る</ButtonLink>
+            </div>
           </div>
           <div className="reference-grid">
             <ReferenceColumn ids={problem.candidate_algorithms} title="Algorithm" tone="active" />
@@ -172,6 +177,30 @@ export function ProblemDetailView({ problemId }) {
             <ReferenceColumn ids={problem.relaxations_or_reformulations} title="緩和・変換" tone="review" />
           </div>
         </section>
+
+        {stories.length > 0 && (
+          <section className="panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Visual Demo</p>
+                <h2>小さく解いてみる</h2>
+              </div>
+              <ButtonLink href="#/stories">SolveStory一覧</ButtonLink>
+            </div>
+            <div className="story-grid">
+              {stories.map((story) => (
+                <article className="story-card" key={story.id}>
+                  <div>
+                    <p className="eyebrow">{maps.traces[story.visual_trace_id]?.trace_type ?? "trace"}</p>
+                    <h2>{story.title}</h2>
+                    <p>{story.objective}</p>
+                  </div>
+                  <ButtonLink href={`#/stories/${story.id}`}>traceを見る</ButtonLink>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         {cases.length > 0 && (
           <section className="panel">
@@ -228,6 +257,7 @@ export function ProblemDetailView({ problemId }) {
         <section className="panel">
           <p className="eyebrow">Next</p>
           <div className="action-list">
+            {stories[0] && <ButtonLink href={`#/stories/${stories[0].id}`} icon={IconRoute}>小さく解いてみる</ButtonLink>}
             <ButtonLink href={`#/compare/${comparison.leftId}/${comparison.rightId}`} icon={IconArrowsDiff}>似た概念と比較する</ButtonLink>
             <ButtonLink href={cases[0] ? `#/paths/${cases[0].id}` : "#/cases"} icon={IconRoute}>近いケースで見る</ButtonLink>
             <ButtonLink href="#/diagnosis" icon={IconBook2}>条件から診断する</ButtonLink>
