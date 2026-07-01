@@ -29,3 +29,24 @@ patterns:
   - id: predict_then_optimize
     name_ja: Predict-then-Optimize
     summary: 予測モデルの出力を下流の最適化に接続し、意思決定品質で評価する。
+  - id: allocation
+    name_ja: 配分
+    summary: 限られた資源、予算、数量を複数の対象に割り振る。
+  - id: portfolio
+    name_ja: ポートフォリオ
+    summary: 資産や候補の重みを決め、リターン・リスク・制約のトレードオフを扱う。
+  - id: continuous_design
+    name_ja: 連続設計
+    summary: 連続変数を調整し、滑らかな目的関数や制約の下で良い設計を探す。
+  - id: facility_location
+    name_ja: 施設配置
+    summary: 拠点を開くかどうかと需要の割当を同時に決める。
+  - id: scheduling
+    name_ja: スケジューリング
+    summary: 人、機械、作業、時間枠の割当や順序を制約付きで決める。
+  - id: experimental_design
+    name_ja: 実験条件探索
+    summary: 高価な実験やシミュレーションを少ない試行回数で進める。
+  - id: online_experiment
+    name_ja: オンライン実験
+    summary: 観測結果を見ながら施策や配分を逐次的に更新する。
