@@ -40,9 +40,16 @@ Allowed types:
 - `confused_with`
 - `used_in`
 
+`confused_with` relation は比較ビューの判断軸としても使います。優先ペアでは次の任意フィールドを持ちます。
+
+- `shared`: 同じところ
+- `decision_axes`: 違いを見る観点
+- `choose_source_when` / `choose_target_when`: どちらを選ぶか
+- `decision_note`: 判断のまとめ
+
 ### ExampleCase
 
-診断の評価セットです。`expected_top3` は一つの正解ではなく、候補に含めるべき問題クラスです。
+診断の評価セットです。`narrative` が現実課題の説明、`signals` が診断で拾いたい特徴、`expected_top3` が候補に含めるべき問題クラスです。`expected_top3` は一つの正解ではなく、妥当な候補集合です。
 
 ## Validation
 
@@ -55,7 +62,9 @@ Allowed types:
 - source completeness
 - Qiita / Zenn exclusion
 - `confused_with` relation count
-- example case expected classes
+- guided comparison fields for priority `confused_with` pairs
+- example case required fields and expected classes
+- `not_optimization` example case count
 
 ## Persistence
 

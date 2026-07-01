@@ -6,13 +6,97 @@ relations:
   - { id: r005, type: overlaps_with, source: nonlinear_programming, target: nonconvex_optimization, explanation: 一般の NLP は非凸になりうるため局所解の問題が出る。 }
   - { id: r006, type: overlaps_with, source: mixed_integer_linear_programming, target: combinatorial_optimization, explanation: MILP は多くの組合せ問題を線形制約で表現する。 }
   - { id: r007, type: overlaps_with, source: constraint_programming_sat_smt, target: combinatorial_optimization, explanation: CP/SAT/SMT は組合せ構造を制約充足として解く。 }
-  - { id: r008, type: confused_with, source: linear_programming, target: convex_optimization, explanation: LP は凸最適化の一部だが、凸最適化は非線形凸関数も含む。 }
-  - { id: r009, type: confused_with, source: nonlinear_programming, target: nonconvex_optimization, explanation: NLP は構文上の分類で、非凸は形状の性質。凸 NLP もある。 }
-  - { id: r010, type: confused_with, source: mixed_integer_linear_programming, target: constraint_programming_sat_smt, explanation: MILP は線形代数モデル、CP-SAT は論理制約と探索を前面に出す。 }
-  - { id: r011, type: confused_with, source: blackbox_derivative_free, target: bayesian_optimization_problem, explanation: BO は高価な評価向けの DFO の一派で、surrogate と不確実性を使う。 }
-  - { id: r012, type: confused_with, source: stochastic_programming, target: robust_optimization, explanation: SP は確率分布、RO は不確実集合を中心に置く。 }
-  - { id: r013, type: confused_with, source: stochastic_programming, target: distributionally_robust_optimization, explanation: DRO は分布集合への最悪ケースで、SP より分布推定リスクを前面に出す。 }
-  - { id: r014, type: confused_with, source: robust_optimization, target: distributionally_robust_optimization, explanation: RO はパラメータ集合、DRO は分布集合を扱う。 }
+  - id: r008
+    type: confused_with
+    source: linear_programming
+    target: convex_optimization
+    explanation: LP は凸最適化の一部だが、凸最適化は非線形凸関数も含む。
+    shared: どちらも局所解ではなく大域最適性を扱いやすい凸構造を重視する。
+    decision_axes:
+      - 線形目的・線形制約だけで表せるか
+      - 非線形だが凸性を証明できる関数や制約があるか
+      - LP solver の単純さを優先するか、DCP/円錐形式まで使うか
+    choose_source_when: 目的も制約も線形で、感度分析や大規模な線形配分を素直に扱いたい。
+    choose_target_when: 二次・指数・ノルム・円錐制約など、線形ではないが凸性がある構造を使いたい。
+    decision_note: まず LP として書けるかを試し、非線形凸の表現力が必要になったら Convex Optimization に広げる。
+  - id: r009
+    type: confused_with
+    source: nonlinear_programming
+    target: nonconvex_optimization
+    explanation: NLP は構文上の分類で、非凸は形状の性質。凸 NLP もある。
+    shared: どちらも線形だけでは表せない目的・制約を扱う。
+    decision_axes:
+      - 非線形性そのものが問題なのか、局所解・多峰性が問題なのか
+      - 勾配や Hessian を使えるか
+      - 凸性を証明できる部分があるか
+    choose_source_when: 滑らかな非線形制約を局所法で扱い、初期値や制約充足が主な関心。
+    choose_target_when: 複数の局所解、離散的な谷、グローバル探索や緩和が必要な形状が中心。
+    decision_note: NLP は書き方、Non-convex は難しさの原因として分けて見る。
+  - id: r010
+    type: confused_with
+    source: mixed_integer_linear_programming
+    target: constraint_programming_sat_smt
+    explanation: MILP は線形代数モデル、CP-SAT は論理制約と探索を前面に出す。
+    shared: どちらも binary/integer 変数を含む割当、スケジュール、選択問題に使える。
+    decision_axes:
+      - 線形目的と gap 証明が必要か
+      - 論理制約・組合せ feasibility が中心か
+      - 目的改善よりも制約充足や探索の枝刈りを優先するか
+    choose_source_when: 線形目的・線形制約で利益やコストを最適化し、LP relaxation や MIP gap を見たい。
+    choose_target_when: 依存・排他・順序などの論理制約が多く、まず実行可能解や制約充足を確実に出したい。
+    decision_note: MILP は数式としての線形性と gap、CP-SAT は論理制約と feasibility の扱いやすさで選ぶ。
+  - id: r011
+    type: confused_with
+    source: blackbox_derivative_free
+    target: bayesian_optimization_problem
+    explanation: BO は高価な評価向けの DFO の一派で、surrogate と不確実性を使う。
+    shared: どちらも勾配や内部式が使えない評価関数を外から試す。
+    decision_axes:
+      - 1回の評価コストが高いか
+      - surrogate と不確実性を使って逐次的に点を選びたいか
+      - 評価回数が多く取れる探索か、少数回で学びたい探索か
+    choose_source_when: 評価が比較的安く、多点探索・進化戦略・ランダム探索を幅広く回せる。
+    choose_target_when: 評価が高価で、posterior/surrogate/acquisition を使って次の評価点を慎重に選びたい。
+    decision_note: Black-box は広い入口、BO は高価な評価を少数回で進める逐次意思決定として見る。
+  - id: r012
+    type: confused_with
+    source: stochastic_programming
+    target: robust_optimization
+    explanation: SP は確率分布、RO は不確実集合を中心に置く。
+    shared: どちらも不確実な需要・供給・価格などを deterministic な単一点として扱わない。
+    decision_axes:
+      - 確率分布やシナリオ確率を信じられるか
+      - 期待値・recourse を最適化したいか、最悪ケース保証を重視するか
+      - 説明しやすい保守性が必要か
+    choose_source_when: シナリオ確率、期待費用、二段階 recourse をモデル化したい。
+    choose_target_when: 分布よりも範囲・上限・下限を決め、悪いケースでも破綻しない設計をしたい。
+    decision_note: 分布があるなら SP、範囲しか合意できないなら RO から始める。
+  - id: r013
+    type: confused_with
+    source: stochastic_programming
+    target: distributionally_robust_optimization
+    explanation: DRO は分布集合への最悪ケースで、SP より分布推定リスクを前面に出す。
+    shared: どちらも確率的な不確実性を意思決定に入れる。
+    decision_axes:
+      - 推定した分布をそのまま信じるか
+      - ambiguity set で分布ずれを許すか
+      - 平均性能と tail risk のどちらを重視するか
+    choose_source_when: シナリオ分布が十分に信頼でき、期待値や recourse の設計が主目的。
+    choose_target_when: サンプルが少ない、外れ値や分布ずれが怖い、tail risk を保守的に抑えたい。
+    decision_note: 分布推定そのものがリスクなら DRO、推定分布を前提にできるなら SP を選ぶ。
+  - id: r014
+    type: confused_with
+    source: robust_optimization
+    target: distributionally_robust_optimization
+    explanation: RO はパラメータ集合、DRO は分布集合を扱う。
+    shared: どちらも不確実性に対して保守的な解を求める。
+    decision_axes:
+      - 不確実性を値の範囲で表すか、分布の集合で表すか
+      - worst-case parameter と worst-case distribution のどちらが説明しやすいか
+      - データから ambiguity set を作る必要があるか
+    choose_source_when: 需要や供給の上限下限など、パラメータ範囲への最悪ケースで十分に説明できる。
+    choose_target_when: 過去データがあり、分布の推定誤差や tail risk まで含めて守りたい。
+    decision_note: RO は値の集合、DRO は分布の集合。データ由来の分布不安があるときに DRO へ進む。
   - { id: r015, type: confused_with, source: optimal_control, target: dynamic_programming_rl, explanation: 制御はモデルと制約を重視し、RL は観測から方策を学ぶ側面が強い。 }
   - { id: r016, type: confused_with, source: online_optimization_bandits, target: dynamic_programming_rl, explanation: Bandit は状態遷移を単純化し regret を重視することが多い。 }
   - { id: r017, type: confused_with, source: differentiable_optimization, target: hpo_automl, explanation: 微分可能最適化は下流 solver を学習に組み込み、HPO は外側から設定を探索する。 }

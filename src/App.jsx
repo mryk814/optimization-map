@@ -1,15 +1,23 @@
 import { useMemo, useState } from "react";
 import {
+  IconAlertTriangle,
+  IconArrowRight,
   IconArrowsDiff,
+  IconBook2,
+  IconChartDots,
+  IconCircleCheck,
   IconClipboard,
   IconDownload,
   IconFilter,
   IconGitBranch,
+  IconInfoCircle,
   IconMap,
+  IconRoute,
   IconSearch,
   IconSparkles,
 } from "@tabler/icons-react";
 
+import { OptimizationGlyph } from "./components/OptimizationGlyph.jsx";
 import { data, downloadCsv, getRelated, labelFor, maps, scoreDiagnosis, toTsv } from "./data/loadData.js";
 
 const tableColumns = [
@@ -20,6 +28,55 @@ const tableColumns = [
   { label: "Algorithms", value: (item) => item.candidate_algorithms.map(labelFor).join(" / ") },
   { label: "Solvers", value: (item) => item.candidate_solvers.map(labelFor).join(" / ") },
 ];
+
+const relationLabels = {
+  is_a: "上位関係",
+  overlaps_with: "重なる領域",
+  confused_with: "混同注意",
+  relaxes_to: "緩和",
+  reformulates_to: "変換",
+  commonly_solved_by: "手法",
+  implemented_by: "実装",
+  used_in: "用途",
+};
+
+const relationTones = {
+  confused_with: "blocked",
+  relaxes_to: "review",
+  reformulates_to: "review",
+  commonly_solved_by: "active",
+  implemented_by: "done",
+  used_in: "done",
+};
+
+function axisValueLabel(axisId, valueId) {
+  if (!valueId) {
+    return "—";
+  }
+  const axis = maps.axes[axisId];
+  const value = axis?.values.find((item) => item.id === valueId);
+  return value?.name_ja ?? valueId;
+}
+
+function findComparisonGuidance(leftId, rightId) {
+  const relation = data.relations.find(
+    (item) =>
+      item.type === "confused_with" &&
+      ((item.source === leftId && item.target === rightId) || (item.source === rightId && item.target === leftId)),
+  );
+  if (!relation?.decision_note) {
+    return null;
+  }
+
+  const reversed = relation.source !== leftId;
+  return {
+    shared: relation.shared,
+    decisionAxes: relation.decision_axes ?? [],
+    leftChoice: reversed ? relation.choose_target_when : relation.choose_source_when,
+    rightChoice: reversed ? relation.choose_source_when : relation.choose_target_when,
+    note: relation.decision_note,
+  };
+}
 
 function Badge({ children, tone = "neutral" }) {
   return <span className={`badge badge-${tone}`}>{children}</span>;
@@ -34,20 +91,44 @@ function IconButton({ children, icon: Icon, onClick, variant = "secondary", titl
   );
 }
 
+function OverviewHero({ selected }) {
+  return (
+    <header className="topbar">
+      <div className="hero-copy">
+        <p className="eyebrow">Optimization Map</p>
+        <h1>課題から問題クラスへ進む地図</h1>
+        <p>{selected.summary}</p>
+      </div>
+      <div className="metric-strip" aria-label="データ件数">
+        <span><strong className="num">{data.problemClasses.length}</strong> classes</span>
+        <span><strong className="num">{data.axes.length}</strong> axes</span>
+        <span><strong className="num">{data.relations.length}</strong> relations</span>
+        <span><strong className="num">{data.exampleCases.length}</strong> cases</span>
+      </div>
+    </header>
+  );
+}
+
 function ProblemCard({ problem, selected, onSelect }) {
+  const axisSummary = Object.entries(problem.axes ?? {})
+    .slice(0, 3)
+    .map(([axisId, valueId]) => axisValueLabel(axisId, valueId));
+
   return (
     <button
       aria-current={selected ? "true" : undefined}
       className={`problem-row${selected ? " is-selected" : ""}`}
       onClick={() => onSelect(problem.id)}
+      title={problem.summary}
       type="button"
     >
+      <OptimizationGlyph problem={problem} variant="list" />
       <span className="problem-row-main">
         <strong>{problem.name_ja}</strong>
-        <span>{problem.summary}</span>
+        <span>{problem.name_en}</span>
       </span>
       <span className="problem-row-tags">
-        {problem.tags.slice(0, 3).map((tag) => (
+        {axisSummary.map((tag) => (
           <Badge key={tag}>{tag}</Badge>
         ))}
       </span>
@@ -55,114 +136,297 @@ function ProblemCard({ problem, selected, onSelect }) {
   );
 }
 
+function Sidebar({ axisFilter, filteredProblems, onAxisFilter, onCopy, onExport, onQuery, onSelect, query, selectedId }) {
+  const filterOptions = useMemo(() => {
+    const values = new Map([["all", "すべて"]]);
+    for (const axis of data.axes.filter((item) => item.core)) {
+      for (const value of axis.values) {
+        values.set(value.id, `${axis.name_ja}: ${value.name_ja}`);
+      }
+    }
+    return [...values.entries()];
+  }, []);
+
+  return (
+    <aside className="panel sidebar" aria-label="ProblemClass 一覧">
+      <div className="sidebar-head">
+        <div>
+          <p className="eyebrow">Browse</p>
+          <h2>ProblemClass</h2>
+        </div>
+        <Badge tone="idle">{filteredProblems.length} 件</Badge>
+      </div>
+
+      <div className="toolbar">
+        <label className="search-box">
+          <IconSearch aria-hidden="true" size={16} />
+          <input
+            aria-label="ProblemClass を検索"
+            onChange={(event) => onQuery(event.target.value)}
+            placeholder="検索"
+            type="search"
+            value={query}
+          />
+        </label>
+        <label className="filter-box">
+          <IconFilter aria-hidden="true" size={16} />
+          <select aria-label="分類軸で絞り込み" onChange={(event) => onAxisFilter(event.target.value)} value={axisFilter}>
+            {filterOptions.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="list-actions">
+        <IconButton icon={IconClipboard} onClick={onCopy} title="一覧をTSVでコピー">コピー</IconButton>
+        <IconButton icon={IconDownload} onClick={onExport} title="一覧をCSVで保存">CSV</IconButton>
+      </div>
+
+      <div className="problem-list">
+        {filteredProblems.length === 0 ? (
+          <div className="empty-state">条件に合う ProblemClass はありません。検索語か filter を変えてください。</div>
+        ) : (
+          filteredProblems.map((problem) => (
+            <ProblemCard
+              key={problem.id}
+              onSelect={onSelect}
+              problem={problem}
+              selected={selectedId === problem.id}
+            />
+          ))
+        )}
+      </div>
+    </aside>
+  );
+}
+
 function DetailPanel({ problem }) {
   const relations = getRelated(problem.id);
+  const axisCards = Object.entries(problem.axes ?? {}).map(([axisId, valueId]) => ({
+    id: `${axisId}:${valueId}`,
+    axis: maps.axes[axisId]?.name_ja ?? axisId,
+    value: axisValueLabel(axisId, valueId),
+  }));
 
   return (
     <section className="panel detail-panel" aria-labelledby="detail-heading">
-      <div className="panel-heading">
-        <div>
+      <div className="detail-hero">
+        <OptimizationGlyph problem={problem} variant="hero" />
+        <div className="detail-title">
           <p className="eyebrow">ProblemClass</p>
           <h2 id="detail-heading">{problem.name_ja}</h2>
+          <p>{problem.summary}</p>
         </div>
-        <Badge tone="active">{problem.name_en}</Badge>
+        <div className="formula-card">
+          <span>canonical form</span>
+          <code>{problem.canonical_form}</code>
+        </div>
       </div>
 
-      <p className="summary-text">{problem.definition}</p>
+      <VisualRoute problem={problem} />
 
-      <div className="formula">{problem.canonical_form}</div>
-
-      <div className="detail-grid">
-        <InfoList title="使う場面" items={problem.typical_when} />
-        <InfoList title="避ける場面" items={problem.not_good_when} />
-        <InfoList title="難しさ" items={[problem.why_hard]} />
-        <InfoList title="緩和・変換" items={problem.relaxations_or_reformulations.map(labelFor)} />
+      <div className="axis-ribbon" aria-label="分類軸">
+        {axisCards.map((axis) => (
+          <div className="axis-chip" key={axis.id}>
+            <span>{axis.axis}</span>
+            <strong>{axis.value}</strong>
+          </div>
+        ))}
       </div>
 
-      <div className="reference-grid">
-        <ReferenceBlock title="Algorithm" items={problem.candidate_algorithms} />
-        <ReferenceBlock title="Solver" items={problem.candidate_solvers} />
-        <ReferenceBlock title="Confused with" items={problem.confused_with} />
+      <details className="definition-fold">
+        <summary>
+          <IconBook2 aria-hidden="true" size={16} />
+          定義と判断メモを読む
+        </summary>
+        <p>{problem.definition}</p>
+      </details>
+
+      <div className="decision-grid">
+        <InfoList icon={IconCircleCheck} title="使う場面" items={problem.typical_when} tone="done" />
+        <InfoList icon={IconAlertTriangle} title="避ける場面" items={problem.not_good_when} tone="blocked" />
+        <InfoList icon={IconChartDots} title="難しさ" items={[problem.why_hard]} tone="review" />
       </div>
 
-      <div className="sources">
-        <h3>Sources</h3>
+      <div className="route-card">
+        <div className="route-card-head">
+          <div>
+            <p className="eyebrow">Route</p>
+            <h3>次に見る候補</h3>
+          </div>
+          <IconRoute aria-hidden="true" size={20} />
+        </div>
+        <div className="route-lanes">
+          <ReferenceBlock title="Algorithm" items={problem.candidate_algorithms} tone="active" />
+          <ReferenceBlock title="Solver / Library" items={problem.candidate_solvers} tone="done" />
+          <ReferenceBlock title="緩和・変換" items={problem.relaxations_or_reformulations} tone="review" />
+        </div>
+      </div>
+
+      <RelationCards currentId={problem.id} relations={relations} />
+
+      <details className="sources source-fold">
+        <summary>
+          <span>Sources</span>
+          <Badge tone="idle">{problem.sources.length} 件</Badge>
+        </summary>
         {problem.sources.map((source) => (
           <a href={source.url} key={source.url} rel="noreferrer" target="_blank">
             {source.title}
             <span>{source.type}</span>
           </a>
         ))}
-      </div>
-
-      <RelationTable relations={relations} />
+      </details>
     </section>
   );
 }
 
-function InfoList({ title, items }) {
+function VisualRoute({ problem }) {
+  const axes = Object.entries(problem.axes ?? {})
+    .slice(0, 4)
+    .map(([axisId, valueId]) => axisValueLabel(axisId, valueId));
+  const algorithms = problem.candidate_algorithms.slice(0, 3).map(labelFor);
+  const solvers = problem.candidate_solvers.slice(0, 3).map(labelFor);
+
   return (
-    <div className="info-list">
-      <h3>{title}</h3>
+    <div className="visual-route" aria-label="問題の形から solver までの流れ">
+      <div className="visual-stage visual-stage-input">
+        <span>問題の形</span>
+        <strong>{axes[0] ?? "未分類"}</strong>
+        <div className="mini-chip-list">
+          {axes.slice(1).map((label) => (
+            <em key={label}>{label}</em>
+          ))}
+        </div>
+      </div>
+      <div className="visual-link" aria-hidden="true"><span /></div>
+      <div className="visual-stage visual-stage-current">
+        <span>候補クラス</span>
+        <strong>{problem.name_ja}</strong>
+        <div className="visual-pulse" aria-hidden="true" />
+      </div>
+      <div className="visual-link" aria-hidden="true"><span /></div>
+      <div className="visual-stage visual-stage-output">
+        <span>解き方</span>
+        <strong>{algorithms[0] ?? "Algorithm"}</strong>
+        <div className="mini-chip-list">
+          {algorithms.slice(1).map((label) => (
+            <em key={label}>{label}</em>
+          ))}
+        </div>
+      </div>
+      <div className="visual-link" aria-hidden="true"><span /></div>
+      <div className="visual-stage visual-stage-solver">
+        <span>実装先</span>
+        <strong>{solvers[0] ?? "Solver"}</strong>
+        <div className="mini-chip-list">
+          {solvers.slice(1).map((label) => (
+            <em key={label}>{label}</em>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoList({ icon: Icon, title, items, tone = "neutral" }) {
+  return (
+    <details className={`info-list info-list-${tone}`}>
+      <summary>
+        {Icon && <Icon aria-hidden="true" size={16} />}
+        <span>{title}</span>
+        <Badge tone={tone}>{items.length} 件</Badge>
+      </summary>
       <ul>
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}
       </ul>
-    </div>
+    </details>
   );
 }
 
-function ReferenceBlock({ title, items }) {
+function ReferenceBlock({ title, items, tone = "neutral" }) {
   return (
     <div className="reference-block">
       <h3>{title}</h3>
       <div className="chip-list">
         {items.map((id) => (
-          <Badge key={id}>{labelFor(id)}</Badge>
+          <Badge key={id} tone={tone}>{labelFor(id)}</Badge>
         ))}
       </div>
     </div>
   );
 }
 
-function RelationTable({ relations }) {
+function RelationCards({ relations, currentId }) {
   if (!relations.length) {
     return <div className="empty-state">relation はまだありません。</div>;
   }
 
   return (
-    <div className="relation-table-wrap">
-      <h3>Relations</h3>
-      <table className="relation-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Source</th>
-            <th>Target</th>
-            <th>Explanation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {relations.slice(0, 12).map((relation) => (
-            <tr key={relation.id}>
-              <td>
-                <Badge tone="active">{relation.type}</Badge>
-              </td>
-              <td>{labelFor(relation.source)}</td>
-              <td>{labelFor(relation.target)}</td>
-              <td>{relation.explanation}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="relation-section">
+      <div className="section-title">
+        <p className="eyebrow">Relations</p>
+        <h3>周辺のつながり</h3>
+      </div>
+      <div className="relation-cards">
+        {relations.slice(0, 9).map((relation) => {
+          const tone = relationTones[relation.type] ?? "neutral";
+          const isOutgoing = relation.source === currentId;
+          const primary = labelFor(isOutgoing ? relation.target : relation.source);
+          return (
+            <article className="relation-card" key={relation.id}>
+              <RelationGlyph type={relation.type} />
+              <div className="relation-card-top">
+                <Badge tone={tone}>{relationLabels[relation.type] ?? relation.type}</Badge>
+                <span>{isOutgoing ? "from this class" : "to this class"}</span>
+              </div>
+              <div className="relation-node-line">
+                <strong>{labelFor(relation.source)}</strong>
+                <IconArrowRight aria-hidden="true" size={16} />
+                <strong>{labelFor(relation.target)}</strong>
+              </div>
+              <details className="relation-detail">
+                <summary>説明</summary>
+                <p>{relation.explanation}</p>
+              </details>
+              <span className="relation-primary">{primary}</span>
+            </article>
+          );
+        })}
+      </div>
     </div>
+  );
+}
+
+function RelationGlyph({ type }) {
+  return (
+    <span className={`relation-glyph relation-glyph-${type}`} aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
   );
 }
 
 function ComparePanel({ leftId, rightId, onLeftChange, onRightChange }) {
   const left = maps.problems[leftId];
   const right = maps.problems[rightId];
+  const guidance = findComparisonGuidance(leftId, rightId);
+  const axisKeys = [...new Set([...Object.keys(left.axes ?? {}), ...Object.keys(right.axes ?? {})])];
+  const axisDiffs = axisKeys
+    .filter((key) => left.axes?.[key] !== right.axes?.[key])
+    .slice(0, 6)
+    .map((key) => ({
+      id: key,
+      axis: maps.axes[key]?.name_ja ?? key,
+      left: axisValueLabel(key, left.axes?.[key]),
+      right: axisValueLabel(key, right.axes?.[key]),
+    }));
   const rows = [
     ["定義", left.definition, right.definition],
     ["使う場面", left.typical_when.join(" / "), right.typical_when.join(" / ")],
@@ -173,7 +437,7 @@ function ComparePanel({ leftId, rightId, onLeftChange, onRightChange }) {
   ];
 
   return (
-    <section className="panel" aria-labelledby="compare-heading">
+    <section className="panel compare-panel" aria-labelledby="compare-heading">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Compare</p>
@@ -197,47 +461,137 @@ function ComparePanel({ leftId, rightId, onLeftChange, onRightChange }) {
           ))}
         </select>
       </div>
-      <table className="compare-table">
-        <thead>
-          <tr>
-            <th>軸</th>
-            <th>{left.name_ja}</th>
-            <th>{right.name_ja}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([label, leftValue, rightValue]) => (
-            <tr key={label}>
-              <th>{label}</th>
-              <td>{leftValue}</td>
-              <td>{rightValue}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="compare-visual-grid">
+        <CompareFace problem={left} />
+        <div className="compare-diff-card">
+          <p className="eyebrow">Difference</p>
+          <div className="compare-diff-list">
+            {axisDiffs.length === 0 ? (
+              <span className="muted-line">主要軸は近い構造です。</span>
+            ) : (
+              axisDiffs.map((diff) => (
+                <div className="axis-diff" key={diff.id}>
+                  <span>{diff.axis}</span>
+                  <strong>{diff.left}</strong>
+                  <IconArrowRight aria-hidden="true" size={14} />
+                  <strong>{diff.right}</strong>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        <CompareFace problem={right} />
+      </div>
+      {guidance ? (
+        <div className="choice-guide" aria-label="どちらを選ぶか">
+          <div className="choice-guide-main">
+            <p className="eyebrow">Decision</p>
+            <h3>どちらを選ぶか</h3>
+            <p>{guidance.note}</p>
+          </div>
+          <div className="choice-guide-card">
+            <span>同じところ</span>
+            <strong>{guidance.shared}</strong>
+          </div>
+          <div className="choice-guide-card">
+            <span>違うところ</span>
+            <ul>
+              {guidance.decisionAxes.map((axis) => (
+                <li key={axis}>{axis}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="choice-guide-card">
+            <span>{left.name_ja} を選ぶ</span>
+            <strong>{guidance.leftChoice}</strong>
+          </div>
+          <div className="choice-guide-card">
+            <span>{right.name_ja} を選ぶ</span>
+            <strong>{guidance.rightChoice}</strong>
+          </div>
+        </div>
+      ) : (
+        <div className="choice-guide choice-guide-empty">
+          <div className="choice-guide-main">
+            <p className="eyebrow">Decision</p>
+            <h3>任意比較</h3>
+            <p>このペアは詳細な判断軸データがまだありません。まず定義、使う場面、避ける場面、手法を並べて確認します。</p>
+          </div>
+        </div>
+      )}
+      <details className="compare-detail">
+        <summary>詳細テーブルを開く</summary>
+        <div className="table-scroll">
+          <table className="compare-table">
+            <thead>
+              <tr>
+                <th>軸</th>
+                <th>{left.name_ja}</th>
+                <th>{right.name_ja}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([label, leftValue, rightValue]) => (
+                <tr key={label}>
+                  <th>{label}</th>
+                  <td>{leftValue}</td>
+                  <td>{rightValue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </section>
   );
 }
 
-function DiagnosisPanel({ answers, onAnswer }) {
+function CompareFace({ problem }) {
+  return (
+    <article className="compare-face">
+      <OptimizationGlyph problem={problem} variant="compare" />
+      <h3>{problem.name_ja}</h3>
+      <div className="chip-list">
+        {problem.candidate_algorithms.slice(0, 2).map((id) => (
+          <Badge key={id} tone="active">{labelFor(id)}</Badge>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function DiagnosisPanel({ answers, onAnswer, onReset, onSelectProblem }) {
   const results = scoreDiagnosis(answers).slice(0, 5);
   const answered = Object.keys(answers).length;
+  const maxScore = Math.max(...results.map((result) => result.score), 1);
+  const warnings = [...new Set(results.flatMap((result) => result.warnings ?? []))];
+  const nextQuestions = data.diagnosisQuestions
+    .filter((question) => !answers[question.id])
+    .slice(0, 2)
+    .map((question) => question.label);
 
   return (
-    <section className="panel" aria-labelledby="diagnosis-heading">
+    <section className="panel diagnosis-panel" aria-labelledby="diagnosis-heading">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Diagnosis</p>
           <h2 id="diagnosis-heading">モデリング診断</h2>
         </div>
-        <Badge tone={answered ? "active" : "idle"}>{answered} / {data.diagnosisQuestions.length}</Badge>
+        <div className="heading-actions">
+          <Badge tone={answered ? "active" : "idle"}>{answered} / {data.diagnosisQuestions.length}</Badge>
+          {answered > 0 && (
+            <button className="text-button" onClick={onReset} type="button">
+              クリア
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="diagnosis-grid">
         <div className="questions">
           {data.diagnosisQuestions.map((question) => (
             <fieldset key={question.id}>
-              <legend>{question.text}</legend>
+              <legend>{question.label}</legend>
               <div className="segmented">
                 {question.answers.map((answer) => (
                   <label key={answer.id}>
@@ -259,20 +613,213 @@ function DiagnosisPanel({ answers, onAnswer }) {
           {results.length === 0 ? (
             <div className="empty-state">回答すると候補 ProblemClass が表示されます。</div>
           ) : (
-            results.map((result, index) => (
-              <div className="result-row" key={result.id}>
-                <span className="rank num">{index + 1}</span>
-                <div>
-                  <strong>{result.label}</strong>
-                  <span>{result.reasons.join(" / ")}</span>
-                </div>
-                <Badge tone="active">score {result.score}</Badge>
-              </div>
-            ))
+            <>
+              {warnings.map((warning) => (
+                <div className="warning-state" key={warning}>{warning}</div>
+              ))}
+              {results.map((result, index) => {
+                if (!result.problem) {
+                  return (
+                    <article className="result-row result-warning-card" key={result.id}>
+                      <IconAlertTriangle aria-hidden="true" size={22} />
+                      <div>
+                        <strong>{result.label}</strong>
+                        <span className="result-reason-line">{result.reasons.join(" / ")}</span>
+                        <span className="result-caveat">最適化モデルへ進む前に、意思決定変数・目的・制約を文章で切り分けてください。</span>
+                        <span className="score-meter">
+                          <span style={{ width: `${Math.round((result.score / maxScore) * 100)}%` }} />
+                        </span>
+                      </div>
+                      <span className="rank num">{index + 1}</span>
+                    </article>
+                  );
+                }
+
+                const algorithms = result.problem.candidate_algorithms.slice(0, 3).map(labelFor);
+                const solvers = result.problem.candidate_solvers.slice(0, 3).map(labelFor);
+                const caveats = result.problem.not_good_when.slice(0, 2);
+                return (
+                  <button
+                    className="result-row result-card"
+                    key={result.id}
+                    onClick={() => onSelectProblem(result.id)}
+                    type="button"
+                  >
+                    <OptimizationGlyph problem={result.problem} variant="result" />
+                    <div>
+                      <span className="result-title-line">
+                        <strong>{result.label}</strong>
+                        <em className="num">score {result.score}</em>
+                      </span>
+                      <span className="result-reason-line">{result.reasons.slice(0, 3).join(" / ")}</span>
+                      <span className="score-meter">
+                        <span style={{ width: `${Math.round((result.score / maxScore) * 100)}%` }} />
+                      </span>
+                      <span className="result-detail-grid">
+                        <span><b>Algorithm</b>{algorithms.join(" / ")}</span>
+                        <span><b>Solver</b>{solvers.join(" / ")}</span>
+                        <span><b>注意点</b>{caveats.join(" / ")}</span>
+                        <span><b>次に確認</b>{nextQuestions.join(" / ") || "詳細カードで前提を確認"}</span>
+                      </span>
+                      {result.reasons.length > 3 && (
+                        <span className="result-more">+{result.reasons.length - 3} reasons</span>
+                      )}
+                    </div>
+                    <span className="rank num">{index + 1}</span>
+                  </button>
+                );
+              })}
+            </>
           )}
         </div>
       </div>
     </section>
+  );
+}
+
+function MapPanel({ selected }) {
+  const relationCounts = ["is_a", "overlaps_with", "confused_with", "relaxes_to", "commonly_solved_by", "implemented_by", "used_in"]
+    .map((type) => ({
+      type,
+      count: data.relations.filter((relation) => relation.type === type).length,
+    }));
+
+  return (
+    <section className="panel map-panel" aria-labelledby="map-heading">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Map</p>
+          <h2 id="map-heading">課題から solver までの見取り図</h2>
+        </div>
+        <IconMap aria-hidden="true" size={20} />
+      </div>
+      <div className="pipeline">
+        {["現実課題", "モデル構造", selected.name_ja, "Algorithm", "Solver"].map((step, index) => (
+          <span className={index === 2 ? "is-current" : ""} key={`${step}-${index}`}>
+            {step}
+          </span>
+        ))}
+      </div>
+      <div className="motion-hint" aria-label="理解の流れ">
+        <IconInfoCircle aria-hidden="true" size={16} />
+        <span>まず形を見て、候補クラスを選び、手法と solver に降ろす。</span>
+        <i aria-hidden="true" />
+      </div>
+      <div className="map-grid">
+        {relationCounts.map((item) => (
+          <div className="map-tile" key={item.type}>
+            <span>{relationLabels[item.type] ?? item.type}</span>
+            <strong className="num">{item.count}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function QuickCompare({ selected, onSelectCompare }) {
+  const confused = selected.confused_with.slice(0, 3);
+  if (!confused.length) {
+    return null;
+  }
+
+  return (
+    <section className="panel quick-compare" aria-labelledby="quick-compare-heading">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Compare next</p>
+          <h2 id="quick-compare-heading">混同しやすい相手</h2>
+        </div>
+        <IconArrowsDiff aria-hidden="true" size={20} />
+      </div>
+      <div className="quick-compare-list">
+        {confused.map((id) => (
+          <button key={id} onClick={() => onSelectCompare(id)} type="button">
+            <span>{labelFor(id)}</span>
+            <IconArrowRight aria-hidden="true" size={16} />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CasePanel() {
+  return (
+    <section className="panel" aria-labelledby="cases-heading">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Evaluation</p>
+          <h2 id="cases-heading">診断ベンチケース</h2>
+        </div>
+        <IconSparkles aria-hidden="true" size={20} />
+      </div>
+      <div className="case-grid">
+        {data.exampleCases.map((example) => (
+          <article className="case-card" key={example.id}>
+            <h3>{example.title}</h3>
+            <div className="chip-list">
+              {example.expected_top3.map((id) => (
+                <Badge key={id} tone="active">{labelFor(id)}</Badge>
+              ))}
+            </div>
+            <p>{example.narrative}</p>
+            <p>{example.signals.join(" / ")}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PipelinePanel() {
+  return (
+    <section className="panel" aria-labelledby="path-heading">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Pipeline</p>
+          <h2 id="path-heading">課題から solver まで</h2>
+        </div>
+        <IconGitBranch aria-hidden="true" size={20} />
+      </div>
+      <div className="pipeline pipeline-plain">
+        <span>ExampleCase</span>
+        <span>ModelingPattern</span>
+        <span>ProblemClass</span>
+        <span>Algorithm</span>
+        <span>Solver</span>
+      </div>
+    </section>
+  );
+}
+
+function ExportPanel({ count, onCopy, onExport }) {
+  return (
+    <section className="panel export-panel" aria-labelledby="export-heading">
+      <div>
+        <p className="eyebrow">Carry out</p>
+        <h2 id="export-heading">一覧を持ち出す</h2>
+        <p><strong className="num">{count}</strong> 件の ProblemClass をコピーまたはCSVで保存できます。</p>
+      </div>
+      <div className="export-actions">
+        <IconButton icon={IconClipboard} onClick={onCopy} title="一覧をTSVでコピー">コピー</IconButton>
+        <IconButton icon={IconDownload} onClick={onExport} title="一覧をCSVで保存">CSV</IconButton>
+      </div>
+    </section>
+  );
+}
+
+function InspectorRail({ answers, onAnswer, onReset, onSelectProblem, selected, setCompareRight }) {
+  return (
+    <div className="inspector-rail">
+      <QuickCompare selected={selected} onSelectCompare={setCompareRight} />
+      <DiagnosisPanel
+        answers={answers}
+        onAnswer={onAnswer}
+        onReset={onReset}
+        onSelectProblem={onSelectProblem}
+      />
+    </div>
   );
 }
 
@@ -299,15 +846,6 @@ export default function App() {
   }, [axisFilter, query]);
 
   const selected = maps.problems[selectedId] ?? filteredProblems[0] ?? data.problemClasses[0];
-  const filterOptions = useMemo(() => {
-    const values = new Map([["all", "すべて"]]);
-    for (const axis of data.axes.filter((item) => item.core)) {
-      for (const value of axis.values) {
-        values.set(value.id, `${axis.name_ja}: ${value.name_ja}`);
-      }
-    }
-    return [...values.entries()];
-  }, []);
 
   const showToast = (message) => {
     setToast(message);
@@ -324,135 +862,48 @@ export default function App() {
     showToast("CSVを書き出しました");
   };
 
+  const selectProblem = (id) => {
+    if (!maps.problems[id]) {
+      return;
+    }
+    setSelectedId(id);
+    setCompareLeft(id);
+  };
+
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Optimization Map</p>
-          <h1>課題から問題クラスへ進む地図</h1>
-        </div>
-        <div className="metric-strip" aria-label="データ件数">
-          <span><strong className="num">{data.problemClasses.length}</strong> classes</span>
-          <span><strong className="num">{data.axes.length}</strong> axes</span>
-          <span><strong className="num">{data.relations.length}</strong> relations</span>
-          <span><strong className="num">{data.exampleCases.length}</strong> cases</span>
-        </div>
-      </header>
+      <OverviewHero selected={selected} />
 
       <main className="workspace">
-        <aside className="panel sidebar" aria-label="ProblemClass 一覧">
-          <div className="toolbar">
-            <label className="search-box">
-              <IconSearch aria-hidden="true" size={16} />
-              <input
-                aria-label="ProblemClass を検索"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="検索"
-                type="search"
-                value={query}
-              />
-            </label>
-            <label className="filter-box">
-              <IconFilter aria-hidden="true" size={16} />
-              <select aria-label="分類軸で絞り込み" onChange={(event) => setAxisFilter(event.target.value)} value={axisFilter}>
-                {filterOptions.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="list-actions">
-            <IconButton icon={IconClipboard} onClick={copyProblems} title="一覧をTSVでコピー">コピー</IconButton>
-            <IconButton icon={IconDownload} onClick={exportProblems} title="一覧をCSVで保存">CSV</IconButton>
-          </div>
-
-          <div className="problem-list">
-            {filteredProblems.length === 0 ? (
-              <div className="empty-state">条件に合う ProblemClass はありません。検索語か filter を変えてください。</div>
-            ) : (
-              filteredProblems.map((problem) => (
-                <ProblemCard
-                  key={problem.id}
-                  onSelect={setSelectedId}
-                  problem={problem}
-                  selected={selected.id === problem.id}
-                />
-              ))
-            )}
-          </div>
-        </aside>
+        <Sidebar
+          axisFilter={axisFilter}
+          filteredProblems={filteredProblems}
+          onAxisFilter={setAxisFilter}
+          onCopy={copyProblems}
+          onExport={exportProblems}
+          onQuery={setQuery}
+          onSelect={selectProblem}
+          query={query}
+          selectedId={selected.id}
+        />
 
         <div className="content-stack">
-          <section className="panel map-panel" aria-labelledby="map-heading">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Map</p>
-                <h2 id="map-heading">MVP coverage</h2>
-              </div>
-              <IconMap aria-hidden="true" size={20} />
-            </div>
-            <div className="map-grid">
-              {["is_a", "confused_with", "commonly_solved_by", "implemented_by", "used_in"].map((type) => (
-                <div className="map-tile" key={type}>
-                  <span>{type}</span>
-                  <strong className="num">{data.relations.filter((relation) => relation.type === type).length}</strong>
-                </div>
-              ))}
-            </div>
-          </section>
-
+          <MapPanel selected={selected} />
           <DetailPanel problem={selected} />
           <ComparePanel leftId={compareLeft} onLeftChange={setCompareLeft} rightId={compareRight} onRightChange={setCompareRight} />
-          <DiagnosisPanel answers={answers} onAnswer={(questionId, answerId) => setAnswers((current) => ({ ...current, [questionId]: answerId }))} />
-
-          <section className="panel" aria-labelledby="cases-heading">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Evaluation</p>
-                <h2 id="cases-heading">診断ベンチケース</h2>
-              </div>
-              <IconSparkles aria-hidden="true" size={20} />
-            </div>
-            <table className="case-table">
-              <thead>
-                <tr>
-                  <th>Case</th>
-                  <th>Expected top-3</th>
-                  <th>Signals</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.exampleCases.map((example) => (
-                  <tr key={example.id}>
-                    <td>{example.title}</td>
-                    <td>{example.expected_top3.map(labelFor).join(" / ")}</td>
-                    <td>{example.signals.join(" / ")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="panel" aria-labelledby="path-heading">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Pipeline</p>
-                <h2 id="path-heading">課題から solver まで</h2>
-              </div>
-              <IconGitBranch aria-hidden="true" size={20} />
-            </div>
-            <div className="pipeline">
-              <span>ExampleCase</span>
-              <span>ModelingPattern</span>
-              <span>ProblemClass</span>
-              <span>Algorithm</span>
-              <span>Solver</span>
-            </div>
-          </section>
+          <CasePanel />
+          <PipelinePanel />
+          <ExportPanel count={filteredProblems.length} onCopy={copyProblems} onExport={exportProblems} />
         </div>
+
+        <InspectorRail
+          answers={answers}
+          onAnswer={(questionId, answerId) => setAnswers((current) => ({ ...current, [questionId]: answerId }))}
+          onReset={() => setAnswers({})}
+          onSelectProblem={selectProblem}
+          selected={selected}
+          setCompareRight={setCompareRight}
+        />
       </main>
 
       {toast && <div className="toast" role="status">{toast}</div>}
