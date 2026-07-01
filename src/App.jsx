@@ -91,19 +91,44 @@ function IconButton({ children, icon: Icon, onClick, variant = "secondary", titl
   );
 }
 
-function OverviewHero({ selected }) {
+const readingSteps = [
+  { id: "diagnosis", label: "診断", tool: "diagnosis" },
+  { id: "map", label: "形を見る", tool: "map" },
+  { id: "compare", label: "比較する", tool: "compare" },
+  { id: "export", label: "持ち出す", tool: "export" },
+];
+
+const currentStepByTool = {
+  cases: "diagnosis",
+  compare: "compare",
+  diagnosis: "diagnosis",
+  export: "export",
+  map: "map",
+};
+
+function OverviewHero({ activeTool, selected, setActiveTool }) {
+  const currentStep = currentStepByTool[activeTool] ?? "diagnosis";
+
   return (
     <header className="topbar">
       <div className="hero-copy">
         <p className="eyebrow">Optimization Map</p>
         <h1>課題から問題クラスへ進む地図</h1>
-        <p>{selected.summary}</p>
+        <p>まず課題の条件か近いケースから候補を出し、{selected.name_ja} の形・使いどころ・次の手法へ進みます。</p>
       </div>
-      <div className="metric-strip" aria-label="データ件数">
-        <span><strong className="num">{data.problemClasses.length}</strong> classes</span>
-        <span><strong className="num">{data.axes.length}</strong> axes</span>
-        <span><strong className="num">{data.relations.length}</strong> relations</span>
-        <span><strong className="num">{data.exampleCases.length}</strong> cases</span>
+      <div className="reading-steps" aria-label="読む順番">
+        {readingSteps.map((step, index) => (
+          <button
+            aria-current={currentStep === step.id ? "step" : undefined}
+            className={currentStep === step.id ? "is-current" : ""}
+            key={step.id}
+            onClick={() => setActiveTool(step.tool)}
+            type="button"
+          >
+            <strong>{index + 1}</strong>
+            {step.label}
+          </button>
+        ))}
       </div>
     </header>
   );
@@ -226,8 +251,6 @@ function DetailPanel({ problem }) {
         </div>
       </div>
 
-      <VisualRoute problem={problem} />
-
       <div className="axis-ribbon" aria-label="分類軸">
         {axisCards.map((axis) => (
           <div className="axis-chip" key={axis.id}>
@@ -243,6 +266,14 @@ function DetailPanel({ problem }) {
           定義と判断メモを読む
         </summary>
         <p>{problem.definition}</p>
+      </details>
+
+      <details className="route-fold">
+        <summary>
+          <IconRoute aria-hidden="true" size={16} />
+          問題から solver までの流れを開く
+        </summary>
+        <VisualRoute problem={problem} />
       </details>
 
       <div className="decision-grid">
@@ -368,11 +399,12 @@ function RelationCards({ relations, currentId }) {
   }
 
   return (
-    <div className="relation-section">
-      <div className="section-title">
+    <details className="relation-section relation-fold">
+      <summary className="section-title">
         <p className="eyebrow">Relations</p>
-        <h3>周辺のつながり</h3>
-      </div>
+        <h3>周辺のつながりを開く</h3>
+        <Badge tone="idle">{relations.length} 件</Badge>
+      </summary>
       <div className="relation-cards">
         {relations.slice(0, 9).map((relation) => {
           const tone = relationTones[relation.type] ?? "neutral";
@@ -399,7 +431,50 @@ function RelationCards({ relations, currentId }) {
           );
         })}
       </div>
-    </div>
+    </details>
+  );
+}
+
+function StartPanel({ activeTool, selected, setActiveTool }) {
+  const sampleCases = data.exampleCases.slice(0, 3);
+
+  return (
+    <section className="panel start-panel" aria-labelledby="start-heading">
+      <div className="start-copy">
+        <p className="eyebrow">Start</p>
+        <h2 id="start-heading">まず課題の入口を選ぶ</h2>
+        <p>問題名を知らなくても、条件に答えるか近いケースを眺めるところから始められます。</p>
+      </div>
+      <div className="start-options">
+        <button
+          className={`start-option start-option-primary${activeTool === "diagnosis" ? " is-active" : ""}`}
+          onClick={() => setActiveTool("diagnosis")}
+          type="button"
+        >
+          <span>条件から候補を出す</span>
+          <strong>変数・線形性・不確実性を答える</strong>
+          <IconArrowRight aria-hidden="true" size={16} />
+        </button>
+        <button
+          className={`start-option${activeTool === "cases" ? " is-active" : ""}`}
+          onClick={() => setActiveTool("cases")}
+          type="button"
+        >
+          <span>近いケースから入る</span>
+          <strong>{sampleCases.map((example) => example.title).join(" / ")}</strong>
+          <IconArrowRight aria-hidden="true" size={16} />
+        </button>
+        <button
+          className={`start-option${activeTool === "map" ? " is-active" : ""}`}
+          onClick={() => setActiveTool("map")}
+          type="button"
+        >
+          <span>現在の候補を理解する</span>
+          <strong>{selected.name_ja} から algorithm と solver まで見る</strong>
+          <IconArrowRight aria-hidden="true" size={16} />
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -744,6 +819,85 @@ function QuickCompare({ selected, onSelectCompare }) {
   );
 }
 
+const toolTabs = [
+  { id: "diagnosis", label: "診断", eyebrow: "Decide" },
+  { id: "compare", label: "比較", eyebrow: "Compare" },
+  { id: "map", label: "見取り図", eyebrow: "Map" },
+  { id: "cases", label: "ケース", eyebrow: "Cases" },
+  { id: "export", label: "持ち出し", eyebrow: "Export" },
+];
+
+function ToolDock({
+  activeTool,
+  answers,
+  compareLeft,
+  compareRight,
+  filteredCount,
+  onAnswer,
+  onCopy,
+  onExport,
+  onReset,
+  onSelectProblem,
+  selected,
+  setActiveTool,
+  setCompareLeft,
+  setCompareRight,
+}) {
+  return (
+    <section className="tool-dock" aria-label="補助ツール">
+      <div className="tool-dock-head">
+        <div>
+          <p className="eyebrow">{toolTabs.find((tab) => tab.id === activeTool)?.eyebrow}</p>
+          <h2>必要な時だけ開く道具</h2>
+        </div>
+        <div className="tool-tabs" role="tablist" aria-label="補助ツールを切り替え">
+          {toolTabs.map((tab) => (
+            <button
+              aria-selected={activeTool === tab.id}
+              className={activeTool === tab.id ? "is-active" : ""}
+              key={tab.id}
+              onClick={() => setActiveTool(tab.id)}
+              role="tab"
+              type="button"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="tool-panel" role="tabpanel">
+        {activeTool === "diagnosis" && (
+          <DiagnosisPanel
+            answers={answers}
+            onAnswer={onAnswer}
+            onReset={onReset}
+            onSelectProblem={onSelectProblem}
+          />
+        )}
+        {activeTool === "compare" && (
+          <ComparePanel
+            leftId={compareLeft}
+            onLeftChange={setCompareLeft}
+            onRightChange={setCompareRight}
+            rightId={compareRight}
+          />
+        )}
+        {activeTool === "map" && (
+          <div className="tool-stack">
+            <MapPanel selected={selected} />
+            <PipelinePanel />
+          </div>
+        )}
+        {activeTool === "cases" && <CasePanel />}
+        {activeTool === "export" && (
+          <ExportPanel count={filteredCount} onCopy={onCopy} onExport={onExport} />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function CasePanel() {
   return (
     <section className="panel" aria-labelledby="cases-heading">
@@ -809,16 +963,61 @@ function ExportPanel({ count, onCopy, onExport }) {
   );
 }
 
-function InspectorRail({ answers, onAnswer, onReset, onSelectProblem, selected, setCompareRight }) {
+function GuideRail({ filteredCount, onCopy, onExport, selected, setActiveTool, setCompareRight }) {
+  const primaryAlgorithm = selected.candidate_algorithms[0];
+  const primarySolver = selected.candidate_solvers[0];
+
   return (
-    <div className="inspector-rail">
-      <QuickCompare selected={selected} onSelectCompare={setCompareRight} />
-      <DiagnosisPanel
-        answers={answers}
-        onAnswer={onAnswer}
-        onReset={onReset}
-        onSelectProblem={onSelectProblem}
+    <div className="guide-rail">
+      <section className="panel focus-card" aria-label="現在の読みどころ">
+        <p className="eyebrow">Focus</p>
+        <h2>{selected.name_ja}</h2>
+        <p>{selected.summary}</p>
+        <div className="focus-next">
+          <span>
+            <b>Algorithm</b>
+            {primaryAlgorithm ? labelFor(primaryAlgorithm) : "未設定"}
+          </span>
+          <span>
+            <b>Solver</b>
+            {primarySolver ? labelFor(primarySolver) : "未設定"}
+          </span>
+        </div>
+      </section>
+
+      <QuickCompare
+        selected={selected}
+        onSelectCompare={(id) => {
+          setCompareRight(id);
+          setActiveTool("compare");
+        }}
       />
+
+      <section className="panel action-card" aria-label="次の操作">
+        <p className="eyebrow">Next</p>
+        <div className="action-list">
+          <button onClick={() => setActiveTool("diagnosis")} type="button">
+            <span>条件から候補を出す</span>
+            <IconArrowRight aria-hidden="true" size={16} />
+          </button>
+          <button onClick={() => setActiveTool("cases")} type="button">
+            <span>ケースから探す</span>
+            <IconArrowRight aria-hidden="true" size={16} />
+          </button>
+          <button onClick={() => setActiveTool("compare")} type="button">
+            <span>似たクラスと比較する</span>
+            <IconArrowRight aria-hidden="true" size={16} />
+          </button>
+          <button onClick={() => setActiveTool("export")} type="button">
+            <span>{filteredCount} 件を持ち出す</span>
+            <IconArrowRight aria-hidden="true" size={16} />
+          </button>
+        </div>
+        <div className="rail-actions">
+          <IconButton icon={IconClipboard} onClick={onCopy} title="一覧をTSVでコピー">コピー</IconButton>
+          <IconButton icon={IconDownload} onClick={onExport} title="一覧をCSVで保存">CSV</IconButton>
+        </div>
+      </section>
     </div>
   );
 }
@@ -829,6 +1028,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(data.problemClasses[0].id);
   const [compareLeft, setCompareLeft] = useState("linear_programming");
   const [compareRight, setCompareRight] = useState("convex_optimization");
+  const [activeTool, setActiveTool] = useState("diagnosis");
   const [answers, setAnswers] = useState({});
   const [toast, setToast] = useState("");
 
@@ -872,7 +1072,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <OverviewHero selected={selected} />
+      <OverviewHero activeTool={activeTool} selected={selected} setActiveTool={setActiveTool} />
 
       <main className="workspace">
         <Sidebar
@@ -888,20 +1088,32 @@ export default function App() {
         />
 
         <div className="content-stack">
-          <MapPanel selected={selected} />
+          <StartPanel activeTool={activeTool} selected={selected} setActiveTool={setActiveTool} />
           <DetailPanel problem={selected} />
-          <ComparePanel leftId={compareLeft} onLeftChange={setCompareLeft} rightId={compareRight} onRightChange={setCompareRight} />
-          <CasePanel />
-          <PipelinePanel />
-          <ExportPanel count={filteredProblems.length} onCopy={copyProblems} onExport={exportProblems} />
+          <ToolDock
+            activeTool={activeTool}
+            answers={answers}
+            compareLeft={compareLeft}
+            compareRight={compareRight}
+            filteredCount={filteredProblems.length}
+            onAnswer={(questionId, answerId) => setAnswers((current) => ({ ...current, [questionId]: answerId }))}
+            onCopy={copyProblems}
+            onExport={exportProblems}
+            onReset={() => setAnswers({})}
+            onSelectProblem={selectProblem}
+            selected={selected}
+            setActiveTool={setActiveTool}
+            setCompareLeft={setCompareLeft}
+            setCompareRight={setCompareRight}
+          />
         </div>
 
-        <InspectorRail
-          answers={answers}
-          onAnswer={(questionId, answerId) => setAnswers((current) => ({ ...current, [questionId]: answerId }))}
-          onReset={() => setAnswers({})}
-          onSelectProblem={selectProblem}
+        <GuideRail
+          filteredCount={filteredProblems.length}
+          onCopy={copyProblems}
+          onExport={exportProblems}
           selected={selected}
+          setActiveTool={setActiveTool}
           setCompareRight={setCompareRight}
         />
       </main>
