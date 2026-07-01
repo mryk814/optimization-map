@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { IconFilter, IconListSearch, IconRoute } from "@tabler/icons-react";
 
-import { data, getCaseProblems, labelFor, maps } from "../data/loadData.js";
+import { data, getCaseProblems, getStoriesForCase, labelFor, maps } from "../data/loadData.js";
 import { Badge, ButtonLink, CaseCard, PageHeader, ProblemCard, RoutePath } from "../components/ui.jsx";
 
 export function CasesView() {
@@ -65,6 +65,7 @@ export function CaseDetailView({ caseId }) {
   const problems = getCaseProblems(example.id);
   const primary = problems[0];
   const traps = example.likely_traps?.map((id) => maps.problems[id]).filter(Boolean) ?? [];
+  const stories = getStoriesForCase(example.id);
 
   return (
     <div className="view-stack">
@@ -86,6 +87,32 @@ export function CaseDetailView({ caseId }) {
         </div>
         <RoutePath example={example} problem={primary} />
       </section>
+
+      {stories.length > 0 ? (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Visual Demo</p>
+              <h2>小さく解いてみる</h2>
+            </div>
+            <Badge tone="active">{stories.length} 件</Badge>
+          </div>
+          <div className="story-grid">
+            {stories.map((story) => (
+              <article className="story-card" key={story.id}>
+                <div>
+                  <p className="eyebrow">{maps.traces[story.visual_trace_id]?.trace_type ?? "trace"}</p>
+                  <h2>{story.title}</h2>
+                  <p>{story.objective}</p>
+                </div>
+                <ButtonLink href={`#/stories/${story.id}`}>traceを見る</ButtonLink>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="empty-state">このケースの visual demo は coming soon です。</div>
+      )}
 
       <section className="split-section">
         <div className="panel">
