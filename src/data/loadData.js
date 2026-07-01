@@ -8,6 +8,9 @@ import patternsRaw from "../../data/modeling_patterns.yml?raw";
 import problemsRaw from "../../data/problem_classes.yml?raw";
 import relationsRaw from "../../data/relations.yml?raw";
 import solversRaw from "../../data/solvers.yml?raw";
+import tracesRaw from "../../data/optimization_traces.yml?raw";
+import solveStoriesRaw from "../../data/solve_stories.yml?raw";
+import visualSupplementsRaw from "../../data/visual_supplements.yml?raw";
 
 function parse(raw, key) {
   return yaml.load(raw)[key];
@@ -22,6 +25,9 @@ export const data = {
   problemClasses: parse(problemsRaw, "problem_classes"),
   relations: parse(relationsRaw, "relations"),
   solvers: parse(solversRaw, "solvers"),
+  optimizationTraces: parse(tracesRaw, "optimization_traces"),
+  solveStories: parse(solveStoriesRaw, "solve_stories"),
+  visualSupplements: parse(visualSupplementsRaw, "visual_supplements"),
 };
 
 export const maps = {
@@ -31,6 +37,9 @@ export const maps = {
   patterns: Object.fromEntries(data.patterns.map((pattern) => [pattern.id, pattern])),
   problems: Object.fromEntries(data.problemClasses.map((problem) => [problem.id, problem])),
   solvers: Object.fromEntries(data.solvers.map((solver) => [solver.id, solver])),
+  traces: Object.fromEntries(data.optimizationTraces.map((trace) => [trace.id, trace])),
+  solveStories: Object.fromEntries(data.solveStories.map((story) => [story.id, story])),
+  visualSupplements: Object.fromEntries(data.visualSupplements.map((supplement) => [supplement.id, supplement])),
 };
 
 export function labelFor(id) {
@@ -40,6 +49,8 @@ export function labelFor(id) {
     maps.solvers[id] ??
     maps.patterns[id] ??
     maps.cases[id] ??
+    maps.solveStories[id] ??
+    maps.traces[id] ??
     (id === "not_optimization" ? { title: "最適化の前に分析する" } : null);
   return node?.name_ja ?? node?.name ?? node?.title ?? id;
 }
@@ -147,7 +158,34 @@ export function getPathForCase(caseId) {
     primary,
     algorithms: primary?.candidate_algorithms.map((id) => maps.algorithms[id]).filter(Boolean) ?? [],
     solvers: primary?.candidate_solvers.map((id) => maps.solvers[id]).filter(Boolean) ?? [],
+    stories: getStoriesForCase(caseId),
   };
+}
+
+export function getStoriesForCase(caseId) {
+  return data.solveStories.filter((story) => story.case_id === caseId);
+}
+
+export function getStoriesForProblem(problemId) {
+  return data.solveStories.filter(
+    (story) => story.primary_problem_class === problemId || story.secondary_problem_classes?.includes(problemId),
+  );
+}
+
+export function getStoriesForAlgorithm(algorithmId) {
+  return data.solveStories.filter((story) => story.candidate_algorithms?.includes(algorithmId));
+}
+
+export function getStoryTrace(storyId) {
+  const story = maps.solveStories[storyId];
+  if (!story) {
+    return null;
+  }
+  return maps.traces[story.visual_trace_id] ?? null;
+}
+
+export function getVisualSupplementForAlgorithm(algorithmId) {
+  return data.visualSupplements.find((supplement) => supplement.target_type === "algorithm" && supplement.target_id === algorithmId) ?? null;
 }
 
 export function filterProblems(query, axisFilter = "all") {
