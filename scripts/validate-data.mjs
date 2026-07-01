@@ -34,6 +34,8 @@ const relationTypes = new Set([
   "used_in",
 ]);
 
+const visualTargetTypes = new Set(["problem_class", "algorithm", "solver", "case", "modeling_pattern"]);
+
 function readYaml(relativePath) {
   const absolutePath = path.join(root, relativePath);
   return yaml.load(fs.readFileSync(absolutePath, "utf8"));
@@ -71,6 +73,9 @@ const patterns = readYaml("data/modeling_patterns.yml").patterns;
 const relations = readYaml("data/relations.yml").relations;
 const cases = readYaml("data/example_cases.yml").example_cases;
 const diagnosis = readYaml("data/diagnosis_rules.yml").questions;
+const visualSupplements = readYaml("data/visual_supplements.yml").visual_supplements;
+const solveStories = readYaml("data/solve_stories.yml").solve_stories;
+const optimizationTraces = readYaml("data/optimization_traces.yml").optimization_traces;
 
 assertArray(axes, "classification axes", 24);
 assertArray(problems, "problem classes", 15);
@@ -79,6 +84,9 @@ assertArray(solvers, "solvers", 15);
 assertArray(relations, "relations", 80);
 assertArray(cases, "example cases", 30);
 assertArray(diagnosis, "diagnosis questions", 8);
+assertArray(visualSupplements, "visual supplements", algorithms.length);
+assertArray(solveStories, "solve stories", 4);
+assertArray(optimizationTraces, "optimization traces", 4);
 
 const axisIds = uniqueById(axes, "classification axes");
 const problemIds = uniqueById(problems, "problem classes");
@@ -88,6 +96,9 @@ const patternIds = uniqueById(patterns, "patterns");
 const relationIds = uniqueById(relations, "relations");
 const caseIds = uniqueById(cases, "example cases");
 uniqueById(diagnosis, "diagnosis questions");
+const visualSupplementIds = uniqueById(visualSupplements, "visual supplements");
+const solveStoryIds = uniqueById(solveStories, "solve stories");
+const traceIds = uniqueById(optimizationTraces, "optimization traces");
 
 const graphIds = new Set([
   ...problemIds,
@@ -97,6 +108,15 @@ const graphIds = new Set([
   ...caseIds,
   "not_optimization",
 ]);
+
+function hasTarget(targetType, targetId) {
+  if (targetType === "problem_class") return problemIds.has(targetId);
+  if (targetType === "algorithm") return algorithmIds.has(targetId);
+  if (targetType === "solver") return solverIds.has(targetId);
+  if (targetType === "case") return caseIds.has(targetId);
+  if (targetType === "modeling_pattern") return patternIds.has(targetId);
+  return false;
+}
 
 for (const axis of axes) {
   for (const field of ["name_ja", "name_en", "category", "description", "diagnostic_question", "ui_widget"]) {
@@ -245,6 +265,113 @@ for (const question of diagnosis) {
   }
 }
 
+const visualSupplementsByAlgorithm = new Map();
+for (const supplement of visualSupplements) {
+  for (const field of [
+    "target_type",
+    "target_id",
+    "title",
+    "visual_type",
+    "learning_goal",
+    "what_moves",
+    "what_user_should_notice",
+    "required_fields",
+    "pseudo_code",
+    "ai_coding_brief",
+  ]) {
+    if (supplement[field] === undefined || supplement[field] === null) {
+      fail(`visual supplement ${supplement.id} is missing ${field}`);
+    }
+  }
+  if (!visualTargetTypes.has(supplement.target_type)) {
+    fail(`visual supplement ${supplement.id} has invalid target_type ${supplement.target_type}`);
+  }
+  if (!hasTarget(supplement.target_type, supplement.target_id)) {
+    fail(`visual supplement ${supplement.id} references missing ${supplement.target_type} ${supplement.target_id}`);
+  }
+  assertArray(supplement.what_moves, `visual supplement ${supplement.id}.what_moves`, 1);
+  assertArray(supplement.what_user_should_notice, `visual supplement ${supplement.id}.what_user_should_notice`, 1);
+  assertArray(supplement.required_fields, `visual supplement ${supplement.id}.required_fields`, 1);
+  if (supplement.static_trace_ok !== true) {
+    fail(`visual supplement ${supplement.id} must declare static_trace_ok: true`);
+  }
+  if (supplement.realtime_solve_required !== false) {
+    fail(`visual supplement ${supplement.id} must declare realtime_solve_required: false`);
+  }
+  if (supplement.target_type === "algorithm") {
+    const count = visualSupplementsByAlgorithm.get(supplement.target_id) ?? 0;
+    visualSupplementsByAlgorithm.set(supplement.target_id, count + 1);
+  }
+}
+
+const algorithmsWithoutVisuals = [...algorithmIds].filter((algorithmId) => !visualSupplementsByAlgorithm.has(algorithmId));
+if (algorithmsWithoutVisuals.length > 0) {
+  fail(`every algorithm needs at least one visual supplement; missing: ${algorithmsWithoutVisuals.join(", ")}`);
+}
+
+for (const trace of optimizationTraces) {
+  if (!trace.trace_type) {
+    fail(`optimization trace ${trace.id} is missing trace_type`);
+  }
+  assertArray(trace.states, `optimization trace ${trace.id}.states`, 1);
+}
+
+for (const story of solveStories) {
+  for (const field of [
+    "title",
+    "case_id",
+    "domain",
+    "primary_problem_class",
+    "secondary_problem_classes",
+    "modeling_pattern",
+    "decision_variables",
+    "objective",
+    "constraints",
+    "candidate_algorithms",
+    "candidate_solvers",
+    "visual_trace_id",
+    "pseudo_code",
+    "interpretation",
+    "ai_coding_brief",
+  ]) {
+    if (story[field] === undefined || story[field] === null) {
+      fail(`solve story ${story.id} is missing ${field}`);
+    }
+  }
+  if (!caseIds.has(story.case_id)) {
+    fail(`solve story ${story.id} references missing case ${story.case_id}`);
+  }
+  if (!problemIds.has(story.primary_problem_class)) {
+    fail(`solve story ${story.id} references missing primary problem class ${story.primary_problem_class}`);
+  }
+  for (const problemId of story.secondary_problem_classes ?? []) {
+    if (!problemIds.has(problemId)) {
+      fail(`solve story ${story.id} references missing secondary problem class ${problemId}`);
+    }
+  }
+  if (!patternIds.has(story.modeling_pattern)) {
+    fail(`solve story ${story.id} references missing modeling pattern ${story.modeling_pattern}`);
+  }
+  assertArray(story.decision_variables, `solve story ${story.id}.decision_variables`, 1);
+  assertArray(story.constraints, `solve story ${story.id}.constraints`, 1);
+  assertArray(story.candidate_algorithms, `solve story ${story.id}.candidate_algorithms`, 1);
+  assertArray(story.candidate_solvers, `solve story ${story.id}.candidate_solvers`, 1);
+  assertArray(story.interpretation, `solve story ${story.id}.interpretation`, 1);
+  for (const algorithmId of story.candidate_algorithms) {
+    if (!algorithmIds.has(algorithmId)) {
+      fail(`solve story ${story.id} references missing algorithm ${algorithmId}`);
+    }
+  }
+  for (const solverId of story.candidate_solvers) {
+    if (!solverIds.has(solverId)) {
+      fail(`solve story ${story.id} references missing solver ${solverId}`);
+    }
+  }
+  if (!traceIds.has(story.visual_trace_id)) {
+    fail(`solve story ${story.id} references missing trace ${story.visual_trace_id}`);
+  }
+}
+
 console.log(
   JSON.stringify(
     {
@@ -260,6 +387,11 @@ console.log(
       exampleCases: cases.length,
       expectedTop3CoveredProblemClasses: coveredProblemClassCount,
       notOptimizationCases: notOptimizationCaseCount,
+      visualSupplements: visualSupplements.length,
+      visualSupplementedAlgorithms: visualSupplementsByAlgorithm.size,
+      solveStories: solveStoryIds.size,
+      optimizationTraces: traceIds.size,
+      visualSupplementIds: visualSupplementIds.size,
     },
     null,
     2,
