@@ -1,0 +1,249 @@
+solve_stories:
+  - id: lp_production_planning_story
+    title: 生産計画をLPで解く
+    case_id: production_planning
+    domain: production
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [mixed_integer_linear_programming, convex_optimization]
+    modeling_pattern: allocation
+    decision_variables:
+      - 製品Aの生産量 x_A
+      - 製品Bの生産量 x_B
+    objective: 利益 30 x_A + 20 x_B を最大化する。
+    constraints:
+      - 材料使用量が上限を超えない
+      - 作業時間が上限を超えない
+      - 生産量は負にならない
+    uncertainty_or_time_structure: まず需要や材料量を固定した静的な計画として扱う。
+    candidate_algorithms: [simplex, interior_point]
+    candidate_solvers: [scipy_linprog, highs]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: |
+      define c = [-30, -20]
+      define A_ub for material and labor constraints
+      define b_ub for capacities
+      solve linprog(c, A_ub, b_ub, bounds=(0, inf))
+      inspect x and objective value
+    interpretation:
+      - 解は、限られた材料と作業時間をどちらの製品へ配分するかを示す。
+      - 2Dでは制約が作る多角形の頂点に最適解が出る様子を見られる。
+      - binaryやsetup判断が入るとMILPに近づく。
+    ai_coding_brief: |
+      SciPy linprog を使って2変数LPを解くサンプルコードを書いてください。
+      入力は利益係数、材料係数、作業時間係数、容量です。
+      出力は最適生産量、最大利益、制約slackです。
+      併せて、feasible region と objective line を描くための polygon data を返してください。
+    sources:
+      - https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
+
+  - id: qp_portfolio_story
+    title: ポートフォリオをQPで解く
+    case_id: portfolio
+    domain: finance
+    primary_problem_class: quadratic_programming
+    secondary_problem_classes: [convex_optimization, socp_sdp]
+    modeling_pattern: portfolio
+    decision_variables:
+      - 各資産への投資比率 w_i
+    objective: リスクペナルティ付きの目的関数を最小化し、期待リターンと分散リスクのバランスを取る。
+    constraints:
+      - 投資比率の合計は1
+      - 空売りなしの場合 w_i >= 0
+      - 必要ならセクターや上限制約を入れる
+    uncertainty_or_time_structure: 期待リターンと共分散を固定した単期モデルとして扱う。
+    candidate_algorithms: [interior_point]
+    candidate_solvers: [cvxpy, mosek]
+    visual_trace_id: qp_portfolio_tradeoff_trace
+    pseudo_code: |
+      define expected returns mu
+      define covariance matrix Sigma
+      choose risk_aversion gamma
+      minimize gamma * quad_form(w, Sigma) - mu^T w
+      subject to sum(w) == 1 and w >= 0
+      solve with cvxpy
+    interpretation:
+      - risk_aversion を上げると、リスクの低い重みへ移る。
+      - 凸QPなら大域最適性を期待できる。
+      - 分布推定に不安がある場合はRO/DROへ進む。
+    ai_coding_brief: |
+      CVXPYで3資産のポートフォリオQPを解くコードを書いてください。
+      risk_aversionを複数値で変え、各重み、期待リターン、分散を表として返してください。
+      可視化用に risk-return curve の points を返してください。
+    sources:
+      - https://www.cvxpy.org/examples/basic/quadratic_program.html
+
+  - id: gradient_descent_toy_story
+    title: 勾配降下で2次関数を下る
+    case_id: model_training_loss
+    domain: learning
+    primary_problem_class: nonlinear_programming
+    secondary_problem_classes: [nonconvex_optimization, differentiable_optimization]
+    modeling_pattern: continuous_design
+    decision_variables:
+      - 2次元のパラメータ x, y
+    objective: f(x, y) = x^2 + 2y^2 を最小化する。
+    constraints:
+      - 制約なし
+    uncertainty_or_time_structure: deterministic な反復最適化として扱う。
+    candidate_algorithms: [local_nlp]
+    candidate_solvers: [scipy_optimize, jaxopt]
+    visual_trace_id: gradient_descent_bowl_trace
+    pseudo_code: |
+      initialize x = [3, 2]
+      repeat:
+        grad = [2*x0, 4*x1]
+        x = x - step_size * grad
+        record objective and gradient norm
+    interpretation:
+      - 点が等高線を横切りながら低い目的値へ進む。
+      - step size が大きすぎると振動や発散が起きる。
+      - 非凸問題では局所解へ落ちる可能性がある。
+    ai_coding_brief: |
+      2D quadratic bowl 上のgradient descent traceを生成するコードを書いてください。
+      各iterationで x, objective, gradient_norm を保存してください。
+      React/SVG側で等高線と点の軌跡を描けるJSONを返してください。
+    sources:
+      - https://docs.scipy.org/doc/scipy/reference/optimize.html
+
+  - id: milp_branch_bound_story
+    title: Branch-and-Boundで整数解を絞る
+    case_id: facility_location
+    domain: planning
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [combinatorial_optimization, linear_programming]
+    modeling_pattern: facility_location
+    decision_variables:
+      - 施設を開くかどうか y_j in {0,1}
+      - 顧客を施設へ割り当てる x_ij
+    objective: 固定費と割当コストの合計を最小化する。
+    constraints:
+      - 各顧客はどこかの施設へ割り当てる
+      - 開いていない施設には割り当てられない
+      - 施設容量を超えない
+    uncertainty_or_time_structure: 静的な混合整数モデルとして扱う。
+    candidate_algorithms: [branch_and_bound, cutting_planes, branch_cut]
+    candidate_solvers: [gurobi, cplex, scip, highs]
+    visual_trace_id: milp_branch_bound_trace
+    pseudo_code: |
+      solve LP relaxation at root
+      if solution has fractional y:
+        branch on y_j <= 0 and y_j >= 1
+      update incumbent when integer feasible solution appears
+      prune nodes by infeasibility or bound
+      stop when all nodes are closed
+    interpretation:
+      - 整数変数が入ると候補の組合せを探索する必要がある。
+      - boundとincumbentの差がgapになる。
+      - 良い緩和やcutは探索木を小さくする。
+    ai_coding_brief: |
+      Branch-and-Boundのtoy traceを表示するReact componentを作ってください。
+      入力はnodes, edges, incumbent_by_step, gap_by_stepです。
+      step sliderでactive node、pruned node、incumbentを更新してください。
+    sources:
+      - https://www.scipopt.org/
+
+  - id: cpsat_shift_assignment_story
+    title: CP-SATで人員シフトを作る
+    case_id: workforce_shift
+    domain: scheduling
+    primary_problem_class: constraint_programming_sat_smt
+    secondary_problem_classes: [mixed_integer_linear_programming, combinatorial_optimization]
+    modeling_pattern: scheduling
+    decision_variables:
+      - worker w が shift s に入るか x[w,s] in {0,1}
+    objective: 希望違反と不足ペナルティを小さくする。
+    constraints:
+      - 各shiftに必要人数以上を配置する
+      - 同じworkerは同じ時間に複数shiftへ入れない
+      - 休暇希望やスキル制約を守る
+    uncertainty_or_time_structure: まずは静的な週次シフト表として扱う。
+    candidate_algorithms: [constraint_propagation, branch_and_bound]
+    candidate_solvers: [ortools, z3]
+    visual_trace_id: cpsat_shift_grid_trace
+    pseudo_code: |
+      create binary variables x[w,s]
+      add coverage constraints
+      add at-most-one constraints per worker/time
+      add skill and vacation constraints
+      minimize penalty terms
+      solve with CP-SAT
+    interpretation:
+      - 表のセルが0/1変数に対応する。
+      - 制約違反を可視化すると、なぜその割当が不可能か分かりやすい。
+      - 線形目的より制約充足が主役ならCP-SATが候補になる。
+    ai_coding_brief: |
+      OR-Tools CP-SATのシフト割当サンプルを作ってください。
+      小規模データとしてworkers 4人、shifts 4枠を使い、coverage, at-most-one, unavailable制約を入れてください。
+      可視化用にassignment gridとviolationsをJSONで返してください。
+    sources:
+      - https://developers.google.com/optimization/cp/cp_solver
+
+  - id: bo_experiment_story
+    title: Bayesian Optimizationで高価な実験を順に選ぶ
+    case_id: experiment_design
+    domain: experimentation
+    primary_problem_class: bayesian_optimization_problem
+    secondary_problem_classes: [blackbox_derivative_free, simulation_optimization]
+    modeling_pattern: experimental_design
+    decision_variables:
+      - 実験条件 x
+    objective: 観測される反応値を最大化する。
+    constraints:
+      - 実験可能な範囲内で条件を選ぶ
+      - 安全上試せない領域は除外する
+    uncertainty_or_time_structure: 1回ずつ観測しながら次の候補を選ぶ逐次最適化として扱う。
+    candidate_algorithms: [bayesian_optimization, upper_confidence_bound]
+    candidate_solvers: [botorch, optuna]
+    visual_trace_id: bo_experiment_trial_trace
+    pseudo_code: |
+      start with a few initial trials
+      fit surrogate model
+      choose next x by acquisition function
+      evaluate black-box objective
+      update best-so-far
+    interpretation:
+      - 評価が高価なとき、全探索ではなく次に試す点を慎重に選ぶ。
+      - best-so-farを見ると探索の進行が分かる。
+      - 高次元や強い制約では工夫が必要。
+    ai_coding_brief: |
+      Optuna風のtoy Bayesian optimization traceを作ってください。
+      各trialにx, objective, best_so_far, noteを持たせてください。
+      UIではtrial historyとbest-so-far curveをstep再生してください。
+    sources:
+      - https://botorch.org/docs/introduction
+      - https://optuna.readthedocs.io/
+
+  - id: bandit_ab_allocation_story
+    title: BanditでA/B配分を更新する
+    case_id: ab_allocation
+    domain: experimentation
+    primary_problem_class: online_optimization_bandits
+    secondary_problem_classes: [bayesian_optimization_problem, dynamic_programming_rl]
+    modeling_pattern: online_experiment
+    decision_variables:
+      - 各roundで選ぶvariant / arm
+    objective: 累積報酬を大きくし、regretを小さくする。
+    constraints:
+      - 各roundでは1つのarmだけ選ぶ
+      - 観測できるのは選んだarmの結果だけ
+    uncertainty_or_time_structure: bandit feedback を持つ逐次意思決定として扱う。
+    candidate_algorithms: [upper_confidence_bound]
+    candidate_solvers: [optuna, botorch]
+    visual_trace_id: bandit_ab_ucb_trace
+    pseudo_code: |
+      initialize each arm by trying once
+      for each round:
+        compute upper confidence bound for each arm
+        select arm with largest UCB
+        observe reward
+        update mean and confidence interval
+    interpretation:
+      - 不確実なarmも試すため、短期的には損をすることがある。
+      - 観測が増えると良いarmへ配分が寄る。
+      - BOよりもarm選択や逐次配分の見方に近い。
+    ai_coding_brief: |
+      UCBのtoy traceを作ってください。
+      armsは3つ、roundごとにselected_arm, reward, empirical_mean, confidence_bound, cumulative_regretを保存してください。
+      UIではarm別の棒グラフとregret curveを表示してください。
+    sources:
+      - https://tor-lattimore.com/downloads/book/book.pdf
