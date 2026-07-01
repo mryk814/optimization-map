@@ -12,6 +12,7 @@ Demo: https://mryk814.github.io/optimization-map/
 - どの前提を置けば、より解きやすい問題になるのか？
 - LP と Convex、MILP と CP-SAT、SP と RO/DRO のような近い概念をどう使い分けるのか？
 - いつ「これは最適化で解く前に整理すべき」と判断するのか？
+- 小さな例で、最適化がどう進むかをどう見せるか？
 
 ## Quick Start
 
@@ -22,7 +23,7 @@ npm run dev
 npm run build
 ```
 
-- `npm run validate`: YAML の件数、ID 参照、source policy、relation endpoint、診断ケース、全 `confused_with` の比較判断軸を検査します。
+- `npm run validate`: YAML の件数、ID 参照、source policy、relation endpoint、診断ケース、全 `confused_with` の比較判断軸、visual supplement、solve story、trace を検査します。
 - `npm run dev`: static explorer を `http://127.0.0.1:5173/` で起動します。
 - `npm run build`: validation 後に production build を作ります。
 
@@ -38,8 +39,13 @@ npm run build
 - Guided confused_with: 10 / 10 本
 - Diagnosis golden cases: 30 件
 - expected_top3 coverage: ProblemClass 20 / 20 件
+- VisualSupplement: 20 件
+- SolveStory: 7 件
+- OptimizationTrace: 7 件
 
 Static explorer は hash route を持つ読解サイト型の構成です。ケース入口、問題タイプの記事、モデリング診断、比較ビュー、課題を候補タイプ・手法・solver へ翻訳する解き方ビュー、TSV コピー、CSV export を扱えます。
+
+v0.2 では、リアルタイム求解ではなく、事前に用意した `OptimizationTrace` を再生する **Visual Learning Layer** を育てます。
 
 ## Repo Structure
 
@@ -63,6 +69,7 @@ optimization-map/
 - [問題タイプ比較テンプレート](docs/problem-class-comparison-template.md)
 - [Knowledge Graph](docs/knowledge-graph.md)
 - [Visualization](docs/visualization.md)
+- [Visual Spec Template](docs/visual-spec-template.md)
 - [Research Sources](docs/research-sources.md)
 
 ## Source Policy
@@ -73,6 +80,6 @@ optimization-map/
 
 ## Next Milestones
 
-1. 診断 golden cases の自動スコア評価を追加する。
-2. source coverage と古典 / 最新資料の区別を継続的に更新する。
-3. solver 実行なしで読めるサンプル解法ノートを代表ケースへ追加する。
+1. Visual demo を ProblemType / Case / Path から辿れるようにする。
+2. LP / QP / Gradient Descent / MILP / CP-SAT / BO の代表 trace をUIで再生する。
+3. AI Coding Brief Export を作り、ProblemType / SolveStory / Algorithm から実装指示をコピーできるようにする。
