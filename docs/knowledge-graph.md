@@ -1,6 +1,6 @@
 # Knowledge Graph
 
-Optimization Map の graph は、分類ツリーではなく多軸 relation です。ProblemClass は複数の親や隣接概念を持ちます。
+Optimization Map の graph は、分類ツリーではなく多軸 relation です。問題タイプ（内部データ名: ProblemClass）は複数の親や隣接概念を持ちます。
 
 ## Node Types
 

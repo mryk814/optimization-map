@@ -1,6 +1,6 @@
 # Research Sources
 
-この repo の source は、ProblemClass から直接参照できる粒度で管理します。根拠なしの説明文が増えると、診断と比較の信頼性が落ちるためです。
+この repo の source は、問題タイプ（内部データ名: ProblemClass）から直接参照できる粒度で管理します。根拠なしの説明文が増えると、診断と比較の信頼性が落ちるためです。
 
 ## Source Types
 
@@ -13,7 +13,7 @@
 | `survey` | 分野の整理、比較、最近の位置づけ |
 | `paper` | 特定手法や重要概念の根拠 |
 
-## ProblemClass Source Map
+## Problem Type Source Map
 
 - LP: MIT OCW, SciPy linprog
 - QP: CVXPY, MOSEK Modeling Cookbook

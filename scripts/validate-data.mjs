@@ -193,11 +193,12 @@ if (confusedWithCount < 8) {
   fail(`need at least 8 confused_with relations, got ${confusedWithCount}`);
 }
 
-if (guidedConfusedWithCount < 5) {
-  fail(`need at least 5 guided confused_with relations, got ${guidedConfusedWithCount}`);
+if (guidedConfusedWithCount !== confusedWithCount) {
+  fail(`all confused_with relations need decision guidance, got ${guidedConfusedWithCount}/${confusedWithCount}`);
 }
 
 let notOptimizationCaseCount = 0;
+const expectedTop3Coverage = new Set();
 for (const example of cases) {
   for (const field of ["title", "narrative", "signals"]) {
     if (!example[field]) {
@@ -206,10 +207,14 @@ for (const example of cases) {
   }
   assertArray(example.signals, `example ${example.id}.signals`, 1);
   assertArray(example.expected_top3, `example ${example.id}.expected_top3`, 3);
+  if (new Set(example.expected_top3).size !== example.expected_top3.length) {
+    fail(`example ${example.id}.expected_top3 must not contain duplicate classes`);
+  }
   for (const id of example.expected_top3) {
     if (!problemIds.has(id) && id !== "not_optimization") {
       fail(`example ${example.id} references missing expected class ${id}`);
     }
+    expectedTop3Coverage.add(id);
   }
   if (example.expected_top3.includes("not_optimization")) {
     notOptimizationCaseCount += 1;
@@ -218,6 +223,12 @@ for (const example of cases) {
 
 if (notOptimizationCaseCount < 3) {
   fail(`need at least 3 not_optimization example cases, got ${notOptimizationCaseCount}`);
+}
+
+const coveredProblemClassCount = [...expectedTop3Coverage].filter((id) => problemIds.has(id)).length;
+if (coveredProblemClassCount !== problemIds.size) {
+  const missing = [...problemIds].filter((id) => !expectedTop3Coverage.has(id));
+  fail(`expected_top3 coverage must include every problem class; missing: ${missing.join(", ")}`);
 }
 
 for (const question of diagnosis) {
@@ -247,6 +258,7 @@ console.log(
       confusedWithRelations: confusedWithCount,
       guidedConfusedWithRelations: guidedConfusedWithCount,
       exampleCases: cases.length,
+      expectedTop3CoveredProblemClasses: coveredProblemClassCount,
       notOptimizationCases: notOptimizationCaseCount,
     },
     null,

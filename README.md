@@ -1,6 +1,6 @@
 # optimization-map
 
-Optimization Map は、現実課題を **ProblemClass、モデリング方針、Algorithm、Solver** へつなげて探索するための静的な知識ベース / 教育アプリです。
+Optimization Map は、現実課題を **問題タイプ、モデリング方針、Algorithm、Solver** へつなげて探索するための静的な知識ベース / 教育アプリです。
 
 Demo: https://mryk814.github.io/optimization-map/
 
@@ -22,7 +22,7 @@ npm run dev
 npm run build
 ```
 
-- `npm run validate`: YAML の件数、ID 参照、source policy、relation endpoint、診断ケース、比較判断軸を検査します。
+- `npm run validate`: YAML の件数、ID 参照、source policy、relation endpoint、診断ケース、全 `confused_with` の比較判断軸を検査します。
 - `npm run dev`: static explorer を `http://127.0.0.1:5173/` で起動します。
 - `npm run build`: validation 後に production build を作ります。
 
@@ -31,13 +31,15 @@ npm run build
 ## Current MVP
 
 - ClassificationAxis: 25 件
-- ProblemClass: 20 件
+- 問題タイプ（内部データ名: ProblemClass）: 20 件
 - Algorithm: 20 件
 - Solver: 19 件
 - Relation: 90 本
+- Guided confused_with: 10 / 10 本
 - Diagnosis golden cases: 30 件
+- expected_top3 coverage: ProblemClass 20 / 20 件
 
-Static explorer では ProblemClass 検索、core axis filter、詳細カード、比較ビュー、relation tracing、モデリング診断、診断ベンチケース、TSV コピー、CSV export を扱えます。
+Static explorer は hash route を持つ読解サイト型の構成です。ケース入口、問題タイプの記事、モデリング診断、比較ビュー、課題を候補タイプ・手法・solver へ翻訳する解き方ビュー、TSV コピー、CSV export を扱えます。
 
 ## Repo Structure
 
@@ -58,7 +60,7 @@ optimization-map/
 - [Roadmap](docs/roadmap.md)
 - [Data Model](docs/data-model.md)
 - [Diagnosis Flow](docs/diagnosis-flow.md)
-- [ProblemClass Comparison Template](docs/problem-class-comparison-template.md)
+- [問題タイプ比較テンプレート](docs/problem-class-comparison-template.md)
 - [Knowledge Graph](docs/knowledge-graph.md)
 - [Visualization](docs/visualization.md)
 - [Research Sources](docs/research-sources.md)
@@ -72,6 +74,5 @@ optimization-map/
 ## Next Milestones
 
 1. 診断 golden cases の自動スコア評価を追加する。
-2. 比較ビューの判断軸を `confused_with` relation 全体へ広げる。
-3. ProblemClass map と solver 対応表をより探索しやすくする。
-4. source coverage と古典 / 最新資料の区別を継続的に更新する。
+2. source coverage と古典 / 最新資料の区別を継続的に更新する。
+3. solver 実行なしで読めるサンプル解法ノートを代表ケースへ追加する。

@@ -49,7 +49,7 @@ Allowed types:
 
 ### ExampleCase
 
-診断の評価セットです。`narrative` が現実課題の説明、`signals` が診断で拾いたい特徴、`expected_top3` が候補に含めるべき問題クラスです。`expected_top3` は一つの正解ではなく、妥当な候補集合です。
+診断の評価セットです。`narrative` が現実課題の説明、`signals` が診断で拾いたい特徴、`expected_top3` が候補に含めるべき問題タイプです。`expected_top3` は一つの正解ではなく、妥当な候補集合です。
 
 ## Validation
 

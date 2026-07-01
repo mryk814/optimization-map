@@ -1,4 +1,4 @@
-# ProblemClass Comparison Template
+# Problem Type Comparison Template
 
 比較ビューは「似ているが違う概念」を選ぶための道具です。定義の横並びではなく、判断軸ごとに違いを見せます。
 
@@ -31,7 +31,7 @@
 
 ## Filled v0 Pairs
 
-The explorer can compare any two ProblemClass records. Priority `confused_with` relations carry the decision guidance used by the UI:
+The explorer can compare any two problem type records. Priority `confused_with` relations carry the decision guidance used by the UI:
 
 - `shared`: 同じところ
 - `decision_axes`: 違うところを見る観点

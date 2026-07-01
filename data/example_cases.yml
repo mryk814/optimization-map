@@ -57,7 +57,7 @@ example_cases:
     title: ポートフォリオのリスクと収益を調整する
     narrative: 期待収益と分散リスクの tradeoff を取りたい。
     signals: [quadratic, convex, risk]
-    expected_top3: [quadratic_programming, convex_optimization, distributionally_robust_optimization]
+    expected_top3: [quadratic_programming, convex_optimization, socp_sdp]
     likely_traps: [mixed_integer_linear_programming]
   - id: robust_supply_chain
     title: 供給途絶に備えたサプライチェーン設計

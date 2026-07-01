@@ -97,9 +97,45 @@ relations:
     choose_source_when: 需要や供給の上限下限など、パラメータ範囲への最悪ケースで十分に説明できる。
     choose_target_when: 過去データがあり、分布の推定誤差や tail risk まで含めて守りたい。
     decision_note: RO は値の集合、DRO は分布の集合。データ由来の分布不安があるときに DRO へ進む。
-  - { id: r015, type: confused_with, source: optimal_control, target: dynamic_programming_rl, explanation: 制御はモデルと制約を重視し、RL は観測から方策を学ぶ側面が強い。 }
-  - { id: r016, type: confused_with, source: online_optimization_bandits, target: dynamic_programming_rl, explanation: Bandit は状態遷移を単純化し regret を重視することが多い。 }
-  - { id: r017, type: confused_with, source: differentiable_optimization, target: hpo_automl, explanation: 微分可能最適化は下流 solver を学習に組み込み、HPO は外側から設定を探索する。 }
+  - id: r015
+    type: confused_with
+    source: optimal_control
+    target: dynamic_programming_rl
+    explanation: 制御はモデルと制約を重視し、RL は観測から方策を学ぶ側面が強い。
+    shared: どちらも状態、行動、時間、報酬またはコストを持つ逐次意思決定を扱う。
+    decision_axes:
+      - ダイナミクスや制約を明示的なモデルとして書けるか
+      - 安全制約や入力制限を常に守る必要があるか
+      - サンプルから方策を学ぶのか、既知モデルを使って軌道を計算するのか
+    choose_source_when: 物理モデル、入力制限、状態制約が明確で、MPC や軌道最適化として安全に解きたい。
+    choose_target_when: 環境の遷移や報酬を試行から学び、価値関数や方策をデータで改善したい。
+    decision_note: モデルと制約を先に信じるなら Optimal Control、経験から方策を学ぶなら DP/RL として読む。
+  - id: r016
+    type: confused_with
+    source: online_optimization_bandits
+    target: dynamic_programming_rl
+    explanation: Bandit は状態遷移を単純化し regret を重視することが多い。
+    shared: どちらも観測しながら次の行動を選び、探索と活用のバランスを扱う。
+    decision_axes:
+      - 行動の結果がすぐ観測できるか、将来状態まで連鎖するか
+      - 評価指標が regret か、長期累積報酬か
+      - 状態表現と遷移モデルを持つ必要があるか
+    choose_source_when: A/B配分や広告予算のように、行動ごとの報酬を逐次観測して短い周期で配分を直したい。
+    choose_target_when: 現在の行動が将来の状態を変え、価値関数や方策を長期的に学ぶ必要がある。
+    decision_note: 状態遷移を捨てられるなら Bandit、将来状態への影響が本体なら DP/RL に進む。
+  - id: r017
+    type: confused_with
+    source: differentiable_optimization
+    target: hpo_automl
+    explanation: 微分可能最適化は下流 solver を学習に組み込み、HPO は外側から設定を探索する。
+    shared: どちらも機械学習の性能を上げるために、学習処理の周辺で最適化を使う。
+    decision_axes:
+      - solver や意思決定損失を微分可能な計算グラフに入れられるか
+      - 探索したい対象がモデル内部の決定か、外側の設定やパイプラインか
+      - 勾配で端から端まで更新したいか、validation 指標を見ながら試行を選びたいか
+    choose_source_when: 予測後の最適化結果を損失に含め、solver 出力を微分してモデルを更新したい。
+    choose_target_when: 学習率、モデル種類、特徴量処理などを validation loss で外側から比較したい。
+    decision_note: solver を学習ループへ埋め込むなら Differentiable Optimization、設定探索なら HPO/AutoML として扱う。
   - { id: r018, type: relaxes_to, source: mixed_integer_linear_programming, target: linear_programming, explanation: 整数制約を外すと LP relaxation になり、下界やヒントを得られる。 }
   - { id: r019, type: relaxes_to, source: combinatorial_optimization, target: linear_programming, explanation: 多くの離散問題は polyhedral relaxation によって連続問題へ緩和できる。 }
   - { id: r020, type: relaxes_to, source: nonconvex_optimization, target: convex_optimization, explanation: 凸緩和により下界や安定した近似解を得る。 }
