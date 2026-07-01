@@ -2,6 +2,8 @@
 
 Visualization の目的は、最適化分野の「現在地」と「隣に何があるか」を見せることです。
 
+ビジュアル実装の仕様化には [Visual Spec Template](visual-spec-template.md) を使います。最初から live solver を動かすのではなく、`OptimizationTrace` を再生する静的デモとして設計します。
+
 ## Current MVP Views
 
 ### Case-first Solving Flow
@@ -25,6 +27,26 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 
 - Meaning: 変数、線形性、不確実性などから次に読む問題タイプ候補を絞る
 - URL: `#/diagnosis`
+
+## v0.2 Visual Learning Layer
+
+### SolveStory
+
+- Node: ExampleCase / ProblemType / Algorithm / Solver
+- Meaning: `課題 → 変数 → 目的 → 制約 → 手法 → trace → 解釈` の流れを読む
+- Data: `data/solve_stories.yml`
+
+### OptimizationTrace Player
+
+- Node: SolveStory
+- Meaning: 事前計算された状態列を step-by-step に再生する
+- Data: `data/optimization_traces.yml`
+
+### Algorithm Visual Supplement
+
+- Node: Algorithm
+- Meaning: その手法で「何が動くと理解しやすいか」を明示する
+- Data: `data/visual_supplements.yml`
 
 ## Deferred Graph Views
 
@@ -63,6 +85,7 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 - performance benchmark dashboard
 - solver execution UI
 - source citation network
+- live Python / Pyodide execution
 
 ## Visual Encoding
 
@@ -71,3 +94,9 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 - Selected node uses accent border and subtle background.
 - Heatmap uses single-hue intensity; do not use rainbow.
 - Table data must support TSV copy and CSV export.
+
+## Implementation Rule
+
+- Prefer static trace replay before live execution.
+- Every visual demo should declare `learning_goal`, `what_moves`, and `what_user_should_notice`.
+- AI coding briefs should be specific enough to implement a component without reading optimization textbooks.
