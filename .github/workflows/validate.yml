@@ -3,6 +3,7 @@ name: validate
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,6 +16,7 @@ concurrency:
 
 jobs:
   data:
+    name: Validate data and build app
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +24,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run validate
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate YAML data
+        run: npm run validate
+      - name: Build static explorer
+        run: npm run build
 
   deploy:
+    name: Deploy GitHub Pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: data
     runs-on: ubuntu-latest
@@ -39,8 +45,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+      - name: Build static explorer
+        run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
