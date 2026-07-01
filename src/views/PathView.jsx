@@ -7,6 +7,7 @@ export function PathView({ caseId }) {
   const path = getPathForCase(caseId) ?? getPathForCase(data.exampleCases[0].id);
   const traps = path.example.likely_traps?.map((id) => maps.problems[id]).filter(Boolean) ?? [];
   const primaryAxes = Object.entries(path.primary?.axes ?? {}).slice(0, 5);
+  const stories = path.stories ?? [];
 
   return (
     <div className="view-stack">
@@ -58,6 +59,32 @@ export function PathView({ caseId }) {
           </section>
         </div>
       </section>
+
+      {stories.length > 0 ? (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Small Demo</p>
+              <h2>小さく解いて確認する</h2>
+            </div>
+            <Badge tone="active">{stories.length} stories</Badge>
+          </div>
+          <div className="story-grid">
+            {stories.map((story) => (
+              <article className="story-card" key={story.id}>
+                <div>
+                  <p className="eyebrow">{maps.traces[story.visual_trace_id]?.trace_type ?? "trace"}</p>
+                  <h2>{story.title}</h2>
+                  <p>{story.objective}</p>
+                </div>
+                <ButtonLink href={`#/stories/${story.id}`}>traceを見る</ButtonLink>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="empty-state">このケースの SolveStory は coming soon です。</div>
+      )}
 
       <section className="split-section">
         <div className="panel">
