@@ -31,10 +31,20 @@
 
 ## Filled v0 Pairs
 
-The explorer can compare any two ProblemClass records. The first five priority pairs are covered by existing `confused_with` relations and fields:
+The explorer can compare any two ProblemClass records. Priority `confused_with` relations carry the decision guidance used by the UI:
+
+- `shared`: 同じところ
+- `decision_axes`: 違うところを見る観点
+- `choose_source_when`
+- `choose_target_when`
+- `decision_note`
+
+The first five priority groups are covered by guided relations:
 
 - `linear_programming` vs `convex_optimization`
 - `nonlinear_programming` vs `nonconvex_optimization`
 - `mixed_integer_linear_programming` vs `constraint_programming_sat_smt`
 - `blackbox_derivative_free` vs `bayesian_optimization_problem`
 - `stochastic_programming` vs `robust_optimization`
+- `stochastic_programming` vs `distributionally_robust_optimization`
+- `robust_optimization` vs `distributionally_robust_optimization`

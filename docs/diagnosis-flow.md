@@ -25,18 +25,23 @@
 - candidate ProblemClass
 - score
 - reasons: どの回答が効いたか
+- candidate algorithms
+- candidate solvers
 - cautions: `not_good_when` と warning
+- next questions: 未回答の診断質問
 - next reads: `confused_with` と source
+
+`not_optimization` が上位に出た場合は通常の ProblemClass として扱わず、最適化前に整理すべき論点を示す warning card として表示します。
 
 ## Evaluation Set
 
-`data/example_cases.yml` は 20 件の代表ケースを持ちます。各ケースは `expected_top3` を持ちます。
+`data/example_cases.yml` は 30 件以上の代表ケースを持ちます。各ケースは `id`, `title`, `narrative`, `signals`, `expected_top3` を持ちます。`not_optimization` を含むケースは最低 3 件維持します。
 
 v0 の合格ライン:
 
-- 代表ケース 10 件以上で expected top-3 のどれかが上位3件に入る。
+- 代表ケース 30 件以上を UI の診断ベンチケースで確認できる。
 - 「最適化で解くべきではない」ケースを警告できる。
-- 診断結果が理由と注意点を持つ。
+- 診断結果 top-5 が理由、注意点、candidate algorithms、candidate solvers、次に確認すべき質問を持つ。
 
 ## Improvement Backlog
 

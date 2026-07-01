@@ -77,7 +77,7 @@ assertArray(problems, "problem classes", 15);
 assertArray(algorithms, "algorithms", 15);
 assertArray(solvers, "solvers", 15);
 assertArray(relations, "relations", 80);
-assertArray(cases, "example cases", 20);
+assertArray(cases, "example cases", 30);
 assertArray(diagnosis, "diagnosis questions", 8);
 
 const axisIds = uniqueById(axes, "classification axes");
@@ -157,6 +157,7 @@ if (sourcedProblems < 12) {
 }
 
 let confusedWithCount = 0;
+let guidedConfusedWithCount = 0;
 for (const relation of relations) {
   if (!relationTypes.has(relation.type)) {
     fail(`relation ${relation.id} has invalid type ${relation.type}`);
@@ -175,6 +176,16 @@ for (const relation of relations) {
   }
   if (relation.type === "confused_with") {
     confusedWithCount += 1;
+    if (
+      relation.shared &&
+      relation.choose_source_when &&
+      relation.choose_target_when &&
+      relation.decision_note &&
+      Array.isArray(relation.decision_axes) &&
+      relation.decision_axes.length >= 3
+    ) {
+      guidedConfusedWithCount += 1;
+    }
   }
 }
 
@@ -182,13 +193,31 @@ if (confusedWithCount < 8) {
   fail(`need at least 8 confused_with relations, got ${confusedWithCount}`);
 }
 
+if (guidedConfusedWithCount < 5) {
+  fail(`need at least 5 guided confused_with relations, got ${guidedConfusedWithCount}`);
+}
+
+let notOptimizationCaseCount = 0;
 for (const example of cases) {
+  for (const field of ["title", "narrative", "signals"]) {
+    if (!example[field]) {
+      fail(`example ${example.id} is missing ${field}`);
+    }
+  }
+  assertArray(example.signals, `example ${example.id}.signals`, 1);
   assertArray(example.expected_top3, `example ${example.id}.expected_top3`, 3);
   for (const id of example.expected_top3) {
     if (!problemIds.has(id) && id !== "not_optimization") {
       fail(`example ${example.id} references missing expected class ${id}`);
     }
   }
+  if (example.expected_top3.includes("not_optimization")) {
+    notOptimizationCaseCount += 1;
+  }
+}
+
+if (notOptimizationCaseCount < 3) {
+  fail(`need at least 3 not_optimization example cases, got ${notOptimizationCaseCount}`);
 }
 
 for (const question of diagnosis) {
@@ -216,7 +245,9 @@ console.log(
       solvers: solvers.length,
       relations: relations.length,
       confusedWithRelations: confusedWithCount,
+      guidedConfusedWithRelations: guidedConfusedWithCount,
       exampleCases: cases.length,
+      notOptimizationCases: notOptimizationCaseCount,
     },
     null,
     2,
