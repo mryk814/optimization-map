@@ -2,40 +2,60 @@
 
 Visualization の目的は、最適化分野の「現在地」と「隣に何があるか」を見せることです。
 
-## MVP Views
+## Current MVP Views
 
-### ProblemClass Map
+### Case-first Solving Flow
 
-- Node: ProblemClass
+`ExampleCase -> signals -> ProblemType -> Algorithm -> Solver`
+
+- Meaning: 問題名を知らない利用者が、現実課題の手がかりから候補タイプ、手法、実装候補へ進む
+- URL: `#/cases/:id`, `#/paths/:id`
+
+### Problem Type Article
+
+- Meaning: 1つの問題タイプについて、形、使う場面、避ける場面、難しさ、手法、solver、sources を読解順に見る
+- URL: `#/problems/:id`
+
+### Comparison View
+
+- Meaning: 似た概念を並べ、どちらから考えるべきかを判断する
+- URL: `#/compare/:left/:right`
+
+### Diagnosis View
+
+- Meaning: 変数、線形性、不確実性などから次に読む問題タイプ候補を絞る
+- URL: `#/diagnosis`
+
+## Deferred Graph Views
+
+### Problem Type Map
+
+- Node: ProblemType
 - Edge: `is_a`, `overlaps_with`, `confused_with`
 - Filter: core axis, tag, relation type
 - Meaning: 分野の近さと混同しやすい関係
 
 ### Relation Graph
 
-- Node: ProblemClass / Algorithm / Solver / ModelingPattern / ExampleCase
+- Node: ProblemType / Algorithm / Solver / ModelingPattern / ExampleCase
 - Edge: all relation types
-- Meaning: 課題から solver までの経路
+- Meaning: 課題を候補タイプ、手法、solver 候補へ翻訳する流れ
 
 ### Difficulty Heatmap
 
-- Rows: ProblemClass
+- Rows: ProblemType
 - Columns: hardness factors such as integer, nonconvex, blackbox, uncertainty, time
 - Meaning: なぜ難しいかを一語で止めず分解する
 
-### ProblemClass x Algorithm
+### Problem Type x Algorithm
 
 - Bipartite graph or matrix
-- Meaning: 問題クラスから手法候補へ進む
+- Meaning: 問題タイプから手法候補へ進む
 
-### ProblemClass x Solver
+### Problem Type x Solver
 
 - Table first, graph second
 - Meaning: 実装候補を比較する
-
-### Pipeline View
-
-`課題 -> モデル化パターン -> ProblemClass -> Algorithm -> Solver`
 
 ## Deferred Views
 

@@ -44,8 +44,123 @@ export function labelFor(id) {
   return node?.name_ja ?? node?.name ?? node?.title ?? id;
 }
 
+export const tableColumns = [
+  { label: "ID", value: (item) => item.id },
+  { label: "問題タイプ", value: (item) => item.name_ja },
+  { label: "Summary", value: (item) => item.summary },
+  { label: "Tags", value: (item) => item.tags.join(" / ") },
+  { label: "Algorithms", value: (item) => item.candidate_algorithms.map(labelFor).join(" / ") },
+  { label: "Solvers", value: (item) => item.candidate_solvers.map(labelFor).join(" / ") },
+];
+
+export const relationLabels = {
+  is_a: "上位関係",
+  overlaps_with: "重なる領域",
+  confused_with: "混同注意",
+  relaxes_to: "緩和",
+  reformulates_to: "変換",
+  commonly_solved_by: "手法",
+  implemented_by: "実装",
+  used_in: "用途",
+};
+
+export const relationTones = {
+  confused_with: "blocked",
+  relaxes_to: "review",
+  reformulates_to: "review",
+  commonly_solved_by: "active",
+  implemented_by: "done",
+  used_in: "done",
+};
+
+export function axisValueLabel(axisId, valueId) {
+  if (!valueId) {
+    return "-";
+  }
+  const axis = maps.axes[axisId];
+  const value = axis?.values.find((item) => item.id === valueId);
+  return value?.name_ja ?? valueId;
+}
+
 export function getRelated(problemId) {
   return data.relations.filter((relation) => relation.source === problemId || relation.target === problemId);
+}
+
+export function getProblemCases(problemId) {
+  const usedInCaseIds = data.relations
+    .filter((relation) => relation.type === "used_in" && relation.source === problemId)
+    .map((relation) => relation.target);
+  const expectedCaseIds = data.exampleCases
+    .filter((example) => example.expected_top3.includes(problemId) || example.likely_traps?.includes(problemId))
+    .map((example) => example.id);
+  return [...new Set([...usedInCaseIds, ...expectedCaseIds])]
+    .map((id) => maps.cases[id])
+    .filter(Boolean);
+}
+
+export function getCaseProblems(caseId) {
+  const example = maps.cases[caseId];
+  if (!example) {
+    return [];
+  }
+  return example.expected_top3
+    .map((id) => maps.problems[id])
+    .filter(Boolean);
+}
+
+export function getComparisonGuidance(leftId, rightId) {
+  const relation = data.relations.find(
+    (item) =>
+      item.type === "confused_with" &&
+      ((item.source === leftId && item.target === rightId) || (item.source === rightId && item.target === leftId)),
+  );
+  if (!relation?.decision_note) {
+    return null;
+  }
+
+  const reversed = relation.source !== leftId;
+  return {
+    shared: relation.shared,
+    decisionAxes: relation.decision_axes ?? [],
+    leftChoice: reversed ? relation.choose_target_when : relation.choose_source_when,
+    rightChoice: reversed ? relation.choose_source_when : relation.choose_target_when,
+    note: relation.decision_note,
+  };
+}
+
+export function getDefaultComparison(problemId) {
+  const problem = maps.problems[problemId] ?? data.problemClasses[0];
+  const rightId = problem.confused_with?.find((id) => maps.problems[id]) ?? "convex_optimization";
+  return { leftId: problem.id, rightId };
+}
+
+export function getPathForCase(caseId) {
+  const example = maps.cases[caseId];
+  if (!example) {
+    return null;
+  }
+  const problems = getCaseProblems(caseId);
+  const primary = problems[0];
+  return {
+    example,
+    problems,
+    primary,
+    algorithms: primary?.candidate_algorithms.map((id) => maps.algorithms[id]).filter(Boolean) ?? [],
+    solvers: primary?.candidate_solvers.map((id) => maps.solvers[id]).filter(Boolean) ?? [],
+  };
+}
+
+export function filterProblems(query, axisFilter = "all") {
+  const normalized = query.trim().toLowerCase();
+  return data.problemClasses.filter((problem) => {
+    const haystack = [problem.id, problem.name_ja, problem.name_en, problem.summary, ...problem.tags].join(" ").toLowerCase();
+    const matchesQuery = normalized.length === 0 || haystack.includes(normalized);
+    const matchesAxis =
+      axisFilter === "all" ||
+      Object.values(problem.axes ?? {}).includes(axisFilter) ||
+      problem.tags.includes(axisFilter);
+    return matchesQuery && matchesAxis;
+  });
 }
 
 export function scoreDiagnosis(answers) {

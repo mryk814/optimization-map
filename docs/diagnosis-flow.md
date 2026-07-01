@@ -1,6 +1,6 @@
 # Diagnosis Flow v0
 
-診断は「唯一の正解」を返すものではなく、課題から候補 ProblemClass へ進むための説明可能な scoring です。LLM なしで動くルールベース v0 から始めます。
+診断は「唯一の正解」を返すものではなく、課題から候補の問題タイプへ進むための説明可能な scoring です。LLM なしで動くルールベース v0 から始めます。
 
 ## Input Loop
 
@@ -8,7 +8,7 @@
 2. 変数領域、線形性、凸性、ブラックボックス性を確認する。
 3. 不確実性と時間構造を確認する。
 4. 評価コストとフィードバックを確認する。
-5. top candidates、理由、注意点、次に読む ProblemClass を返す。
+5. top candidates、理由、注意点、次に読む問題タイプを返す。
 
 ## Rule Data
 
@@ -22,7 +22,7 @@
 
 診断結果は次を含めます。
 
-- candidate ProblemClass
+- candidate problem type
 - score
 - reasons: どの回答が効いたか
 - candidate algorithms
@@ -31,7 +31,7 @@
 - next questions: 未回答の診断質問
 - next reads: `confused_with` と source
 
-`not_optimization` が上位に出た場合は通常の ProblemClass として扱わず、最適化前に整理すべき論点を示す warning card として表示します。
+`not_optimization` が上位に出た場合は通常の問題タイプとして扱わず、最適化前に整理すべき論点を示す warning card として表示します。
 
 ## Evaluation Set
 
@@ -48,4 +48,4 @@ v0 の合格ライン:
 - expected top-3 の自動評価 script を追加する。
 - `signals` と diagnosis rules の対応を明示し、ケースベース regression にする。
 - 制約違反リスク、安全性、説明責任を scoring に入れる。
-- 問題クラスだけでなく modeling pattern も推薦する。
+- 問題タイプだけでなく modeling pattern も推薦する。
