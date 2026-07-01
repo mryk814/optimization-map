@@ -1,0 +1,267 @@
+.story-grid,
+.story-model-grid,
+.trace-layout,
+.trace-state-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.story-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.story-card,
+.story-field-block,
+.trace-step-card,
+.trace-state-list div {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.story-card h2,
+.story-field-block h3 {
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+
+.story-card p,
+.story-field-block p,
+.story-list li,
+.trace-step-card p,
+.trace-state-list span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+
+.story-overview-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.story-model-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.story-field-block ul,
+.story-list {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.story-field-block li,
+.story-list li {
+  margin: var(--space-1) 0;
+}
+
+.code-block {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  margin: 0;
+  overflow-x: auto;
+  padding: var(--space-3);
+  white-space: pre;
+}
+
+.trace-player {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.trace-layout {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr);
+}
+
+.trace-viewport {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-2);
+}
+
+.trace-side {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.trace-step-card span,
+.trace-state-list span,
+.trace-controls span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+}
+
+.trace-step-card strong,
+.trace-state-list strong {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.trace-state-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trace-controls {
+  align-items: center;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: var(--space-2) var(--space-3);
+}
+
+.trace-controls input {
+  accent-color: var(--color-accent);
+  width: 100%;
+}
+
+.trace-svg {
+  display: block;
+  min-height: 260px;
+  width: 100%;
+}
+
+.trace-axis,
+.trace-constraint,
+.trace-contour,
+.trace-tree-edge {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trace-axis {
+  opacity: 0.8;
+  stroke-width: 1.5;
+}
+
+.trace-constraint {
+  opacity: 0.55;
+  stroke-dasharray: 6 6;
+}
+
+.trace-region {
+  fill: var(--color-accent-subtle-bg-strong);
+  opacity: 0.72;
+  stroke: var(--color-accent-subtle-bd);
+  stroke-width: 2;
+}
+
+.trace-objective,
+.trace-path {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.trace-objective {
+  stroke-dasharray: 7 7;
+}
+
+.trace-point {
+  fill: var(--color-accent);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+.trace-point-muted {
+  fill: var(--color-chart-2);
+  opacity: 0.68;
+  stroke: var(--color-surface);
+  stroke-width: 1.5;
+}
+
+.trace-contour {
+  opacity: 0.3;
+  stroke-width: 1.5;
+}
+
+.trace-text {
+  fill: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.trace-tree-edge {
+  opacity: 0.5;
+  stroke-width: 2;
+}
+
+.trace-tree-node circle {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.trace-tree-node text {
+  dominant-baseline: middle;
+  fill: var(--color-text);
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  text-anchor: middle;
+}
+
+.trace-tree-node-active circle {
+  fill: var(--color-accent-subtle-bg-strong);
+  stroke: var(--color-accent);
+}
+
+.trace-tree-node-incumbent circle {
+  fill: var(--color-status-done-bg);
+  stroke: var(--color-status-done-bd);
+}
+
+.trace-tree-node-pruned circle {
+  fill: var(--color-status-blocked-bg);
+  stroke: var(--color-status-blocked-bd);
+}
+
+.trace-table-wrap {
+  overflow-x: auto;
+}
+
+.trace-grid-table td,
+.trace-grid-table th {
+  text-align: center;
+}
+
+.trace-grid-table td.is-on {
+  background: var(--color-accent-subtle-bg-strong);
+  color: var(--color-accent-strong);
+  font-weight: var(--weight-bold);
+}
+
+@media (max-width: 1120px) {
+  .story-grid,
+  .story-model-grid,
+  .trace-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .trace-controls,
+  .trace-state-list {
+    grid-template-columns: 1fr;
+  }
+}
