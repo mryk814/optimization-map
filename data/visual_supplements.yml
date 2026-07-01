@@ -1,0 +1,518 @@
+visual_supplements:
+  - id: visual_simplex_vertices
+    target_type: algorithm
+    target_id: simplex
+    title: 頂点を移動して目的値を改善する
+    visual_type: feasible_region_vertex_walk
+    learning_goal: LPの最適解が実行可能領域の頂点に現れやすいことを直感的に理解する。
+    what_moves:
+      - 現在の頂点
+      - objective line
+      - objective value
+    what_user_should_notice:
+      - feasible region の外には出ない
+      - 隣接頂点へ移るたびに目的値が改善する
+      - 2Dでは単純だが高次元では面・稜線を辿る
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [vertices, edges, objective_lines, active_vertex, objective_value]
+    pseudo_code: |
+      start at feasible vertex
+      repeat:
+        evaluate neighboring vertices
+        move to a neighbor with better objective
+      stop when no neighbor improves objective
+    ai_coding_brief: >
+      React + SVGで2D feasible polygon、頂点、目的線を描く。step sliderでactive vertexとobjective lineを更新し、現在の目的値を右側に表示する。
+
+  - id: visual_interior_point_central_path
+    target_type: algorithm
+    target_id: interior_point
+    title: 内側から最適点へ近づく
+    visual_type: central_path_2d
+    learning_goal: 内点法が境界上を歩くのではなく、実行可能領域の内側から解へ近づくことを理解する。
+    what_moves:
+      - interior iterate
+      - barrier parameter
+      - central path
+    what_user_should_notice:
+      - iterates は基本的に feasible region の内側にいる
+      - barrier が弱まるほど境界近くの最適点へ近づく
+      - simplex とは進み方が違う
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [feasible_polygon, central_path_points, barrier_values, objective_value]
+    pseudo_code: |
+      choose strictly feasible point
+      for decreasing barrier parameter:
+        solve barrier subproblem approximately
+        move along central path
+    ai_coding_brief: >
+      SVGでfeasible regionとcentral pathを描き、stepごとに点が内側から境界方向へ進むアニメーションを作る。barrier parameterをラベル表示する。
+
+  - id: visual_branch_and_bound_tree
+    target_type: algorithm
+    target_id: branch_and_bound
+    title: 探索木とboundで整数解を絞る
+    visual_type: search_tree
+    learning_goal: 整数最適化で、緩和解・分枝・枝刈り・incumbent・gap がどう働くかを理解する。
+    what_moves:
+      - active node
+      - incumbent value
+      - lower_bound
+      - gap
+    what_user_should_notice:
+      - LP緩和が整数でないと分枝が起きる
+      - boundが悪い枝は探索しなくてよい
+      - 最適解証明には候補解だけでなくboundが必要
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [nodes, edges, node_status, bounds, incumbent, gap]
+    pseudo_code: |
+      solve relaxation at root
+      branch on fractional variable
+      update incumbent when integer feasible solution appears
+      prune nodes by infeasibility or bound
+      stop when gap is small enough
+    ai_coding_brief: >
+      Reactで探索木を表示する。node statusをactive/pruned/incumbent/openで表し、step sliderで木の展開、incumbent、gapを更新する。
+
+  - id: visual_cutting_planes_region
+    target_type: algorithm
+    target_id: cutting_planes
+    title: カットで緩和領域を削る
+    visual_type: cutting_plane_sequence
+    learning_goal: cutting plane がLP緩和の実行可能領域を少しずつ整数解に近づけることを理解する。
+    what_moves:
+      - relaxation region
+      - added cuts
+      - current relaxed optimum
+    what_user_should_notice:
+      - 整数点は残しつつ、不要な分数解を除く
+      - カットが増えると緩和が強くなる
+      - 強いカットは探索木を小さくできる
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [base_region, cuts, relaxed_optima, integer_points]
+    pseudo_code: |
+      solve LP relaxation
+      if solution is fractional:
+        find valid inequality violated by current solution
+        add cut
+      repeat until solution improves or branch is needed
+    ai_coding_brief: >
+      2D領域にカット線を1本ずつ追加し、現在の緩和最適点が移動する様子をSVGで表示する。整数点は残るように描く。
+
+  - id: visual_branch_cut_combined
+    target_type: algorithm
+    target_id: branch_cut
+    title: カットと分枝を組み合わせる
+    visual_type: search_tree_with_cuts
+    learning_goal: branch-and-cut が、探索木とcutting planeを組み合わせてMILPを解く流れを理解する。
+    what_moves:
+      - search tree
+      - cuts per node
+      - incumbent
+      - gap
+    what_user_should_notice:
+      - rootや各nodeでカットを追加できる
+      - カットでboundが改善し、探索木を減らせる
+      - 実務MILP solverの中核的な動きに近い
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [nodes, edges, cuts, bounds, incumbent, gap]
+    pseudo_code: |
+      solve relaxation
+      generate cuts
+      branch if fractional solution remains
+      update incumbent and prune by bound
+    ai_coding_brief: >
+      探索木ビューに各nodeのcut countとboundを表示する。stepごとにcut追加とbranch追加を別アイコンで示す。
+
+  - id: visual_dynamic_programming_grid
+    target_type: algorithm
+    target_id: dynamic_programming
+    title: 状態価値を後ろから埋める
+    visual_type: state_transition_grid
+    learning_goal: DPが状態と遷移を使って、部分問題の値を順に埋める考え方を理解する。
+    what_moves:
+      - active state
+      - value table
+      - selected action
+    what_user_should_notice:
+      - 状態ごとの最適値を再利用する
+      - 状態数が増えると表が急に大きくなる
+      - RLや最適制御の基礎にもなる
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [states, transitions, value_table_steps, policy_steps]
+    pseudo_code: |
+      initialize terminal values
+      for states in reverse order:
+        compute value from successor states
+        choose best action
+    ai_coding_brief: >
+      gridまたは表で状態を表示し、stepごとにvalueが埋まる様子を示す。選ばれたactionを矢印で表示する。
+
+  - id: visual_constraint_propagation_grid
+    target_type: algorithm
+    target_id: constraint_propagation
+    title: 制約で候補を削る
+    visual_type: domain_pruning_grid
+    learning_goal: 制約伝播が、探索前または探索中に変数の候補値を削っていく様子を理解する。
+    what_moves:
+      - variable domains
+      - active constraint
+      - removed values
+    what_user_should_notice:
+      - 解を試す前に候補値を削れる
+      - 矛盾が早く見つかる
+      - 論理制約やスケジューリングで効きやすい
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [variables, domains_by_step, active_constraints, removed_values]
+    pseudo_code: |
+      initialize domains for all variables
+      repeat:
+        apply constraints to remove impossible values
+      until no domain changes or contradiction found
+    ai_coding_brief: >
+      変数×候補値の表を描き、削除された値を薄く表示する。active constraintを上部に表示し、step sliderで伝播を進める。
+
+  - id: visual_local_nlp_descent
+    target_type: algorithm
+    target_id: local_nlp
+    title: 初期値から局所解へ進む
+    visual_type: descent_trace_2d
+    learning_goal: 局所非線形最適化が初期値に依存し、大域解とは限らないことを理解する。
+    what_moves:
+      - current point
+      - objective contour
+      - objective value
+      - gradient norm
+    what_user_should_notice:
+      - 初期値が違うと別の局所解に行くことがある
+      - 目的値は下がっても大域最適とは限らない
+      - scaleや制約処理が結果に影響する
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [contours, traces, objective_values, gradient_norms]
+    pseudo_code: |
+      choose initial point
+      repeat:
+        compute local direction
+        update point
+      stop when gradient norm is small
+    ai_coding_brief: >
+      等高線上に複数の初期点からの軌跡を描く。選択した初期点に応じてtraceを切り替えられるUIにする。
+
+  - id: visual_sqp_quadratic_models
+    target_type: algorithm
+    target_id: sequential_quadratic_programming
+    title: 局所二次モデルを解き直す
+    visual_type: local_model_sequence
+    learning_goal: SQPが非線形制約問題を局所的な二次計画の列として近似して進むことを理解する。
+    what_moves:
+      - current point
+      - local quadratic model
+      - linearized constraints
+      - step direction
+    what_user_should_notice:
+      - 各iterationで近似問題を作る
+      - 制約を線形化して扱う
+      - 滑らかさが重要
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [points, local_models, linearized_constraints, step_vectors]
+    pseudo_code: |
+      linearize constraints around current point
+      build quadratic approximation of Lagrangian
+      solve QP subproblem
+      update point with line search or trust region
+    ai_coding_brief: >
+      2Dの曲線制約と目的等高線を表示し、iterationごとに局所二次モデルと線形化制約を重ねる。
+
+  - id: visual_conic_solver_cones
+    target_type: algorithm
+    target_id: conic_solvers
+    title: 円錐制約の中で解を探す
+    visual_type: cone_geometry
+    learning_goal: SOCP/SDPのような円錐制約が、線形制約より表現力を持つことを直感的に理解する。
+    what_moves:
+      - point in cone
+      - cone boundary
+      - objective direction
+    what_user_should_notice:
+      - 制約は半平面だけでなく円錐や行列不等式にもなる
+      - 凸性を保つと強力なsolverが使える
+      - SDPは表現力が高いが重い
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [cone_shape, iterates, objective_direction, boundary_points]
+    pseudo_code: |
+      formulate constraints as cone membership
+      solve using conic solver
+      inspect primal and dual feasibility
+    ai_coding_brief: >
+      2Dまたは3D風の円錐領域を描き、点が円錐内で目的方向へ移動する様子を表示する。SDPはmatrix heatmapで補足する。
+
+  - id: visual_benders_master_subproblem
+    target_type: algorithm
+    target_id: benders
+    title: master と subproblem を行き来する
+    visual_type: decomposition_flow
+    learning_goal: Benders分解が、主問題と部分問題を反復しながらcutを追加する流れを理解する。
+    what_moves:
+      - master decision
+      - subproblem result
+      - generated cut
+      - bound gap
+    what_user_should_notice:
+      - 問題構造を分けると大きな問題を扱いやすくなる
+      - subproblemの結果がmasterを改善する
+      - stochastic programmingやMILPで有効な場面がある
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [master_steps, subproblem_results, cuts, upper_bounds, lower_bounds]
+    pseudo_code: |
+      solve master problem
+      solve subproblem given master decision
+      generate feasibility or optimality cut
+      add cut to master
+      repeat until gap closes
+    ai_coding_brief: >
+      左にmaster、右にsubproblemを配置し、stepごとに矢印とcutカードを追加するflow diagramを作る。
+
+  - id: visual_column_generation_pricing
+    target_type: algorithm
+    target_id: column_generation
+    title: 必要な列だけを追加する
+    visual_type: column_generation_table
+    learning_goal: 列生成が、巨大な候補集合から必要な変数だけを追加して解く考え方を理解する。
+    what_moves:
+      - active columns
+      - reduced cost
+      - pricing problem result
+    what_user_should_notice:
+      - すべての候補を最初から列挙しない
+      - pricing problem が新しい列を見つける
+      - routingやshiftで巨大変数集合を扱う時に効く
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [restricted_master_columns, reduced_costs, new_columns, objective_values]
+    pseudo_code: |
+      solve restricted master problem
+      solve pricing problem
+      if negative reduced cost column exists:
+        add column to master
+      repeat
+    ai_coding_brief: >
+      列の表を表示し、stepごとに新しい列が追加される。reduced costを横に表示し、改善する列を強調する。
+
+  - id: visual_robust_counterpart_uncertainty_set
+    target_type: algorithm
+    target_id: robust_counterpart
+    title: 不確実集合を安全側の制約へ変換する
+    visual_type: uncertainty_set_counterpart
+    learning_goal: ロバスト最適化で、不確実集合に対する最悪ケース制約を決定論的な制約へ変換する考え方を理解する。
+    what_moves:
+      - uncertainty set
+      - nominal solution
+      - robust feasible region
+      - worst-case point
+    what_user_should_notice:
+      - 不確実性を集合として表す
+      - 安全側にすると解は保守的になる
+      - 集合の形で解きやすさが変わる
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [uncertainty_set, nominal_solution, robust_region, worst_case_points]
+    pseudo_code: |
+      define uncertainty set U
+      require constraints hold for all u in U
+      derive deterministic robust counterpart
+      solve counterpart
+    ai_coding_brief: >
+      nominal feasible regionとrobust feasible regionを重ねて描く。不確実集合のサイズをstepで変え、解が保守的になる様子を見せる。
+
+  - id: visual_saa_scenario_table
+    target_type: algorithm
+    target_id: sample_average_approximation
+    title: シナリオ平均で確率問題を近似する
+    visual_type: scenario_table
+    learning_goal: SAAがランダムシナリオを有限個の表として扱い、期待値問題を近似することを理解する。
+    what_moves:
+      - scenario samples
+      - sample average objective
+      - solution by sample size
+    what_user_should_notice:
+      - シナリオ数が少ないと解がぶれやすい
+      - シナリオ数が増えると問題サイズも大きくなる
+      - 統計誤差と計算量のtradeoffがある
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [scenarios, sample_sizes, solutions, objective_estimates]
+    pseudo_code: |
+      sample scenarios from distribution
+      replace expectation with sample average
+      solve deterministic equivalent
+      validate solution on more scenarios
+    ai_coding_brief: >
+      scenario tableとsample size sliderを作る。sample sizeごとに推定目的値と解がどう変わるかを表示する。
+
+  - id: visual_bayesian_optimization_trials
+    target_type: algorithm
+    target_id: bayesian_optimization
+    title: 少ない試行で良い候補を探す
+    visual_type: trial_history
+    learning_goal: BOが高価な評価を逐次的に選び、best-so-farを改善する流れを理解する。
+    what_moves:
+      - trial point
+      - observed objective
+      - best_so_far
+      - exploration marker
+    what_user_should_notice:
+      - すべてを試すのではなく次の点を選ぶ
+      - best-so-farが少しずつ改善する
+      - 探索と活用のバランスがある
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [trials, x, objective, best_so_far, acquisition_hint]
+    pseudo_code: |
+      fit surrogate model from observations
+      optimize acquisition function
+      evaluate selected candidate
+      update best-so-far
+    ai_coding_brief: >
+      trial history chartとbest-so-far lineを表示する。stepごとに新しい点を追加し、探索/活用の注釈を表示する。
+
+  - id: visual_evolutionary_population
+    target_type: algorithm
+    target_id: evolutionary_search
+    title: 集団が良い領域へ寄っていく
+    visual_type: population_search_2d
+    learning_goal: 進化的探索が個体群を評価し、選択・変異・交叉で探索することを理解する。
+    what_moves:
+      - population points
+      - best individual
+      - generation number
+    what_user_should_notice:
+      - 勾配なしでも探索できる
+      - 評価回数が増えやすい
+      - 保証より実用的探索を重視する
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [generations, population_points, fitness_values, best_point]
+    pseudo_code: |
+      initialize population
+      evaluate fitness
+      select better candidates
+      mutate and recombine
+      repeat for generations
+    ai_coding_brief: >
+      2D散布図でgenerationごとのpopulationを表示する。best individualを強調し、fitnessの改善を横に表示する。
+
+  - id: visual_mpc_receding_horizon
+    target_type: algorithm
+    target_id: mpc
+    title: 予測して少し進み、また解き直す
+    visual_type: receding_horizon_rollout
+    learning_goal: MPCが未来の入力列を最適化し、最初の入力だけ適用して再計画する流れを理解する。
+    what_moves:
+      - predicted trajectory
+      - applied control
+      - horizon window
+      - actual state
+    what_user_should_notice:
+      - 毎回未来を見て計画する
+      - 実際には最初の一手だけ使う
+      - モデル誤差や制約、リアルタイム性が重要
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [time_steps, predicted_trajectories, applied_controls, actual_states, horizon]
+    pseudo_code: |
+      observe current state
+      solve finite-horizon control problem
+      apply first control
+      shift horizon and repeat
+    ai_coding_brief: >
+      時系列チャートで予測軌道と実軌道を描く。horizon windowを動かし、適用されたcontrolを強調する。
+
+  - id: visual_policy_gradient_rollout
+    target_type: algorithm
+    target_id: policy_gradient
+    title: 方策を試して報酬で更新する
+    visual_type: policy_rollout
+    learning_goal: Policy Gradient が方策で行動し、得られた報酬から方策パラメータを更新する流れを理解する。
+    what_moves:
+      - agent position
+      - action probabilities
+      - reward curve
+      - policy update
+    what_user_should_notice:
+      - 勾配は環境モデルではなく報酬サンプルから推定する
+      - 探索が必要
+      - サンプル効率と安全性が難しい
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [episodes, states, actions, rewards, policy_parameters]
+    pseudo_code: |
+      sample trajectories with current policy
+      estimate return-weighted gradient
+      update policy parameters
+      repeat
+    ai_coding_brief: >
+      gridworldのagent移動とepisodeごとのrewardを表示する。policy update後にaction probabilityが変わる様子を小さな矢印で示す。
+
+  - id: visual_ucb_arm_selection
+    target_type: algorithm
+    target_id: upper_confidence_bound
+    title: 不確実な腕を試しながら良い腕へ寄せる
+    visual_type: arm_selection_history
+    learning_goal: UCB/Banditが探索と活用をどう切り替えるかを理解する。
+    what_moves:
+      - selected arm
+      - empirical mean
+      - confidence interval
+      - cumulative regret
+    what_user_should_notice:
+      - 不確実性が大きい腕も試す
+      - 観測が増えると信頼区間が狭くなる
+      - 短期性能と学習のtradeoffがある
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [rounds, selected_arm, rewards, means, confidence_bounds, regret]
+    pseudo_code: |
+      initialize by trying each arm
+      compute upper confidence bound
+      select arm with largest bound
+      observe reward and update estimates
+    ai_coding_brief: >
+      armごとの平均報酬と信頼区間を棒グラフで表示し、round sliderで選ばれたarmとregret curveを更新する。
+
+  - id: visual_differentiable_layer_gradient
+    target_type: algorithm
+    target_id: differentiable_layer
+    title: 最適化解に勾配を流す
+    visual_type: computation_graph_layer
+    learning_goal: differentiable optimization layer が、最適化問題を学習パイプライン内の層として扱うことを理解する。
+    what_moves:
+      - prediction parameters
+      - optimization solution
+      - downstream loss
+      - gradient flow
+    what_user_should_notice:
+      - 予測精度ではなく意思決定品質で学習できる
+      - argmin写像を通して勾配を扱う
+      - 解の一意性や数値安定性に注意が必要
+    static_trace_ok: true
+    realtime_solve_required: false
+    required_fields: [graph_nodes, graph_edges, forward_values, backward_gradients]
+    pseudo_code: |
+      predict parameters for optimization problem
+      solve optimization layer
+      compute downstream loss
+      differentiate through optimality conditions
+      update predictor
+    ai_coding_brief: >
+      計算グラフとして predictor → optimization layer → downstream loss を描く。forward passとbackward gradientをstepで切り替える。
