@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { IconBook2, IconListSearch, IconRoute, IconSearch } from "@tabler/icons-react";
 
-import { data, filterProblems, getPathForCase, labelFor } from "../data/loadData.js";
+import { data, filterProblems, getPathForCase, labelFor, maps } from "../data/loadData.js";
 import { Badge, ButtonLink, CaseCard, PageHeader, ProblemCard, RoutePath } from "../components/ui.jsx";
 
 function sampleItems(items, count) {
@@ -17,6 +17,7 @@ export function HomeView() {
   const starterCases = useMemo(() => sampleItems(data.exampleCases, 3), []);
   const starterPath = getPathForCase(starterCases[0]?.id);
   const featuredProblems = filterProblems("", "all").slice(0, 4);
+  const featuredStories = data.solveStories.slice(0, 4);
 
   return (
     <div className="view-stack">
@@ -29,6 +30,11 @@ export function HomeView() {
           <IconBook2 aria-hidden="true" size={24} />
           <span>近いケースから探す</span>
           <strong>配送、シフト、実験、在庫のような現実課題から入ります。</strong>
+        </a>
+        <a className="entry-card" href="#/stories">
+          <IconRoute aria-hidden="true" size={24} />
+          <span>小さく解いてみる</span>
+          <strong>事前計算された trace で、最適化が進む様子を見ます。</strong>
         </a>
         <a className="entry-card" href="#/diagnosis">
           <IconListSearch aria-hidden="true" size={24} />
@@ -54,6 +60,35 @@ export function HomeView() {
           <RoutePath example={starterPath.example} problem={starterPath.primary} />
         </section>
       )}
+
+      <section className="panel" aria-labelledby="home-story-heading">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Visual Learning</p>
+            <h2 id="home-story-heading">小さく解いて、動きを見る</h2>
+          </div>
+          <ButtonLink href="#/stories">すべて見る</ButtonLink>
+        </div>
+        <div className="story-grid">
+          {featuredStories.map((story) => {
+            const trace = maps.traces[story.visual_trace_id];
+            return (
+              <article className="story-card" key={story.id}>
+                <div>
+                  <p className="eyebrow">{trace?.trace_type ?? "trace"}</p>
+                  <h2>{story.title}</h2>
+                  <p>{story.objective}</p>
+                </div>
+                <div className="chip-list">
+                  <Badge tone="active">{labelFor(story.primary_problem_class)}</Badge>
+                  {trace && <Badge tone="review">{trace.trace_type}</Badge>}
+                </div>
+                <ButtonLink href={`#/stories/${story.id}`}>見る</ButtonLink>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="split-section">
         <div className="panel">
