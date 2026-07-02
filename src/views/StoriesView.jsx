@@ -1,51 +1,108 @@
-import { IconBook2, IconRoute } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { IconCopy, IconDownload, IconPlayerPlay } from "@tabler/icons-react";
 
-import { TracePlayer } from "../components/TracePlayer.jsx";
-import { Badge, ButtonLink, PageHeader } from "../components/ui.jsx";
-import { data, getStoryTrace, labelFor, maps } from "../data/loadData.js";
+import { MotionPreview } from "../components/MotionPreview.jsx";
+import { Badge, ButtonLink, IconButton, PageHeader } from "../components/ui.jsx";
+import { data, getBriefMarkdown, labelFor, maps } from "../data/loadData.js";
 
-function StoryCard({ story }) {
-  const trace = maps.traces[story.visual_trace_id];
+function writeDownload(filename, text, type) {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function BriefActions({ brief }) {
+  const [copied, setCopied] = useState(false);
+  if (!brief) {
+    return null;
+  }
+
+  const markdown = getBriefMarkdown(brief);
+  const copy = async () => {
+    await navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  };
+
   return (
-    <article className="story-card">
-      <div>
-        <p className="eyebrow">SolveStory</p>
-        <h2>{story.title}</h2>
-        <p>{story.objective}</p>
-      </div>
-      <div className="chip-list">
-        <Badge tone="active">{labelFor(story.primary_problem_class)}</Badge>
-        {trace && <Badge tone="review">{trace.trace_type}</Badge>}
-      </div>
-      <div className="inline-actions">
-        <ButtonLink href={`#/stories/${story.id}`}>見る</ButtonLink>
-        <ButtonLink href={`#/cases/${story.case_id}`} icon={IconBook2}>ケース</ButtonLink>
-      </div>
-    </article>
+    <div className="inline-actions">
+      <IconButton icon={IconCopy} onClick={copy} title="Markdownでコピー">{copied ? "コピー済み" : "Markdown"}</IconButton>
+      <IconButton
+        icon={IconDownload}
+        onClick={() => writeDownload(`${brief.id}.json`, JSON.stringify(brief, null, 2), "application/json;charset=utf-8")}
+        title="JSONで保存"
+      >
+        JSON
+      </IconButton>
+    </div>
   );
 }
 
-function FieldList({ title, items }) {
-  if (!items?.length) return null;
+function StoryCard({ story }) {
+  const trace = maps.traces[story.visual_trace_id];
+
   return (
-    <section className="story-field-block">
-      <h3>{title}</h3>
-      <ul>
-        {items.map((item) => <li key={item}>{item}</li>)}
-      </ul>
-    </section>
+    <a className="story-card" href={`#/stories/${story.id}`}>
+      {trace ? <MotionPreview className="motion-preview-card" traceId={trace.id} /> : <div className="empty-state">coming soon</div>}
+      <div className="story-card-body">
+        <p className="eyebrow">{story.domain}</p>
+        <h2>{story.title}</h2>
+        <p>{story.interpretation}</p>
+        <div className="chip-list">
+          <Badge tone="active">{labelFor(story.primary_problem_class)}</Badge>
+          {story.ai_coding_brief_id && <Badge tone="done">AI brief</Badge>}
+        </div>
+      </div>
+    </a>
   );
 }
 
 export function StoriesView() {
+  const [problemId, setProblemId] = useState("all");
+  const stories = useMemo(() => {
+    if (problemId === "all") {
+      return data.solveStories;
+    }
+    return data.solveStories.filter(
+      (story) => story.primary_problem_class === problemId || (story.secondary_problem_classes ?? []).includes(problemId),
+    );
+  }, [problemId]);
+
   return (
     <div className="view-stack">
-      <PageHeader eyebrow="Solve Stories" title="小さく解いて、最適化の進み方を見る">
-        リアルタイム求解ではなく、事前に用意した trace を再生して、課題から解釈までを確認します。
+      <PageHeader
+        action={<Badge tone="idle">{stories.length} / {data.solveStories.length} 本</Badge>}
+        eyebrow="SolveStory Library"
+        title="小さく解いて理解する"
+      >
+        課題、変数、目的、制約、trace、解釈、AI Coding Brief までを一つの story として読みます。
       </PageHeader>
 
+      <section className="panel list-panel">
+        <div className="toolbar-row toolbar-row-two">
+          <label className="filter-box">
+            <IconPlayerPlay aria-hidden="true" size={16} />
+            <select aria-label="問題タイプで story を絞り込み" onChange={(event) => setProblemId(event.target.value)} value={problemId}>
+              <option value="all">すべての ProblemType</option>
+              {data.problemClasses.map((problem) => (
+                <option key={problem.id} value={problem.id}>{problem.name_ja}</option>
+              ))}
+            </select>
+          </label>
+          <div className="inline-actions">
+            <ButtonLink href="#/algorithms">手法から見る</ButtonLink>
+          </div>
+        </div>
+      </section>
+
       <section className="story-grid">
-        {data.solveStories.map((story) => <StoryCard key={story.id} story={story} />)}
+        {stories.map((story) => (
+          <StoryCard key={story.id} story={story} />
+        ))}
       </section>
     </div>
   );
@@ -53,96 +110,129 @@ export function StoriesView() {
 
 export function StoryDetailView({ storyId }) {
   const story = maps.solveStories[storyId] ?? data.solveStories[0];
-  const example = maps.cases[story.case_id];
-  const primary = maps.problems[story.primary_problem_class];
-  const trace = getStoryTrace(story.id);
+  const trace = maps.traces[story.visual_trace_id];
+  const brief = maps.aiCodingBriefs[story.ai_coding_brief_id];
+  const caseItem = story.case_id ? maps.cases[story.case_id] : null;
 
   return (
     <div className="article-layout">
       <article className="view-stack">
         <PageHeader
-          action={<ButtonLink href={`#/paths/${story.case_id}`} icon={IconRoute}>解き方ビューへ</ButtonLink>}
+          action={<ButtonLink href="#/stories" icon={IconPlayerPlay}>Story一覧</ButtonLink>}
           eyebrow="SolveStory"
           title={story.title}
         >
-          {example?.narrative ?? story.objective}
+          {story.interpretation}
         </PageHeader>
 
-        <section className="panel story-overview-panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Model</p>
-              <h2>課題からモデルへ</h2>
-            </div>
-            {primary && <ButtonLink href={`#/problems/${primary.id}`}>問題タイプを読む</ButtonLink>}
-          </div>
-          <div className="story-model-grid">
-            <FieldList items={story.decision_variables} title="決定変数" />
-            <section className="story-field-block">
-              <h3>目的</h3>
-              <p>{story.objective}</p>
-            </section>
-            <FieldList items={story.constraints} title="制約" />
-            <section className="story-field-block">
-              <h3>不確実性 / 時間</h3>
-              <p>{story.uncertainty_or_time_structure}</p>
-            </section>
+        <section className="panel story-detail-hero">
+          {trace ? <MotionPreview traceId={trace.id} /> : <div className="empty-state">coming soon</div>}
+          <div className="story-model">
+            <p className="eyebrow">{story.domain}</p>
+            <h2>{labelFor(story.primary_problem_class)}</h2>
+            <dl className="detail-dl">
+              <div>
+                <dt>変数</dt>
+                <dd>{story.decision_variables}</dd>
+              </div>
+              <div>
+                <dt>目的</dt>
+                <dd>{story.objective}</dd>
+              </div>
+              <div>
+                <dt>制約</dt>
+                <dd>{story.constraints}</dd>
+              </div>
+              <div>
+                <dt>不確実性 / 時間</dt>
+                <dd>{story.uncertainty_or_time_structure}</dd>
+              </div>
+            </dl>
           </div>
         </section>
-
-        <TracePlayer trace={trace} />
 
         <section className="split-section">
           <div className="panel">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Pseudo Code</p>
-                <h2>Python風の流れ</h2>
+                <p className="eyebrow">Trace</p>
+                <h2>step-by-step</h2>
               </div>
+              {trace && <Badge tone="active">{trace.trace_type}</Badge>}
             </div>
-            <pre className="code-block"><code>{story.pseudo_code}</code></pre>
+            <ol className="ordered-list">
+              {(trace?.states ?? []).slice(0, 8).map((state, index) => (
+                <li key={index}>{state.note ?? `${trace.trace_type} step ${index + 1}`}</li>
+              ))}
+            </ol>
           </div>
+
           <div className="panel">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Interpretation</p>
-                <h2>解釈するポイント</h2>
+                <p className="eyebrow">Pseudo Code</p>
+                <h2>実装の骨格</h2>
               </div>
             </div>
-            <ul className="story-list">
-              {story.interpretation.map((item) => <li key={item}>{item}</li>)}
-            </ul>
+            <ol className="ordered-list">
+              {story.pseudo_code.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
           </div>
         </section>
 
         <section className="panel">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">AI Brief</p>
-              <h2>AIに実装依頼するなら</h2>
+              <p className="eyebrow">AI Coding Brief</p>
+              <h2>持ち出せる実装指示</h2>
             </div>
+            <BriefActions brief={brief} />
           </div>
-          <pre className="code-block"><code>{story.ai_coding_brief}</code></pre>
+          {brief ? <pre className="brief-preview">{getBriefMarkdown(brief)}</pre> : <div className="empty-state">この story の brief はまだありません。</div>}
         </section>
       </article>
 
       <aside className="article-rail">
         <section className="panel">
-          <p className="eyebrow">Linked</p>
+          <p className="eyebrow">Route</p>
           <div className="action-list">
-            {example && <ButtonLink href={`#/cases/${example.id}`}>ケースを見る</ButtonLink>}
-            {primary && <ButtonLink href={`#/problems/${primary.id}`}>問題タイプを見る</ButtonLink>}
-            <ButtonLink href="#/stories">他のSolveStory</ButtonLink>
+            {caseItem && <ButtonLink href={`#/cases/${caseItem.id}`}>{caseItem.title}</ButtonLink>}
+            <ButtonLink href={`#/problems/${story.primary_problem_class}`}>{labelFor(story.primary_problem_class)}</ButtonLink>
+            {story.candidate_algorithms.slice(0, 3).map((id) => (
+              <ButtonLink href={`#/algorithms/${id}`} key={id}>{labelFor(id)}</ButtonLink>
+            ))}
           </div>
         </section>
         <section className="panel">
-          <p className="eyebrow">Algorithm / Solver</p>
-          <div className="chip-list chip-list-large">
-            {story.candidate_algorithms.map((id) => <Badge key={id} tone="active">{labelFor(id)}</Badge>)}
-            {story.candidate_solvers.map((id) => <Badge key={id} tone="done">{labelFor(id)}</Badge>)}
+          <p className="eyebrow">Solver</p>
+          <div className="chip-list">
+            {story.candidate_solvers.map((id) => (
+              <Badge key={id} tone="done">{labelFor(id)}</Badge>
+            ))}
           </div>
         </section>
       </aside>
+    </div>
+  );
+}
+
+export function BriefsView({ briefId }) {
+  const brief = maps.aiCodingBriefs[briefId] ?? data.aiCodingBriefs[0];
+
+  return (
+    <div className="view-stack">
+      <PageHeader
+        action={<BriefActions brief={brief} />}
+        eyebrow="AI Coding Brief"
+        title={brief.title}
+      >
+        {labelFor(brief.target_id)}
+      </PageHeader>
+      <section className="panel">
+        <pre className="brief-preview">{getBriefMarkdown(brief)}</pre>
+      </section>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   IconBook2,
   IconChartDots,
   IconCircleCheck,
+  IconNetwork,
   IconRoute,
 } from "@tabler/icons-react";
 
@@ -43,7 +44,9 @@ function ReferenceColumn({ title, ids, tone }) {
       <h2>{title}</h2>
       <div className="chip-list">
         {ids.map((id) => (
-          <Badge key={id} tone={tone}>{labelFor(id)}</Badge>
+          <a className="badge-link" href={maps.algorithms[id] ? `#/algorithms/${id}` : undefined} key={id}>
+            <Badge tone={tone}>{labelFor(id)}</Badge>
+          </a>
         ))}
       </div>
     </section>
@@ -118,7 +121,7 @@ export function ProblemDetailView({ problemId }) {
   const comparison = getDefaultComparison(problem.id);
   const related = getRelated(problem.id).slice(0, 9);
   const cases = getProblemCases(problem.id).slice(0, 4);
-  const stories = getStoriesForProblem(problem.id).slice(0, 4);
+  const stories = getStoriesForProblem(problem.id).slice(0, 6);
   const sourceTypes = [...new Set(problem.sources.map((source) => source.type))];
 
   return (
@@ -167,8 +170,8 @@ export function ProblemDetailView({ problemId }) {
               <h2>解き方へつなぐ</h2>
             </div>
             <div className="inline-actions">
-              {stories[0] && <ButtonLink href={`#/stories/${stories[0].id}`} icon={IconRoute}>小さく解く</ButtonLink>}
               <ButtonLink href={cases[0] ? `#/paths/${cases[0].id}` : "#/cases"} icon={IconRoute}>近いケースで見る</ButtonLink>
+              <ButtonLink href={`#/graph/${problem.id}`} icon={IconNetwork}>Graph focus</ButtonLink>
             </div>
           </div>
           <div className="reference-grid">
@@ -182,21 +185,17 @@ export function ProblemDetailView({ problemId }) {
           <section className="panel">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Visual Demo</p>
-                <h2>小さく解いてみる</h2>
+                <p className="eyebrow">SolveStory</p>
+                <h2>小さく解く導線</h2>
               </div>
-              <ButtonLink href="#/stories">SolveStory一覧</ButtonLink>
+              <ButtonLink href="#/stories">Story 一覧</ButtonLink>
             </div>
-            <div className="story-grid">
+            <div className="story-mini-grid">
               {stories.map((story) => (
-                <article className="story-card" key={story.id}>
-                  <div>
-                    <p className="eyebrow">{maps.traces[story.visual_trace_id]?.trace_type ?? "trace"}</p>
-                    <h2>{story.title}</h2>
-                    <p>{story.objective}</p>
-                  </div>
-                  <ButtonLink href={`#/stories/${story.id}`}>traceを見る</ButtonLink>
-                </article>
+                <a className="story-mini-card" href={`#/stories/${story.id}`} key={story.id}>
+                  <strong>{story.title}</strong>
+                  <span>{story.interpretation}</span>
+                </a>
               ))}
             </div>
           </section>
@@ -257,9 +256,9 @@ export function ProblemDetailView({ problemId }) {
         <section className="panel">
           <p className="eyebrow">Next</p>
           <div className="action-list">
-            {stories[0] && <ButtonLink href={`#/stories/${stories[0].id}`} icon={IconRoute}>小さく解いてみる</ButtonLink>}
             <ButtonLink href={`#/compare/${comparison.leftId}/${comparison.rightId}`} icon={IconArrowsDiff}>似た概念と比較する</ButtonLink>
             <ButtonLink href={cases[0] ? `#/paths/${cases[0].id}` : "#/cases"} icon={IconRoute}>近いケースで見る</ButtonLink>
+            <ButtonLink href={`#/graph/${problem.id}`} icon={IconNetwork}>Graph で見る</ButtonLink>
             <ButtonLink href="#/diagnosis" icon={IconBook2}>条件から診断する</ButtonLink>
           </div>
         </section>

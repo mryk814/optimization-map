@@ -155,6 +155,28 @@ export function CaseDetailView({ caseId }) {
           )}
         </div>
       </section>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">SolveStory</p>
+            <h2>このケースを小さく解く</h2>
+          </div>
+          <ButtonLink href="#/stories">Story 一覧</ButtonLink>
+        </div>
+        {stories.length > 0 ? (
+          <div className="story-mini-grid">
+            {stories.map((story) => (
+              <a className="story-mini-card" href={`#/stories/${story.id}`} key={story.id}>
+                <strong>{story.title}</strong>
+                <span>{story.interpretation}</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">coming soon</div>
+        )}
+      </section>
     </div>
   );
 }

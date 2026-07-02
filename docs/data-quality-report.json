@@ -1,0 +1,511 @@
+{
+  "generatedAt": "2026-07-02T04:35:25.606Z",
+  "totals": {
+    "axes": 25,
+    "problemTypes": 23,
+    "algorithms": 20,
+    "solvers": 19,
+    "relations": 116,
+    "exampleCases": 32,
+    "solveStories": 66,
+    "visualSupplements": 20,
+    "optimizationTraces": 10,
+    "aiCodingBriefs": 58,
+    "learningPaths": 6,
+    "modelingWizardSteps": 8
+  },
+  "coverage": {
+    "problemSourceCounts": [
+      {
+        "id": "linear_programming",
+        "count": 2
+      },
+      {
+        "id": "quadratic_programming",
+        "count": 2
+      },
+      {
+        "id": "convex_optimization",
+        "count": 2
+      },
+      {
+        "id": "socp_sdp",
+        "count": 2
+      },
+      {
+        "id": "nonlinear_programming",
+        "count": 2
+      },
+      {
+        "id": "nonconvex_optimization",
+        "count": 2
+      },
+      {
+        "id": "mixed_integer_linear_programming",
+        "count": 2
+      },
+      {
+        "id": "combinatorial_optimization",
+        "count": 2
+      },
+      {
+        "id": "constraint_programming_sat_smt",
+        "count": 2
+      },
+      {
+        "id": "stochastic_programming",
+        "count": 2
+      },
+      {
+        "id": "robust_optimization",
+        "count": 2
+      },
+      {
+        "id": "distributionally_robust_optimization",
+        "count": 2
+      },
+      {
+        "id": "blackbox_derivative_free",
+        "count": 2
+      },
+      {
+        "id": "bayesian_optimization_problem",
+        "count": 2
+      },
+      {
+        "id": "simulation_optimization",
+        "count": 2
+      },
+      {
+        "id": "optimal_control",
+        "count": 2
+      },
+      {
+        "id": "dynamic_programming_rl",
+        "count": 2
+      },
+      {
+        "id": "online_optimization_bandits",
+        "count": 2
+      },
+      {
+        "id": "differentiable_optimization",
+        "count": 2
+      },
+      {
+        "id": "hpo_automl",
+        "count": 2
+      },
+      {
+        "id": "multi_objective_optimization",
+        "count": 2
+      },
+      {
+        "id": "network_flow_graph_optimization",
+        "count": 2
+      },
+      {
+        "id": "mixed_integer_nonlinear_programming",
+        "count": 2
+      }
+    ],
+    "problemSolveStoryCounts": [
+      {
+        "id": "linear_programming",
+        "count": 17
+      },
+      {
+        "id": "quadratic_programming",
+        "count": 5
+      },
+      {
+        "id": "convex_optimization",
+        "count": 12
+      },
+      {
+        "id": "socp_sdp",
+        "count": 4
+      },
+      {
+        "id": "nonlinear_programming",
+        "count": 7
+      },
+      {
+        "id": "nonconvex_optimization",
+        "count": 6
+      },
+      {
+        "id": "mixed_integer_linear_programming",
+        "count": 21
+      },
+      {
+        "id": "combinatorial_optimization",
+        "count": 16
+      },
+      {
+        "id": "constraint_programming_sat_smt",
+        "count": 5
+      },
+      {
+        "id": "stochastic_programming",
+        "count": 14
+      },
+      {
+        "id": "robust_optimization",
+        "count": 8
+      },
+      {
+        "id": "distributionally_robust_optimization",
+        "count": 4
+      },
+      {
+        "id": "blackbox_derivative_free",
+        "count": 5
+      },
+      {
+        "id": "bayesian_optimization_problem",
+        "count": 7
+      },
+      {
+        "id": "simulation_optimization",
+        "count": 3
+      },
+      {
+        "id": "optimal_control",
+        "count": 4
+      },
+      {
+        "id": "dynamic_programming_rl",
+        "count": 6
+      },
+      {
+        "id": "online_optimization_bandits",
+        "count": 8
+      },
+      {
+        "id": "differentiable_optimization",
+        "count": 3
+      },
+      {
+        "id": "hpo_automl",
+        "count": 4
+      },
+      {
+        "id": "multi_objective_optimization",
+        "count": 1
+      },
+      {
+        "id": "network_flow_graph_optimization",
+        "count": 1
+      },
+      {
+        "id": "mixed_integer_nonlinear_programming",
+        "count": 1
+      }
+    ],
+    "problemVisualCounts": [
+      {
+        "id": "linear_programming",
+        "count": 4
+      },
+      {
+        "id": "quadratic_programming",
+        "count": 1
+      },
+      {
+        "id": "convex_optimization",
+        "count": 3
+      },
+      {
+        "id": "socp_sdp",
+        "count": 2
+      },
+      {
+        "id": "nonlinear_programming",
+        "count": 3
+      },
+      {
+        "id": "nonconvex_optimization",
+        "count": 3
+      },
+      {
+        "id": "mixed_integer_linear_programming",
+        "count": 6
+      },
+      {
+        "id": "combinatorial_optimization",
+        "count": 6
+      },
+      {
+        "id": "constraint_programming_sat_smt",
+        "count": 3
+      },
+      {
+        "id": "stochastic_programming",
+        "count": 6
+      },
+      {
+        "id": "robust_optimization",
+        "count": 4
+      },
+      {
+        "id": "distributionally_robust_optimization",
+        "count": 2
+      },
+      {
+        "id": "blackbox_derivative_free",
+        "count": 1
+      },
+      {
+        "id": "bayesian_optimization_problem",
+        "count": 3
+      },
+      {
+        "id": "simulation_optimization",
+        "count": 2
+      },
+      {
+        "id": "optimal_control",
+        "count": 1
+      },
+      {
+        "id": "dynamic_programming_rl",
+        "count": 2
+      },
+      {
+        "id": "online_optimization_bandits",
+        "count": 4
+      },
+      {
+        "id": "differentiable_optimization",
+        "count": 2
+      },
+      {
+        "id": "hpo_automl",
+        "count": 1
+      },
+      {
+        "id": "multi_objective_optimization",
+        "count": 1
+      },
+      {
+        "id": "network_flow_graph_optimization",
+        "count": 1
+      },
+      {
+        "id": "mixed_integer_nonlinear_programming",
+        "count": 1
+      }
+    ],
+    "algorithmVisualCounts": [
+      {
+        "id": "simplex",
+        "count": 1
+      },
+      {
+        "id": "interior_point",
+        "count": 1
+      },
+      {
+        "id": "branch_and_bound",
+        "count": 1
+      },
+      {
+        "id": "cutting_planes",
+        "count": 1
+      },
+      {
+        "id": "branch_cut",
+        "count": 1
+      },
+      {
+        "id": "dynamic_programming",
+        "count": 1
+      },
+      {
+        "id": "constraint_propagation",
+        "count": 1
+      },
+      {
+        "id": "local_nlp",
+        "count": 1
+      },
+      {
+        "id": "sequential_quadratic_programming",
+        "count": 1
+      },
+      {
+        "id": "conic_solvers",
+        "count": 1
+      },
+      {
+        "id": "benders",
+        "count": 1
+      },
+      {
+        "id": "column_generation",
+        "count": 1
+      },
+      {
+        "id": "robust_counterpart",
+        "count": 1
+      },
+      {
+        "id": "sample_average_approximation",
+        "count": 1
+      },
+      {
+        "id": "bayesian_optimization",
+        "count": 1
+      },
+      {
+        "id": "evolutionary_search",
+        "count": 1
+      },
+      {
+        "id": "mpc",
+        "count": 1
+      },
+      {
+        "id": "policy_gradient",
+        "count": 1
+      },
+      {
+        "id": "upper_confidence_bound",
+        "count": 1
+      },
+      {
+        "id": "differentiable_layer",
+        "count": 1
+      }
+    ],
+    "solverSupportedProblemTypeCounts": [
+      {
+        "id": "scipy_linprog",
+        "count": 1
+      },
+      {
+        "id": "scipy_optimize",
+        "count": 2
+      },
+      {
+        "id": "cvxpy",
+        "count": 3
+      },
+      {
+        "id": "gurobi",
+        "count": 3
+      },
+      {
+        "id": "cplex",
+        "count": 3
+      },
+      {
+        "id": "scip",
+        "count": 3
+      },
+      {
+        "id": "highs",
+        "count": 2
+      },
+      {
+        "id": "ortools",
+        "count": 3
+      },
+      {
+        "id": "z3",
+        "count": 1
+      },
+      {
+        "id": "pyomo",
+        "count": 3
+      },
+      {
+        "id": "ipopt",
+        "count": 2
+      },
+      {
+        "id": "casadi",
+        "count": 2
+      },
+      {
+        "id": "mosek",
+        "count": 2
+      },
+      {
+        "id": "sdpa",
+        "count": 1
+      },
+      {
+        "id": "botorch",
+        "count": 2
+      },
+      {
+        "id": "optuna",
+        "count": 2
+      },
+      {
+        "id": "nevergrad",
+        "count": 1
+      },
+      {
+        "id": "stable_baselines3",
+        "count": 1
+      },
+      {
+        "id": "jaxopt",
+        "count": 2
+      }
+    ],
+    "confusedWithGuidance": {
+      "guided": 13,
+      "total": 13
+    },
+    "expectedTop3CoveredProblemTypes": 23,
+    "aiCodingBriefProblemTypes": 10,
+    "learningPathProblemTypes": 11
+  },
+  "issues": {
+    "missingRelationEndpoints": [],
+    "orphanNodes": [
+      "relaxation",
+      "decomposition",
+      "robust_counterpart_pattern",
+      "penalty_softening",
+      "resource_allocation",
+      "network_flow",
+      "assignment",
+      "routing",
+      "scheduling",
+      "multi_objective",
+      "mixed_discrete_continuous",
+      "nonlinear_response",
+      "online_decision",
+      "local_search",
+      "branch_and_bound_search",
+      "uncertainty_choice",
+      "objective_alignment",
+      "forecast_first",
+      "diagnosis_first",
+      "ai_coding_brief",
+      "visual_spec",
+      "conic_reformulation",
+      "policy_search",
+      "matching",
+      "not_optimization_reporting",
+      "pde_design",
+      "model_training_loss",
+      "maintenance_scheduling",
+      "ad_budget_online",
+      "stochastic_capacity_expansion",
+      "robust_staffing_plan",
+      "expensive_ab_variant_search",
+      "not_optimization_forecast_first",
+      "not_optimization_alignment",
+      "multi_stage_pricing_policy"
+    ],
+    "problemTypesWithoutSource": [],
+    "problemTypesWithoutSolveStory": [],
+    "algorithmsWithoutVisual": []
+  }
+}

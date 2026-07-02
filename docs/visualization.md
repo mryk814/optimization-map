@@ -2,8 +2,6 @@
 
 Visualization の目的は、最適化分野の「現在地」と「隣に何があるか」を見せることです。
 
-ビジュアル実装の仕様化には [Visual Spec Template](visual-spec-template.md) を使います。最初から live solver を動かすのではなく、`OptimizationTrace` を再生する静的デモとして設計します。
-
 ## Current MVP Views
 
 ### Case-first Solving Flow
@@ -28,40 +26,46 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 - Meaning: 変数、線形性、不確実性などから次に読む問題タイプ候補を絞る
 - URL: `#/diagnosis`
 
-## v0.2 Visual Learning Layer
+### Algorithm Motion Gallery
 
-### SolveStory
+- Meaning: Algorithm ごとの `what_moves` / `what_user_should_notice` と motion preview を見る
+- URL: `#/algorithms`, `#/algorithms/:id`
+- Data: `data/visual_supplements.yml`, `data/optimization_traces.yml`
 
-- Node: ExampleCase / ProblemType / Algorithm / Solver
-- Meaning: `課題 → 変数 → 目的 → 制約 → 手法 → trace → 解釈` の流れを読む
-- Data: `data/solve_stories.yml`
+### SolveStory Library
 
-### OptimizationTrace Player
+- Meaning: 現実課題を `課題 -> 変数 -> 目的 -> 制約 -> 手法 -> trace -> 解釈` として読む
+- URL: `#/stories`, `#/stories/:id`
+- Data: `data/solve_stories.yml`, `data/optimization_traces.yml`, `data/ai_coding_briefs.yml`
 
-- Node: SolveStory
-- Meaning: 事前計算された状態列を step-by-step に再生する
-- Data: `data/optimization_traces.yml`
+### Learning Paths
 
-### Algorithm Visual Supplement
+- Meaning: audience 別に ProblemType / Algorithm / SolveStory / Brief を短い順路で辿る
+- URL: `#/learning`, `#/learning/:id`
+- Data: `data/learning_paths.yml`
 
-- Node: Algorithm
-- Meaning: その手法で「何が動くと理解しやすいか」を明示する
-- Data: `data/visual_supplements.yml`
-
-## Deferred Graph Views
-
-### Problem Type Map
+### Knowledge Graph Explorer
 
 - Node: ProblemType
 - Edge: `is_a`, `overlaps_with`, `confused_with`
 - Filter: core axis, tag, relation type
 - Meaning: 分野の近さと混同しやすい関係
+- URL: `#/graph`, `#/graph/:focus`
 
-### Relation Graph
+Explorer mode:
 
-- Node: ProblemType / Algorithm / Solver / ModelingPattern / ExampleCase
-- Edge: all relation types
-- Meaning: 課題を候補タイプ、手法、solver 候補へ翻訳する流れ
+- Beginner Map: 現実課題 -> ProblemType -> Algorithm -> Solver
+- Concept Map: `is_a`, `overlaps_with`, `confused_with`, `relaxes_to`, `reformulates_to`
+- Method Map: ProblemType -> Algorithm -> Solver
+- Source Map: ProblemType -> Case
+
+### Coverage Dashboard
+
+- Meaning: Source、SolveStory、VisualSupplement、AI Coding Brief、LearningPath、relation endpoint の coverage を見る
+- URL: `#/quality`
+- Data: `npm run report` の出力と同じ指標
+
+## Deferred Views
 
 ### Difficulty Heatmap
 
@@ -79,13 +83,16 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 - Table first, graph second
 - Meaning: 実装候補を比較する
 
-## Deferred Views
-
 - interactive force-directed graph with manual layout save
 - performance benchmark dashboard
 - solver execution UI
 - source citation network
-- live Python / Pyodide execution
+
+## AI Implementation Templates
+
+- Visual component を AI に依頼する前に、[Visual Spec Template](visual-spec-template.md) を埋める。
+- 実装指示として持ち出す場合は、[AI Coding Brief Template](ai-coding-brief-template.md) の項目を満たす。
+- live solver 実行を前提にしない。必要性の判断は [Live Execution Options](live-execution-options.md) に分離する。
 
 ## Visual Encoding
 
@@ -94,9 +101,3 @@ Visualization の目的は、最適化分野の「現在地」と「隣に何が
 - Selected node uses accent border and subtle background.
 - Heatmap uses single-hue intensity; do not use rainbow.
 - Table data must support TSV copy and CSV export.
-
-## Implementation Rule
-
-- Prefer static trace replay before live execution.
-- Every visual demo should declare `learning_goal`, `what_moves`, and `what_user_should_notice`.
-- AI coding briefs should be specific enough to implement a component without reading optimization textbooks.

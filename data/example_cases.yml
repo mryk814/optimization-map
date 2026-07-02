@@ -3,7 +3,7 @@ example_cases:
     title: 配送ルートを容量制約つきで決める
     narrative: 複数車両で顧客を回り、移動距離を短くしたい。
     signals: [ordering, capacity, binary, exact_gap]
-    expected_top3: [combinatorial_optimization, mixed_integer_linear_programming, constraint_programming_sat_smt]
+    expected_top3: [network_flow_graph_optimization, combinatorial_optimization, mixed_integer_linear_programming, constraint_programming_sat_smt]
     likely_traps: [linear_programming]
   - id: workforce_shift
     title: 人員シフトを作る
@@ -57,7 +57,7 @@ example_cases:
     title: ポートフォリオのリスクと収益を調整する
     narrative: 期待収益と分散リスクの tradeoff を取りたい。
     signals: [quadratic, convex, risk]
-    expected_top3: [quadratic_programming, convex_optimization, socp_sdp]
+    expected_top3: [multi_objective_optimization, quadratic_programming, convex_optimization, socp_sdp]
     likely_traps: [mixed_integer_linear_programming]
   - id: robust_supply_chain
     title: 供給途絶に備えたサプライチェーン設計
@@ -75,7 +75,7 @@ example_cases:
     title: 最短経路を求める
     narrative: グラフ上で出発点から到着点までの最短経路を探す。
     signals: [graph, path, discrete]
-    expected_top3: [combinatorial_optimization, linear_programming, dynamic_programming_rl]
+    expected_top3: [network_flow_graph_optimization, combinatorial_optimization, linear_programming, dynamic_programming_rl]
     likely_traps: [bayesian_optimization_problem]
   - id: matching
     title: 参加者同士を条件つきでマッチングする
@@ -87,7 +87,7 @@ example_cases:
     title: 公平性制約つき資源配分
     narrative: 効率と公平性を両立しながら限られた資源を配る。
     signals: [multi_objective, constraints, fairness]
-    expected_top3: [convex_optimization, linear_programming, mixed_integer_linear_programming]
+    expected_top3: [multi_objective_optimization, convex_optimization, linear_programming, mixed_integer_linear_programming]
     likely_traps: [hpo_automl]
   - id: not_optimization_reporting
     title: 売上低下の原因を説明したい
@@ -141,7 +141,7 @@ example_cases:
     title: 倉庫と配送ネットワークを再設計する
     narrative: 拠点候補、輸送容量、固定費を見ながら、どの倉庫を使いどの需要地へ送るかを決める。
     signals: [network, fixed_cost, capacity, assignment]
-    expected_top3: [mixed_integer_linear_programming, combinatorial_optimization, linear_programming]
+    expected_top3: [network_flow_graph_optimization, mixed_integer_linear_programming, combinatorial_optimization, linear_programming]
     likely_traps: [bayesian_optimization_problem]
   - id: stochastic_capacity_expansion
     title: 将来需要が不確かな設備投資を段階的に決める
@@ -178,4 +178,16 @@ example_cases:
     narrative: 価格を出すたびに需要反応が観測され、残在庫と時間を見ながら次の価格を決めたい。
     signals: [online_feedback, revenue, sequential, nonlinear]
     expected_top3: [online_optimization_bandits, nonlinear_programming, stochastic_programming]
+    likely_traps: [linear_programming]
+  - id: process_design_minlp
+    title: 設備選択と運転条件を同時に決める
+    narrative: どの装置を採用するかという離散判断と、温度・流量などの非線形運転条件を同時に最適化したい。
+    signals: [integer, nonlinear, process, nonconvex]
+    expected_top3: [mixed_integer_nonlinear_programming, nonconvex_optimization, mixed_integer_linear_programming, nonlinear_programming]
+    likely_traps: [linear_programming]
+  - id: nonlinear_facility_sizing
+    title: 拠点サイズと非線形コストを同時に決める
+    narrative: 候補拠点を選びつつ、規模の経済や混雑コストの非線形性を入れて容量を決めたい。
+    signals: [selection, nonlinear, capacity, fixed_cost]
+    expected_top3: [mixed_integer_nonlinear_programming, mixed_integer_linear_programming, nonlinear_programming]
     likely_traps: [linear_programming]

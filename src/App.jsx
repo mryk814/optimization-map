@@ -2,13 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 
 import { data, downloadCsv } from "./data/loadData.js";
 import { CaseDetailView, CasesView } from "./views/CasesView.jsx";
+import { AlgorithmDetailView, AlgorithmsView } from "./views/AlgorithmsView.jsx";
 import { CompareView } from "./views/CompareView.jsx";
 import { DiagnosisView } from "./views/DiagnosisView.jsx";
+import { GraphView } from "./views/GraphView.jsx";
 import { HomeView } from "./views/HomeView.jsx";
+import { LearningDetailView, LearningView } from "./views/LearningView.jsx";
 import { PathView } from "./views/PathView.jsx";
 import { ProblemDetailView } from "./views/ProblemDetailView.jsx";
 import { ProblemsView } from "./views/ProblemsView.jsx";
-import { StoriesView, StoryDetailView } from "./views/StoriesView.jsx";
+import { QualityView } from "./views/QualityView.jsx";
+import { BriefsView, StoriesView, StoryDetailView } from "./views/StoriesView.jsx";
+import { WizardView } from "./views/WizardView.jsx";
 
 function parseHash(hash) {
   const path = (hash || "#/").replace(/^#\/?/, "");
@@ -34,9 +39,11 @@ function useHashRoute() {
 const navItems = [
   { href: "#/", label: "入口", match: "home" },
   { href: "#/cases", label: "ケース", match: "cases" },
-  { href: "#/stories", label: "小さく解く", match: "stories" },
-  { href: "#/diagnosis", label: "診断", match: "diagnosis" },
+  { href: "#/wizard", label: "診断", match: "diagnosis" },
   { href: "#/problems", label: "問題タイプ", match: "problems" },
+  { href: "#/algorithms", label: "手法", match: "algorithms" },
+  { href: "#/learning", label: "学習", match: "learning" },
+  { href: "#/quality", label: "品質", match: "quality" },
 ];
 
 export default function App() {
@@ -50,8 +57,17 @@ export default function App() {
     if (route.name === "cases" || route.name === "paths") {
       return "cases";
     }
-    if (route.name === "stories") {
-      return "stories";
+    if (route.name === "algorithms" || route.name === "stories" || route.name === "briefs") {
+      return "algorithms";
+    }
+    if (route.name === "learning") {
+      return "learning";
+    }
+    if (route.name === "quality" || route.name === "graph") {
+      return "quality";
+    }
+    if (route.name === "wizard") {
+      return "diagnosis";
     }
     return route.name;
   }, [route.name]);
@@ -89,13 +105,19 @@ export default function App() {
 
       <main>
         {route.name === "home" && <HomeView />}
+        {route.name === "algorithms" && (route.first ? <AlgorithmDetailView algorithmId={route.first} /> : <AlgorithmsView />)}
+        {route.name === "briefs" && <BriefsView briefId={route.first} />}
         {route.name === "cases" && (route.first ? <CaseDetailView caseId={route.first} /> : <CasesView />)}
-        {route.name === "stories" && (route.first ? <StoryDetailView storyId={route.first} /> : <StoriesView />)}
         {route.name === "diagnosis" && <DiagnosisView />}
+        {route.name === "graph" && <GraphView focusId={route.first} />}
+        {route.name === "learning" && (route.first ? <LearningDetailView pathId={route.first} /> : <LearningView />)}
         {route.name === "problems" && (route.first ? <ProblemDetailView problemId={route.first} /> : <ProblemsView onCopyRows={copyRows} onExportRows={exportRows} />)}
+        {route.name === "quality" && <QualityView />}
+        {route.name === "stories" && (route.first ? <StoryDetailView storyId={route.first} /> : <StoriesView />)}
+        {route.name === "wizard" && <WizardView />}
         {route.name === "compare" && <CompareView leftId={route.first || "linear_programming"} rightId={route.second || "convex_optimization"} />}
         {route.name === "paths" && <PathView caseId={route.first || data.exampleCases[0].id} />}
-        {!['home', 'cases', 'stories', 'diagnosis', 'problems', 'compare', 'paths'].includes(route.name) && <HomeView />}
+        {!["home", "algorithms", "briefs", "cases", "diagnosis", "graph", "learning", "problems", "quality", "stories", "wizard", "compare", "paths"].includes(route.name) && <HomeView />}
       </main>
 
       {toast && <div className="toast" role="status">{toast}</div>}

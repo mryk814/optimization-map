@@ -29,24 +29,63 @@ patterns:
   - id: predict_then_optimize
     name_ja: Predict-then-Optimize
     summary: 予測モデルの出力を下流の最適化に接続し、意思決定品質で評価する。
-  - id: allocation
-    name_ja: 配分
-    summary: 限られた資源、予算、数量を複数の対象に割り振る。
-  - id: portfolio
-    name_ja: ポートフォリオ
-    summary: 資産や候補の重みを決め、リターン・リスク・制約のトレードオフを扱う。
-  - id: continuous_design
-    name_ja: 連続設計
-    summary: 連続変数を調整し、滑らかな目的関数や制約の下で良い設計を探す。
-  - id: facility_location
-    name_ja: 施設配置
-    summary: 拠点を開くかどうかと需要の割当を同時に決める。
+  - id: resource_allocation
+    name_ja: 資源配分
+    summary: 限られた資源を需要、容量、優先度に合わせて割り当てる。
+  - id: network_flow
+    name_ja: Network Flow
+    summary: node と edge の保存則、容量、経路構造として問題を表す。
+  - id: assignment
+    name_ja: 割当
+    summary: 人、仕事、時間、場所などの対応関係を binary 変数や制約で表す。
+  - id: routing
+    name_ja: ルーティング
+    summary: 訪問順序、移動コスト、容量制約を持つ経路選択として表す。
   - id: scheduling
     name_ja: スケジューリング
-    summary: 人、機械、作業、時間枠の割当や順序を制約付きで決める。
-  - id: experimental_design
-    name_ja: 実験条件探索
-    summary: 高価な実験やシミュレーションを少ない試行回数で進める。
-  - id: online_experiment
-    name_ja: オンライン実験
-    summary: 観測結果を見ながら施策や配分を逐次的に更新する。
+    summary: 仕事や資源を時間枠へ割り当て、順序や同時実行制約を守る。
+  - id: multi_objective
+    name_ja: 多目的 tradeoff
+    summary: 複数の目的を重み、制約、または Pareto frontier として比較する。
+  - id: mixed_discrete_continuous
+    name_ja: 離散連続混合
+    summary: 設備選択などの離散判断と、運転条件などの連続判断を同時に扱う。
+  - id: nonlinear_response
+    name_ja: 非線形反応
+    summary: 価格、需要、物理量などの曲線関係を目的や制約へ入れる。
+  - id: online_decision
+    name_ja: Online Decision
+    summary: 観測を受けながら次の意思決定を更新する。
+  - id: local_search
+    name_ja: 局所探索
+    summary: 現在点の近傍情報や候補群から、より良い解へ反復的に進める。
+  - id: branch_and_bound_search
+    name_ja: Branch-and-Bound 探索
+    summary: 緩和 bound と incumbent を使って離散探索木を刈り込む。
+  - id: uncertainty_choice
+    name_ja: 不確実性の選択
+    summary: シナリオ、分布、集合、online feedback のどれで不確実性を表すかを決める。
+  - id: objective_alignment
+    name_ja: 目的関数の合意
+    summary: solver に渡す前に、最適化する指標と guardrail を分ける。
+  - id: forecast_first
+    name_ja: Forecast First
+    summary: 意思決定変数が未定義のとき、先に予測対象と誤差構造を整理する。
+  - id: diagnosis_first
+    name_ja: Diagnosis First
+    summary: 原因分析や意思決定候補の整理が先で、まだ最適化問題ではない状態を扱う。
+  - id: ai_coding_brief
+    name_ja: AI Coding Brief
+    summary: 問題タイプや story を AI に渡せる実装指示へ変換する。
+  - id: visual_spec
+    name_ja: Visual Spec
+    summary: 何を描き、何を学ばせ、どの trace を読むかを UI 実装前に固定する。
+  - id: conic_reformulation
+    name_ja: Cone 変換
+    summary: 二次、半正定値、robust 制約を cone membership として表す。
+  - id: policy_search
+    name_ja: 方策探索
+    summary: 状態から行動を選ぶ方策を試行と報酬から更新する。
+  - id: dynamic_programming
+    name_ja: 動的計画
+    summary: 部分問題を再利用し、状態ごとの価値や選択を積み上げる。
