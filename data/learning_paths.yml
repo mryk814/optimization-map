@@ -1,0 +1,79 @@
+learning_paths:
+  - id: beginner_optimization_map
+    title: "初学者向け: 最適化の地図を歩く"
+    audience: beginner
+    summary: 変数、目的、制約から入り、LP、MILP、凸、BO までを薄く横断する。
+    steps:
+      - { type: concept, title: 変数・目的・制約 }
+      - { type: problem_class, id: linear_programming }
+      - { type: solve_story, id: story_lp_production_planning }
+      - { type: compare, left: linear_programming, right: mixed_integer_linear_programming }
+      - { type: problem_class, id: convex_optimization }
+      - { type: solve_story, id: story_gradient_descent_toy }
+      - { type: problem_class, id: bayesian_optimization_problem }
+      - { type: solve_story, id: story_bo_experiment_design }
+  - id: practitioner_modeling_path
+    title: "実務家向け: 課題からモデルへ"
+    audience: practitioner
+    summary: 配分、割当、シフト、在庫、実装 brief までを現実ケースでつなぐ。
+    steps:
+      - { type: case, id: workforce_shift }
+      - { type: problem_class, id: constraint_programming_sat_smt }
+      - { type: solve_story, id: story_cpsat_shift_assignment }
+      - { type: compare, left: mixed_integer_linear_programming, right: constraint_programming_sat_smt }
+      - { type: case, id: uncertain_inventory }
+      - { type: problem_class, id: stochastic_programming }
+      - { type: solve_story, id: story_inventory_saa }
+      - { type: brief, id: brief_problem_cp_sat }
+  - id: ml_engineer_path
+    title: "ML エンジニア向け: HPO から decision-focused へ"
+    audience: ml_engineer
+    summary: HPO、BO、Bandit、微分可能最適化の違いを、試行履歴と意思決定損失で読む。
+    steps:
+      - { type: problem_class, id: hpo_automl }
+      - { type: solve_story, id: story_hpo_automl_budget }
+      - { type: problem_class, id: bayesian_optimization_problem }
+      - { type: solve_story, id: story_bo_experiment_design }
+      - { type: problem_class, id: online_optimization_bandits }
+      - { type: solve_story, id: story_bandit_ab_allocation }
+      - { type: problem_class, id: differentiable_optimization }
+      - { type: solve_story, id: story_predict_then_optimize }
+  - id: or_researcher_path
+    title: "OR / 研究者寄り: 緩和・分解・不確実性"
+    audience: researcher
+    summary: 双対、分解、robust/stochastic/DRO、MINLP 入口を関係グラフで読む。
+    steps:
+      - { type: problem_class, id: convex_optimization }
+      - { type: problem_class, id: socp_sdp }
+      - { type: algorithm, id: benders }
+      - { type: solve_story, id: story_benders_supply_chain }
+      - { type: algorithm, id: column_generation }
+      - { type: solve_story, id: story_column_generation_shift }
+      - { type: compare, left: stochastic_programming, right: robust_optimization }
+      - { type: problem_class, id: distributionally_robust_optimization }
+  - id: visual_learning_path
+    title: "見て覚える: 動く最適化"
+    audience: visual_learner
+    summary: 代表 trace を見ながら、連続・離散・逐次・分解の違いを体でつかむ。
+    steps:
+      - { type: algorithm, id: simplex }
+      - { type: solve_story, id: story_lp_production_planning }
+      - { type: algorithm, id: branch_and_bound }
+      - { type: solve_story, id: story_branch_and_bound_milp }
+      - { type: algorithm, id: bayesian_optimization }
+      - { type: solve_story, id: story_bo_experiment_design }
+      - { type: algorithm, id: mpc }
+      - { type: solve_story, id: story_mpc_robot_control }
+  - id: ai_implementation_path
+    title: AI 実装 brief に落とす
+    audience: ai_builder
+    summary: 問題タイプと SolveStory から、AI に渡せる実装指示へ変換する。
+    steps:
+      - { type: problem_class, id: linear_programming }
+      - { type: brief, id: brief_problem_linear_programming }
+      - { type: solve_story, id: story_lp_production_planning }
+      - { type: brief, id: brief_story_lp_production_planning }
+      - { type: problem_class, id: mixed_integer_linear_programming }
+      - { type: brief, id: brief_problem_milp }
+      - { type: problem_class, id: bayesian_optimization_problem }
+      - { type: brief, id: brief_problem_bayesian_optimization }

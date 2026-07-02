@@ -1,0 +1,607 @@
+modeling_wizard:
+  - id: decision_target
+    question: 何を決めたいですか？
+    axis_effects:
+      - variable_domain
+      - constraint_structure
+      - interaction_mode
+    class_scores: {}
+    next_questions:
+      - objective_shape
+    answers:
+      - id: allocate_people_or_resources
+        label: 人・予算・設備を割り当てる
+        axis_effects:
+          variable_domain: binary_or_integer
+          constraint_structure: assignment_or_capacity
+        class_scores:
+          mixed_integer_linear_programming: 3
+          constraint_programming_sat_smt: 3
+          linear_programming: 1
+        pattern_scores:
+          resource_allocation: 3
+          assignment: 2
+          penalty_softening: 1
+        story_suggestions:
+          - story_cpsat_shift_assignment
+          - story_facility_location_milp
+          - story_fair_allocation_lp
+        brief_suggestions:
+          - brief_story_cpsat_shift_assignment
+          - brief_story_facility_location_milp
+        next_questions:
+          - hard_conditions
+          - variable_kind
+      - id: choose_route_or_flow
+        label: 経路・流量・ネットワークを決める
+        axis_effects:
+          constraint_structure: network_balance
+          variable_domain: integer_or_continuous
+        class_scores:
+          network_flow_graph_optimization: 4
+          combinatorial_optimization: 2
+          mixed_integer_linear_programming: 2
+        pattern_scores:
+          network_flow: 3
+          routing: 2
+        story_suggestions:
+          - story_shortest_path_network
+          - story_network_flow_maxflow
+          - story_vehicle_routing_milp
+        brief_suggestions:
+          - brief_story_shortest_path_network
+          - brief_problem_milp
+        next_questions:
+          - hard_conditions
+          - time_or_feedback
+      - id: tune_blackbox_or_experiment
+        label: 実験条件・ハイパーパラメータを試しながら選ぶ
+        axis_effects:
+          blackboxness: blackbox
+          evaluation_cost: expensive
+        class_scores:
+          bayesian_optimization_problem: 4
+          blackbox_derivative_free: 3
+          hpo_automl: 2
+        pattern_scores:
+          surrogate_modeling: 3
+          online_decision: 1
+        story_suggestions:
+          - story_bo_experiment_design
+          - story_hpo_automl_budget
+          - story_expensive_ab_variant_search
+        brief_suggestions:
+          - brief_story_bo_experiment_design
+          - brief_problem_bayesian_optimization
+        next_questions:
+          - evaluation_source
+          - time_or_feedback
+      - id: clarify_before_optimization
+        label: 何を最適化すべきか、まだ合意できていない
+        axis_effects:
+          model_confidence: unclear
+          deployment_stage: framing
+        class_scores:
+          not_optimization: 5
+          multi_objective_optimization: 1
+        pattern_scores:
+          objective_alignment: 3
+          forecast_first: 2
+        story_suggestions:
+          - story_objective_alignment_first
+          - story_forecast_first
+          - story_not_optimization_reporting
+        brief_suggestions:
+          - brief_story_objective_alignment_first
+          - brief_story_forecast_first
+        next_questions:
+          - objective_shape
+
+  - id: objective_shape
+    question: 良さは何で決まりますか？
+    axis_effects:
+      - objective_structure
+      - risk_measure
+    class_scores: {}
+    next_questions:
+      - hard_conditions
+    answers:
+      - id: cost_or_profit_formula
+        label: コスト・利益・時間を式で足し引きできる
+        axis_effects:
+          objective_structure: linear_or_smooth
+        class_scores:
+          linear_programming: 3
+          quadratic_programming: 1
+          convex_optimization: 1
+        pattern_scores:
+          resource_allocation: 2
+          linearization: 1
+        story_suggestions:
+          - story_lp_production_planning
+          - story_lp_transportation
+        brief_suggestions:
+          - brief_problem_linear_programming
+          - brief_story_lp_production_planning
+        next_questions:
+          - hard_conditions
+      - id: risk_or_tradeoff
+        label: リスク・品質・公平性など複数の指標を比べる
+        axis_effects:
+          objective_structure: tradeoff
+          risk_measure: explicit
+        class_scores:
+          multi_objective_optimization: 4
+          quadratic_programming: 2
+          distributionally_robust_optimization: 1
+        pattern_scores:
+          multi_objective: 3
+          objective_alignment: 2
+        story_suggestions:
+          - story_multi_objective_tradeoff
+          - story_qp_portfolio
+          - story_tail_risk_saa_portfolio
+        brief_suggestions:
+          - brief_story_multi_objective_tradeoff
+          - brief_story_qp_portfolio
+        next_questions:
+          - uncertainty
+          - explainability
+      - id: blackbox_score
+        label: 試してみないと評価値が分からない
+        axis_effects:
+          blackboxness: blackbox
+          evaluation_cost: measured
+        class_scores:
+          blackbox_derivative_free: 3
+          bayesian_optimization_problem: 3
+          simulation_optimization: 2
+        pattern_scores:
+          surrogate_modeling: 3
+        story_suggestions:
+          - story_bo_vs_blackbox
+          - story_blackbox_pde_design
+          - story_saa_vs_bo_simulation
+        brief_suggestions:
+          - brief_story_bo_vs_blackbox
+          - brief_story_blackbox_pde_design
+        next_questions:
+          - evaluation_source
+      - id: decision_is_not_clear
+        label: 指標より先に、判断基準を整理したい
+        axis_effects:
+          model_confidence: low
+        class_scores:
+          not_optimization: 4
+          multi_objective_optimization: 1
+        pattern_scores:
+          objective_alignment: 3
+        story_suggestions:
+          - story_objective_alignment_first
+          - story_not_optimization_reporting
+        brief_suggestions:
+          - brief_story_objective_alignment_first
+        next_questions:
+          - explainability
+
+  - id: hard_conditions
+    question: 必ず守る条件はどんな形ですか？
+    axis_effects:
+      - constraint_structure
+      - feasibility_strictness
+    class_scores: {}
+    next_questions:
+      - variable_kind
+    answers:
+      - id: capacities_and_balances
+        label: 容量、需要、保存則、上下限が中心
+        axis_effects:
+          constraint_structure: linear_capacity
+          feasibility_strictness: hard
+        class_scores:
+          linear_programming: 3
+          network_flow_graph_optimization: 2
+          stochastic_programming: 1
+        pattern_scores:
+          resource_allocation: 2
+          network_flow: 2
+        story_suggestions:
+          - story_lp_transportation
+          - story_supply_chain_network_design
+          - story_network_flow_maxflow
+        brief_suggestions:
+          - brief_story_lp_transportation
+          - brief_story_supply_chain_network_design
+        next_questions:
+          - variable_kind
+      - id: logic_and_assignment
+        label: 0/1、同時不可、順序、休暇などの論理条件が多い
+        axis_effects:
+          constraint_structure: logical
+          variable_domain: binary
+        class_scores:
+          constraint_programming_sat_smt: 4
+          mixed_integer_linear_programming: 3
+          combinatorial_optimization: 2
+        pattern_scores:
+          assignment: 3
+          scheduling: 2
+          branch_and_bound_search: 1
+        story_suggestions:
+          - story_cpsat_shift_assignment
+          - story_matching_assignment
+          - story_config_validation_sat
+        brief_suggestions:
+          - brief_story_cpsat_shift_assignment
+          - brief_solver_ortools_cpsat
+        next_questions:
+          - variable_kind
+      - id: nonlinear_physics_or_response
+        label: 物理式、価格反応、曲線の制約が入る
+        axis_effects:
+          constraint_structure: nonlinear
+          differentiability: mixed
+        class_scores:
+          nonlinear_programming: 3
+          mixed_integer_nonlinear_programming: 3
+          nonconvex_optimization: 2
+        pattern_scores:
+          nonlinear_response: 3
+          mixed_discrete_continuous: 2
+        story_suggestions:
+          - story_minlp_process_design
+          - story_nlp_price_optimization
+          - story_sqp_robot_local_model
+        brief_suggestions:
+          - brief_story_minlp_process_design
+          - brief_story_nlp_pricing
+        next_questions:
+          - variable_kind
+          - evaluation_source
+
+  - id: variable_kind
+    question: 決める値はどの種類に近いですか？
+    axis_effects:
+      - variable_domain
+      - discreteness_source
+    class_scores: {}
+    next_questions:
+      - evaluation_source
+    answers:
+      - id: continuous_amounts
+        label: 量、比率、価格など連続値が中心
+        axis_effects:
+          variable_domain: continuous
+        class_scores:
+          linear_programming: 2
+          quadratic_programming: 2
+          nonlinear_programming: 1
+        pattern_scores:
+          convexification: 1
+          resource_allocation: 1
+        story_suggestions:
+          - story_qp_portfolio
+          - story_lp_production_planning
+        brief_suggestions:
+          - brief_problem_quadratic_programming
+        next_questions:
+          - uncertainty
+      - id: integer_or_binary
+        label: 個数、採否、割当、順序など離散値が中心
+        axis_effects:
+          variable_domain: integer_binary
+          discreteness_source: decision
+        class_scores:
+          mixed_integer_linear_programming: 3
+          constraint_programming_sat_smt: 3
+          combinatorial_optimization: 2
+        pattern_scores:
+          assignment: 2
+          branch_and_bound_search: 2
+        story_suggestions:
+          - story_branch_and_bound_milp
+          - story_cpsat_shift_assignment
+          - story_vehicle_routing_milp
+        brief_suggestions:
+          - brief_problem_milp
+          - brief_problem_cp_sat
+        next_questions:
+          - explainability
+      - id: mixed_discrete_and_continuous
+        label: 設備選択と運転条件のように離散と連続が混ざる
+        axis_effects:
+          variable_domain: mixed
+          discreteness_source: design_choice
+        class_scores:
+          mixed_integer_nonlinear_programming: 4
+          mixed_integer_linear_programming: 2
+          nonlinear_programming: 1
+        pattern_scores:
+          mixed_discrete_continuous: 3
+          linearization: 1
+        story_suggestions:
+          - story_minlp_process_design
+          - story_nlp_price_optimization
+          - story_facility_location_milp
+        brief_suggestions:
+          - brief_story_minlp_process_design
+          - brief_story_facility_location_milp
+        next_questions:
+          - evaluation_source
+
+  - id: evaluation_source
+    question: 評価値や制約はどう得ますか？
+    axis_effects:
+      - blackboxness
+      - evaluation_cost
+      - data_availability
+    class_scores: {}
+    next_questions:
+      - uncertainty
+    answers:
+      - id: explicit_formula
+        label: 式や表で計算できる
+        axis_effects:
+          blackboxness: explicit
+          evaluation_cost: cheap
+        class_scores:
+          convex_optimization: 2
+          linear_programming: 2
+          mixed_integer_linear_programming: 1
+        pattern_scores:
+          linearization: 1
+          convexification: 1
+        story_suggestions:
+          - story_convex_regularization
+          - story_interior_point_path
+        brief_suggestions:
+          - brief_problem_convex_optimization
+        next_questions:
+          - uncertainty
+      - id: simulation_or_batch_data
+        label: simulation、履歴データ、シナリオで評価する
+        axis_effects:
+          blackboxness: simulation
+          data_availability: sampled
+        class_scores:
+          simulation_optimization: 3
+          stochastic_programming: 2
+          blackbox_derivative_free: 1
+        pattern_scores:
+          scenario_modeling: 3
+          surrogate_modeling: 1
+        story_suggestions:
+          - story_saa_newsvendor
+          - story_inventory_saa
+          - story_saa_vs_bo_simulation
+        brief_suggestions:
+          - brief_story_inventory_saa
+        next_questions:
+          - uncertainty
+      - id: expensive_real_trial
+        label: 実験や現場で試す必要があり、1回が高い
+        axis_effects:
+          blackboxness: blackbox
+          evaluation_cost: expensive
+        class_scores:
+          bayesian_optimization_problem: 4
+          blackbox_derivative_free: 2
+          online_optimization_bandits: 1
+        pattern_scores:
+          surrogate_modeling: 3
+          online_decision: 1
+        story_suggestions:
+          - story_bo_experiment_design
+          - story_expensive_ab_variant_search
+        brief_suggestions:
+          - brief_problem_bayesian_optimization
+          - brief_story_expensive_ab_variant_search
+        next_questions:
+          - time_or_feedback
+
+  - id: uncertainty
+    question: 不確実性はどう扱いますか？
+    axis_effects:
+      - uncertainty_representation
+      - stochasticity_source
+    class_scores: {}
+    next_questions:
+      - time_or_feedback
+    answers:
+      - id: mostly_deterministic
+        label: まずは確定値で考えられる
+        axis_effects:
+          uncertainty_representation: none_or_point_estimate
+        class_scores:
+          linear_programming: 1
+          mixed_integer_linear_programming: 1
+          convex_optimization: 1
+        pattern_scores:
+          resource_allocation: 1
+        story_suggestions:
+          - story_lp_production_planning
+          - story_branch_and_bound_milp
+        brief_suggestions:
+          - brief_story_lp_production_planning
+        next_questions:
+          - time_or_feedback
+      - id: scenarios_or_distribution
+        label: 複数シナリオや分布で評価したい
+        axis_effects:
+          uncertainty_representation: scenarios_or_distribution
+          stochasticity_source: demand_or_return
+        class_scores:
+          stochastic_programming: 3
+          distributionally_robust_optimization: 2
+          simulation_optimization: 1
+        pattern_scores:
+          scenario_modeling: 3
+          uncertainty_choice: 1
+        story_suggestions:
+          - story_inventory_saa
+          - story_capacity_expansion_stochastic
+          - story_dro_tail_risk_portfolio
+        brief_suggestions:
+          - brief_story_inventory_saa
+          - brief_story_dro_tail_risk_portfolio
+        next_questions:
+          - explainability
+      - id: worst_case_or_guardrail
+        label: 最悪ケースや守るべき余裕を重視する
+        axis_effects:
+          uncertainty_representation: uncertainty_set
+          risk_measure: worst_case
+        class_scores:
+          robust_optimization: 4
+          distributionally_robust_optimization: 2
+          stochastic_programming: 1
+        pattern_scores:
+          robust_counterpart_pattern: 3
+          uncertainty_choice: 2
+        story_suggestions:
+          - story_robust_staffing
+          - story_robust_counterpart_toy
+          - story_robust_vs_stochastic_planning
+        brief_suggestions:
+          - brief_problem_robust_optimization
+          - brief_story_robust_staffing
+        next_questions:
+          - explainability
+
+  - id: time_or_feedback
+    question: 一回だけ決めますか、観測しながら更新しますか？
+    axis_effects:
+      - time_structure
+      - feedback
+      - interaction_mode
+    class_scores: {}
+    next_questions:
+      - explainability
+    answers:
+      - id: one_shot_plan
+        label: まず一回の計画として決める
+        axis_effects:
+          time_structure: single_stage
+          feedback: none
+        class_scores:
+          linear_programming: 1
+          mixed_integer_linear_programming: 1
+          constraint_programming_sat_smt: 1
+        pattern_scores:
+          resource_allocation: 1
+          assignment: 1
+        story_suggestions:
+          - story_cpsat_shift_assignment
+          - story_facility_location_milp
+        brief_suggestions:
+          - brief_story_cpsat_shift_assignment
+        next_questions:
+          - explainability
+      - id: rolling_or_control
+        label: 状態を見ながら計画を繰り返し更新する
+        axis_effects:
+          time_structure: multi_stage_or_receding
+          feedback: closed_loop
+        class_scores:
+          optimal_control: 4
+          dynamic_programming_rl: 2
+          stochastic_programming: 1
+        pattern_scores:
+          receding_horizon: 3
+          dynamic_programming: 2
+        story_suggestions:
+          - story_mpc_robot_control
+          - story_rl_gridworld_policy
+          - story_dynamic_programming_knapsack
+        brief_suggestions:
+          - brief_problem_optimal_control
+          - brief_story_mpc_robot_control
+        next_questions:
+          - explainability
+      - id: learn_from_online_feedback
+        label: 観測結果で次の選択を学習する
+        axis_effects:
+          time_structure: sequential
+          feedback: online_reward
+        class_scores:
+          online_optimization_bandits: 4
+          dynamic_programming_rl: 2
+          bayesian_optimization_problem: 1
+        pattern_scores:
+          online_decision: 3
+          policy_search: 1
+        story_suggestions:
+          - story_bandit_ab_allocation
+          - story_ucb_recommendation
+          - story_policy_gradient_rollout
+        brief_suggestions:
+          - brief_problem_bandit
+          - brief_story_bandit_ab_allocation
+        next_questions:
+          - explainability
+
+  - id: explainability
+    question: 解の説明責任・厳密性はどれくらい必要ですか？
+    axis_effects:
+      - solution_guarantee
+      - explainability_need
+    class_scores: {}
+    next_questions: []
+    answers:
+      - id: audit_and_exactness
+        label: 根拠、制約充足、最適性を説明したい
+        axis_effects:
+          solution_guarantee: exact_or_bounded
+          explainability_need: high
+        class_scores:
+          linear_programming: 2
+          mixed_integer_linear_programming: 2
+          constraint_programming_sat_smt: 1
+        pattern_scores:
+          branch_and_bound_search: 2
+          objective_alignment: 1
+        story_suggestions:
+          - story_branch_and_bound_milp
+          - story_cpsat_shift_assignment
+          - story_interior_point_path
+        brief_suggestions:
+          - brief_story_branch_and_bound_milp
+          - brief_story_cpsat_shift_assignment
+        next_questions: []
+      - id: good_enough_iteration
+        label: まず良い候補を早く見つけ、後で検証する
+        axis_effects:
+          solution_guarantee: heuristic_or_empirical
+          explainability_need: medium
+        class_scores:
+          blackbox_derivative_free: 2
+          bayesian_optimization_problem: 2
+          nonconvex_optimization: 1
+        pattern_scores:
+          local_search: 2
+          surrogate_modeling: 2
+        story_suggestions:
+          - story_gradient_descent_toy
+          - story_bo_experiment_design
+          - story_evolutionary_search_population
+        brief_suggestions:
+          - brief_story_gradient_descent_toy
+          - brief_story_bo_experiment_design
+        next_questions: []
+      - id: clarify_metrics_first
+        label: 厳密性より、関係者が同じ目的を見ているかが重要
+        axis_effects:
+          solution_guarantee: not_ready
+          explainability_need: alignment
+        class_scores:
+          not_optimization: 4
+          multi_objective_optimization: 2
+        pattern_scores:
+          objective_alignment: 3
+          diagnosis_first: 2
+        story_suggestions:
+          - story_objective_alignment_first
+          - story_not_optimization_reporting
+        brief_suggestions:
+          - brief_story_objective_alignment_first
+        next_questions: []

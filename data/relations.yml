@@ -209,3 +209,65 @@ relations:
   - { id: r088, type: implemented_by, source: quadratic_programming, target: cvxpy, explanation: 凸 QP を DCP として記述できる。 }
   - { id: r089, type: used_in, source: nonlinear_programming, target: price_optimization, explanation: 需要曲線や価格反応が非線形になることが多い。 }
   - { id: r090, type: used_in, source: distributionally_robust_optimization, target: tail_risk_portfolio, explanation: 分布推定の不確かさを考慮したリスク管理に使える。 }
+  - id: r091
+    type: confused_with
+    source: multi_objective_optimization
+    target: convex_optimization
+    explanation: 多目的問題は凸最適化で解ける場合もあるが、論点は凸性より目的間 tradeoff の扱いにある。
+    shared: 連続変数、凸制約、重み付き和で書けるケースがある。
+    decision_axes:
+      - 解を一つに決める合意済み目的があるか
+      - Pareto frontier や重みの比較を利用者に見せる必要があるか
+      - 公平性、リスク、コストのような複数指標を guardrail として分けるか
+    choose_source_when: 複数目的の優先順位が未確定で、tradeoff を見せながら判断したい。
+    choose_target_when: 単一の凸目的と制約へ落ちており、最適解を一つ返せばよい。
+    decision_note: 目的間の選択を支援するなら Multi-objective、すでに一つの凸問題として定義済みなら Convex Optimization として扱う。
+  - id: r092
+    type: confused_with
+    source: network_flow_graph_optimization
+    target: combinatorial_optimization
+    explanation: Network Flow は組合せ最適化の一部だが、保存則と容量を持つグラフ構造を使える点が重要。
+    shared: node/edge、経路、割当、離散構造を扱う。
+    decision_axes:
+      - flow conservation と capacity で自然に書けるか
+      - 専用 graph algorithm や LP relaxation が使えるか
+      - 固定費、順序、時間窓で一般の MILP/routing へ広がるか
+    choose_source_when: node/edge の流量や経路として表現でき、保存則が中心になる。
+    choose_target_when: グラフ以外の選択、順序、集合制約が主役で flow 構造だけでは弱い。
+    decision_note: 保存則を使えるなら Network Flow、より一般の離散選択なら Combinatorial Optimization として読む。
+  - id: r093
+    type: confused_with
+    source: mixed_integer_nonlinear_programming
+    target: mixed_integer_linear_programming
+    explanation: MINLP は MILP に非線形目的・制約が加わった形で、難しさと solver 方針が大きく変わる。
+    shared: 整数変数、binary 選択、gap や分岐を扱う。
+    decision_axes:
+      - 非線形の物理式や需要反応が本質か
+      - 区分線形化や big-M で十分な精度が出るか
+      - 局所 NLP 失敗時の復旧と大域保証が必要か
+    choose_source_when: 整数判断と非線形式が同時にあり、線形化だけでは意味が壊れる。
+    choose_target_when: 非線形性を線形化または区分線形近似して、MILP として扱える。
+    decision_note: 非線形性が意思決定を変えるなら MINLP、線形近似で十分なら MILP として扱う。
+  - { id: r094, type: is_a, source: multi_objective_optimization, target: convex_optimization, explanation: 重み付き和や制約化により、凸な多目的問題を単一の凸問題として解けることがある。 }
+  - { id: r095, type: is_a, source: network_flow_graph_optimization, target: combinatorial_optimization, explanation: グラフ構造を持つ組合せ最適化の重要なサブクラス。 }
+  - { id: r096, type: overlaps_with, source: network_flow_graph_optimization, target: linear_programming, explanation: 最大フローや輸送問題は LP としても表現できる。 }
+  - { id: r097, type: overlaps_with, source: network_flow_graph_optimization, target: mixed_integer_linear_programming, explanation: 固定費や経路選択を含む network design は MILP に拡張される。 }
+  - { id: r098, type: overlaps_with, source: mixed_integer_nonlinear_programming, target: nonlinear_programming, explanation: 連続部分だけを見ると NLP として解けるが、整数選択が残る。 }
+  - { id: r099, type: overlaps_with, source: mixed_integer_nonlinear_programming, target: nonconvex_optimization, explanation: 非凸性と整数性が同時に現れる代表領域。 }
+  - { id: r100, type: commonly_solved_by, source: multi_objective_optimization, target: evolutionary_search, explanation: 非凸・非滑らかな Pareto 探索では population-based method が使われる。 }
+  - { id: r101, type: commonly_solved_by, source: multi_objective_optimization, target: interior_point, explanation: 重み付き和や epsilon 制約化した凸問題では内点法が候補になる。 }
+  - { id: r102, type: commonly_solved_by, source: network_flow_graph_optimization, target: dynamic_programming, explanation: shortest path などの最適部分構造を持つ graph problem に使える。 }
+  - { id: r103, type: commonly_solved_by, source: network_flow_graph_optimization, target: column_generation, explanation: 巨大な route/path 集合は column generation で扱うことがある。 }
+  - { id: r104, type: commonly_solved_by, source: mixed_integer_nonlinear_programming, target: branch_and_bound, explanation: 整数分岐と連続緩和を組み合わせる入口になる。 }
+  - { id: r105, type: commonly_solved_by, source: mixed_integer_nonlinear_programming, target: local_nlp, explanation: 固定した整数判断の下で NLP subproblem を解く。 }
+  - { id: r106, type: implemented_by, source: multi_objective_optimization, target: cvxpy, explanation: scalarization した凸多目的モデルを記述できる。 }
+  - { id: r107, type: implemented_by, source: network_flow_graph_optimization, target: ortools, explanation: OR-Tools は graph/routing/flow の実用 API を持つ。 }
+  - { id: r108, type: implemented_by, source: network_flow_graph_optimization, target: highs, explanation: LP として表現した network flow の実装候補。 }
+  - { id: r109, type: implemented_by, source: mixed_integer_nonlinear_programming, target: scip, explanation: SCIP は MINLP を含む混合整数非線形問題の候補になる。 }
+  - { id: r110, type: implemented_by, source: mixed_integer_nonlinear_programming, target: ipopt, explanation: MINLP の連続 NLP subproblem を解く候補。 }
+  - { id: r111, type: used_in, source: multi_objective_optimization, target: fair_resource_allocation, explanation: 効率と公平性を同時に比較する必要がある。 }
+  - { id: r112, type: used_in, source: multi_objective_optimization, target: portfolio, explanation: リスク、収益、制約余裕の tradeoff を見る。 }
+  - { id: r113, type: used_in, source: network_flow_graph_optimization, target: shortest_path, explanation: node/edge と path cost がそのまま表れる。 }
+  - { id: r114, type: used_in, source: network_flow_graph_optimization, target: supply_chain_network, explanation: 倉庫と配送先の flow と capacity が中心になる。 }
+  - { id: r115, type: used_in, source: mixed_integer_nonlinear_programming, target: process_design_minlp, explanation: 設備選択と非線形運転条件が同時に出る。 }
+  - { id: r116, type: used_in, source: mixed_integer_nonlinear_programming, target: nonlinear_facility_sizing, explanation: 拠点選択と非線形容量コストが同時に出る。 }

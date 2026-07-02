@@ -1,13 +1,13 @@
 import { IconBook2 } from "@tabler/icons-react";
 
-import { axisValueLabel, data, getPathForCase, maps } from "../data/loadData.js";
+import { axisValueLabel, data, getPathForCase, getStoriesForCase, maps } from "../data/loadData.js";
 import { Badge, ButtonLink, PageHeader, ProblemCard, RoutePath } from "../components/ui.jsx";
 
 export function PathView({ caseId }) {
   const path = getPathForCase(caseId) ?? getPathForCase(data.exampleCases[0].id);
   const traps = path.example.likely_traps?.map((id) => maps.problems[id]).filter(Boolean) ?? [];
   const primaryAxes = Object.entries(path.primary?.axes ?? {}).slice(0, 5);
-  const stories = path.stories ?? [];
+  const stories = getStoriesForCase(path.example.id).slice(0, 4);
 
   return (
     <div className="view-stack">
@@ -60,32 +60,6 @@ export function PathView({ caseId }) {
         </div>
       </section>
 
-      {stories.length > 0 ? (
-        <section className="panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Small Demo</p>
-              <h2>小さく解いて確認する</h2>
-            </div>
-            <Badge tone="active">{stories.length} stories</Badge>
-          </div>
-          <div className="story-grid">
-            {stories.map((story) => (
-              <article className="story-card" key={story.id}>
-                <div>
-                  <p className="eyebrow">{maps.traces[story.visual_trace_id]?.trace_type ?? "trace"}</p>
-                  <h2>{story.title}</h2>
-                  <p>{story.objective}</p>
-                </div>
-                <ButtonLink href={`#/stories/${story.id}`}>traceを見る</ButtonLink>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className="empty-state">このケースの SolveStory は coming soon です。</div>
-      )}
-
       <section className="split-section">
         <div className="panel">
           <div className="section-heading">
@@ -113,7 +87,9 @@ export function PathView({ caseId }) {
               <h3>Algorithm</h3>
               <div className="chip-list">
                 {path.algorithms.slice(0, 5).map((algorithm) => (
-                  <Badge key={algorithm.id} tone="active">{algorithm.name_ja ?? algorithm.name}</Badge>
+                  <a className="badge-link" href={`#/algorithms/${algorithm.id}`} key={algorithm.id}>
+                    <Badge tone="active">{algorithm.name_ja ?? algorithm.name}</Badge>
+                  </a>
                 ))}
               </div>
             </section>
@@ -138,6 +114,25 @@ export function PathView({ caseId }) {
           )}
         </div>
       </section>
+
+      {stories.length > 0 && (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">SolveStory</p>
+              <h2>この経路の demo</h2>
+            </div>
+          </div>
+          <div className="story-mini-grid">
+            {stories.map((story) => (
+              <a className="story-mini-card" href={`#/stories/${story.id}`} key={story.id}>
+                <strong>{story.title}</strong>
+                <span>{story.interpretation}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

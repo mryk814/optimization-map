@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { IconBook2, IconListSearch, IconRoute, IconSearch } from "@tabler/icons-react";
+import { IconBook2, IconChartDots, IconListSearch, IconRoute, IconSearch } from "@tabler/icons-react";
 
+import { MotionPreview } from "../components/MotionPreview.jsx";
 import { data, filterProblems, getPathForCase, labelFor, maps } from "../data/loadData.js";
 import { Badge, ButtonLink, CaseCard, PageHeader, ProblemCard, RoutePath } from "../components/ui.jsx";
 
@@ -17,7 +18,7 @@ export function HomeView() {
   const starterCases = useMemo(() => sampleItems(data.exampleCases, 3), []);
   const starterPath = getPathForCase(starterCases[0]?.id);
   const featuredProblems = filterProblems("", "all").slice(0, 4);
-  const featuredStories = data.solveStories.slice(0, 4);
+  const featuredStories = data.solveStories.filter((story) => story.visual_trace_id).slice(0, 4);
 
   return (
     <div className="view-stack">
@@ -31,20 +32,20 @@ export function HomeView() {
           <span>近いケースから探す</span>
           <strong>配送、シフト、実験、在庫のような現実課題から入ります。</strong>
         </a>
-        <a className="entry-card" href="#/stories">
-          <IconRoute aria-hidden="true" size={24} />
-          <span>小さく解いてみる</span>
-          <strong>事前計算された trace で、最適化が進む様子を見ます。</strong>
-        </a>
-        <a className="entry-card" href="#/diagnosis">
+        <a className="entry-card" href="#/wizard">
           <IconListSearch aria-hidden="true" size={24} />
-          <span>条件から診断する</span>
-          <strong>変数、線形性、不確実性を答えて候補を出します。</strong>
+          <span>モデル化を整理する</span>
+          <strong>変数、目的、制約を答えて story と brief まで辿ります。</strong>
         </a>
         <a className="entry-card" href="#/problems">
           <IconSearch aria-hidden="true" size={24} />
           <span>問題タイプを検索する</span>
           <strong>用語を知っている時は一覧から直接読めます。</strong>
+        </a>
+        <a className="entry-card" href="#/algorithms">
+          <IconChartDots aria-hidden="true" size={24} />
+          <span>手法の動きを見る</span>
+          <strong>Algorithm を motion preview で見比べます。</strong>
         </a>
       </section>
 
@@ -60,35 +61,6 @@ export function HomeView() {
           <RoutePath example={starterPath.example} problem={starterPath.primary} />
         </section>
       )}
-
-      <section className="panel" aria-labelledby="home-story-heading">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Visual Learning</p>
-            <h2 id="home-story-heading">小さく解いて、動きを見る</h2>
-          </div>
-          <ButtonLink href="#/stories">すべて見る</ButtonLink>
-        </div>
-        <div className="story-grid">
-          {featuredStories.map((story) => {
-            const trace = maps.traces[story.visual_trace_id];
-            return (
-              <article className="story-card" key={story.id}>
-                <div>
-                  <p className="eyebrow">{trace?.trace_type ?? "trace"}</p>
-                  <h2>{story.title}</h2>
-                  <p>{story.objective}</p>
-                </div>
-                <div className="chip-list">
-                  <Badge tone="active">{labelFor(story.primary_problem_class)}</Badge>
-                  {trace && <Badge tone="review">{trace.trace_type}</Badge>}
-                </div>
-                <ButtonLink href={`#/stories/${story.id}`}>見る</ButtonLink>
-              </article>
-            );
-          })}
-        </div>
-      </section>
 
       <section className="split-section">
         <div className="panel">
@@ -120,6 +92,28 @@ export function HomeView() {
             ))}
           </div>
           <div className="soft-note">例: {featuredProblems.map((problem) => labelFor(problem.id)).join(" / ")}</div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Small Demos</p>
+            <h2>小さく解いてみる</h2>
+          </div>
+          <div className="inline-actions">
+            <ButtonLink href="#/stories">Story 一覧</ButtonLink>
+            <ButtonLink href="#/learning">学習パス</ButtonLink>
+          </div>
+        </div>
+        <div className="story-mini-grid story-mini-grid-visual">
+          {featuredStories.map((story) => (
+            <a className="story-mini-card story-mini-card-visual" href={`#/stories/${story.id}`} key={story.id}>
+              <MotionPreview className="motion-preview-mini" traceId={story.visual_trace_id} />
+              <strong>{story.title}</strong>
+              <span>{labelFor(story.primary_problem_class)} / {maps.traces[story.visual_trace_id]?.trace_type}</span>
+            </a>
+          ))}
         </div>
       </section>
     </div>

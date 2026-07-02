@@ -1,249 +1,1189 @@
 solve_stories:
-  - id: lp_production_planning_story
-    title: 生産計画をLPで解く
+  - id: story_lp_production_planning
+    title: 生産計画を LP で解く
     case_id: production_planning
-    domain: production
+    domain: operations
     primary_problem_class: linear_programming
-    secondary_problem_classes: [mixed_integer_linear_programming, convex_optimization]
-    modeling_pattern: allocation
-    decision_variables:
-      - 製品Aの生産量 x_A
-      - 製品Bの生産量 x_B
-    objective: 利益 30 x_A + 20 x_B を最大化する。
-    constraints:
-      - 材料使用量が上限を超えない
-      - 作業時間が上限を超えない
-      - 生産量は負にならない
-    uncertainty_or_time_structure: まず需要や材料量を固定した静的な計画として扱う。
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: resource_allocation
+    decision_variables: 製品A/Bの生産量を連続変数にする。
+    objective: 利益を最大化する。
+    constraints: 材料、設備時間、需要上限、非負制約。
+    uncertainty_or_time_structure: まず静的な日次計画として扱う。
     candidate_algorithms: [simplex, interior_point]
-    candidate_solvers: [scipy_linprog, highs]
+    candidate_solvers: [scipy_linprog, highs, pyomo]
     visual_trace_id: lp_production_planning_trace
-    pseudo_code: |
-      define c = [-30, -20]
-      define A_ub for material and labor constraints
-      define b_ub for capacities
-      solve linprog(c, A_ub, b_ub, bounds=(0, inf))
-      inspect x and objective value
-    interpretation:
-      - 解は、限られた材料と作業時間をどちらの製品へ配分するかを示す。
-      - 2Dでは制約が作る多角形の頂点に最適解が出る様子を見られる。
-      - binaryやsetup判断が入るとMILPに近づく。
-    ai_coding_brief: |
-      SciPy linprog を使って2変数LPを解くサンプルコードを書いてください。
-      入力は利益係数、材料係数、作業時間係数、容量です。
-      出力は最適生産量、最大利益、制約slackです。
-      併せて、feasible region と objective line を描くための polygon data を返してください。
-    sources:
-      - https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
-
-  - id: qp_portfolio_story
-    title: ポートフォリオをQPで解く
+    pseudo_code: ["変数 x[p] を置く", "資源制約 A x <= b を作る", "利益 c^T x を最大化する", "slack と最適点を読む"]
+    interpretation: 最適解は制約の交点に現れ、余っている資源と詰まっている資源が slack で分かる。
+    ai_coding_brief_id: brief_story_lp_production_planning
+    sources: [linear_programming]
+  - id: story_lp_transportation
+    title: 輸送問題を LP として読む
+    case_id: supply_chain_network
+    domain: logistics
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [combinatorial_optimization]
+    modeling_pattern: network_flow
+    decision_variables: 拠点 i から需要地 j へ送る量 x[i,j]。
+    objective: 輸送コストを最小化する。
+    constraints: 供給上限、需要充足、非負制約。
+    uncertainty_or_time_structure: 単一期間の静的ネットワーク。
+    candidate_algorithms: [simplex, interior_point]
+    candidate_solvers: [highs, scipy_linprog, pyomo]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["供給地と需要地の index を作る", "cost matrix を読む", "行和・列和制約を置く", "輸送表を出力する"]
+    interpretation: ネットワーク構造があっても、量だけを動かすなら LP で整理できる。
+    ai_coding_brief_id: brief_story_lp_transportation
+    sources: [linear_programming]
+  - id: story_qp_portfolio
+    title: ポートフォリオのリスクと収益を QP で調整する
     case_id: portfolio
     domain: finance
     primary_problem_class: quadratic_programming
     secondary_problem_classes: [convex_optimization, socp_sdp]
-    modeling_pattern: portfolio
-    decision_variables:
-      - 各資産への投資比率 w_i
-    objective: リスクペナルティ付きの目的関数を最小化し、期待リターンと分散リスクのバランスを取る。
-    constraints:
-      - 投資比率の合計は1
-      - 空売りなしの場合 w_i >= 0
-      - 必要ならセクターや上限制約を入れる
-    uncertainty_or_time_structure: 期待リターンと共分散を固定した単期モデルとして扱う。
-    candidate_algorithms: [interior_point]
-    candidate_solvers: [cvxpy, mosek]
-    visual_trace_id: qp_portfolio_tradeoff_trace
-    pseudo_code: |
-      define expected returns mu
-      define covariance matrix Sigma
-      choose risk_aversion gamma
-      minimize gamma * quad_form(w, Sigma) - mu^T w
-      subject to sum(w) == 1 and w >= 0
-      solve with cvxpy
-    interpretation:
-      - risk_aversion を上げると、リスクの低い重みへ移る。
-      - 凸QPなら大域最適性を期待できる。
-      - 分布推定に不安がある場合はRO/DROへ進む。
-    ai_coding_brief: |
-      CVXPYで3資産のポートフォリオQPを解くコードを書いてください。
-      risk_aversionを複数値で変え、各重み、期待リターン、分散を表として返してください。
-      可視化用に risk-return curve の points を返してください。
-    sources:
-      - https://www.cvxpy.org/examples/basic/quadratic_program.html
-
-  - id: gradient_descent_toy_story
-    title: 勾配降下で2次関数を下る
-    case_id: model_training_loss
-    domain: learning
+    modeling_pattern: risk_tradeoff
+    decision_variables: 資産 weight w[i]。
+    objective: 分散リスクと期待収益の tradeoff を最小化する。
+    constraints: weight 合計、上下限、必要ならセクター制約。
+    uncertainty_or_time_structure: 過去データから推定した静的リスク。
+    candidate_algorithms: [interior_point, sequential_quadratic_programming]
+    candidate_solvers: [cvxpy, mosek, gurobi]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["期待収益と共分散を読む", "risk_aversion を決める", "QP を解く", "risk-return 点を比較する"]
+    interpretation: risk_aversion を動かすと、同じ制約でも採用する重みが変わる。
+    ai_coding_brief_id: brief_story_qp_portfolio
+    sources: [quadratic_programming]
+  - id: story_convex_regularization
+    title: L1/L2 正則化を凸最適化として読む
+    synthetic_case: regularized_regression
+    domain: ml
+    primary_problem_class: convex_optimization
+    secondary_problem_classes: [quadratic_programming]
+    modeling_pattern: penalty_softening
+    decision_variables: 回帰係数 beta。
+    objective: 予測誤差と正則化ペナルティを同時に小さくする。
+    constraints: 必要に応じて係数範囲や単調性を置く。
+    uncertainty_or_time_structure: 固定データに対する batch 学習。
+    candidate_algorithms: [interior_point, conic_solvers]
+    candidate_solvers: [cvxpy, jaxopt]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["損失関数を置く", "L1/L2 penalty を足す", "lambda を変えて解く", "係数の疎性と誤差を比較する"]
+    interpretation: 正則化は制約または penalty として、過学習と解釈性の tradeoff を作る。
+    ai_coding_brief_id: brief_story_convex_regularization
+    sources: [convex_optimization]
+  - id: story_nlp_price_optimization
+    title: 非線形需要曲線で価格を決める
+    case_id: price_optimization
+    domain: revenue
     primary_problem_class: nonlinear_programming
-    secondary_problem_classes: [nonconvex_optimization, differentiable_optimization]
-    modeling_pattern: continuous_design
-    decision_variables:
-      - 2次元のパラメータ x, y
-    objective: f(x, y) = x^2 + 2y^2 を最小化する。
-    constraints:
-      - 制約なし
-    uncertainty_or_time_structure: deterministic な反復最適化として扱う。
-    candidate_algorithms: [local_nlp]
+    secondary_problem_classes: [nonconvex_optimization, online_optimization_bandits]
+    modeling_pattern: nonlinear_response
+    decision_variables: 商品ごとの価格 p[i]。
+    objective: 需要曲線を通した利益を最大化する。
+    constraints: 価格上下限、在庫、ブランド制約。
+    uncertainty_or_time_structure: 需要反応は推定済みとして静的に解く。
+    candidate_algorithms: [local_nlp, sequential_quadratic_programming]
+    candidate_solvers: [ipopt, scipy_optimize, casadi]
+    visual_trace_id: gradient_descent_toy_trace
+    pseudo_code: ["需要関数 d(p) を置く", "利益 p*d(p)-cost を作る", "制約付き NLP を解く", "初期値を複数試す"]
+    interpretation: 価格反応が非線形なら、初期値依存と局所解を意識する。
+    ai_coding_brief_id: brief_story_nlp_pricing
+    sources: [nonlinear_programming]
+  - id: story_gradient_descent_toy
+    title: Gradient Descent の局所解を見る
+    case_id: model_training_loss
+    domain: ml
+    primary_problem_class: nonconvex_optimization
+    secondary_problem_classes: [nonlinear_programming]
+    modeling_pattern: local_search
+    decision_variables: 2D toy parameter theta。
+    objective: 非凸目的関数の値を下げる。
+    constraints: 制約なし、または box 制約。
+    uncertainty_or_time_structure: iteration ごとの逐次更新。
+    candidate_algorithms: [local_nlp, evolutionary_search]
     candidate_solvers: [scipy_optimize, jaxopt]
-    visual_trace_id: gradient_descent_bowl_trace
-    pseudo_code: |
-      initialize x = [3, 2]
-      repeat:
-        grad = [2*x0, 4*x1]
-        x = x - step_size * grad
-        record objective and gradient norm
-    interpretation:
-      - 点が等高線を横切りながら低い目的値へ進む。
-      - step size が大きすぎると振動や発散が起きる。
-      - 非凸問題では局所解へ落ちる可能性がある。
-    ai_coding_brief: |
-      2D quadratic bowl 上のgradient descent traceを生成するコードを書いてください。
-      各iterationで x, objective, gradient_norm を保存してください。
-      React/SVG側で等高線と点の軌跡を描けるJSONを返してください。
-    sources:
-      - https://docs.scipy.org/doc/scipy/reference/optimize.html
-
-  - id: milp_branch_bound_story
-    title: Branch-and-Boundで整数解を絞る
+    visual_trace_id: gradient_descent_toy_trace
+    pseudo_code: ["初期点を選ぶ", "勾配を計算する", "step size を決める", "目的値が下がる方向へ更新する"]
+    interpretation: 下っていることと大域最適であることは別の話。
+    ai_coding_brief_id: brief_story_gradient_descent_toy
+    sources: [nonconvex_optimization]
+  - id: story_facility_location_milp
+    title: 施設配置を MILP で決める
     case_id: facility_location
-    domain: planning
+    domain: logistics
     primary_problem_class: mixed_integer_linear_programming
-    secondary_problem_classes: [combinatorial_optimization, linear_programming]
+    secondary_problem_classes: [combinatorial_optimization]
     modeling_pattern: facility_location
-    decision_variables:
-      - 施設を開くかどうか y_j in {0,1}
-      - 顧客を施設へ割り当てる x_ij
-    objective: 固定費と割当コストの合計を最小化する。
-    constraints:
-      - 各顧客はどこかの施設へ割り当てる
-      - 開いていない施設には割り当てられない
-      - 施設容量を超えない
-    uncertainty_or_time_structure: 静的な混合整数モデルとして扱う。
-    candidate_algorithms: [branch_and_bound, cutting_planes, branch_cut]
-    candidate_solvers: [gurobi, cplex, scip, highs]
-    visual_trace_id: milp_branch_bound_trace
-    pseudo_code: |
-      solve LP relaxation at root
-      if solution has fractional y:
-        branch on y_j <= 0 and y_j >= 1
-      update incumbent when integer feasible solution appears
-      prune nodes by infeasibility or bound
-      stop when all nodes are closed
-    interpretation:
-      - 整数変数が入ると候補の組合せを探索する必要がある。
-      - boundとincumbentの差がgapになる。
-      - 良い緩和やcutは探索木を小さくする。
-    ai_coding_brief: |
-      Branch-and-Boundのtoy traceを表示するReact componentを作ってください。
-      入力はnodes, edges, incumbent_by_step, gap_by_stepです。
-      step sliderでactive node、pruned node、incumbentを更新してください。
-    sources:
-      - https://www.scipopt.org/
-
-  - id: cpsat_shift_assignment_story
-    title: CP-SATで人員シフトを作る
+    decision_variables: 拠点を開く binary y[j] と割当 x[i,j]。
+    objective: 固定費と配送費を最小化する。
+    constraints: 需要割当、容量、開いた拠点にだけ割り当てる linking。
+    uncertainty_or_time_structure: 静的な需要を前提にする。
+    candidate_algorithms: [branch_and_bound, branch_cut, cutting_planes]
+    candidate_solvers: [gurobi, cplex, scip, ortools]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["y と x を定義する", "linking 制約を置く", "総コストを最小化する", "gap と incumbent を確認する"]
+    interpretation: binary の開閉判断があるため LP ではなく MILP になる。
+    ai_coding_brief_id: brief_story_facility_location_milp
+    sources: [mixed_integer_linear_programming]
+  - id: story_cpsat_shift_assignment
+    title: 人員シフトを CP-SAT で作る
     case_id: workforce_shift
-    domain: scheduling
+    domain: staffing
     primary_problem_class: constraint_programming_sat_smt
     secondary_problem_classes: [mixed_integer_linear_programming, combinatorial_optimization]
-    modeling_pattern: scheduling
-    decision_variables:
-      - worker w が shift s に入るか x[w,s] in {0,1}
-    objective: 希望違反と不足ペナルティを小さくする。
-    constraints:
-      - 各shiftに必要人数以上を配置する
-      - 同じworkerは同じ時間に複数shiftへ入れない
-      - 休暇希望やスキル制約を守る
-    uncertainty_or_time_structure: まずは静的な週次シフト表として扱う。
+    modeling_pattern: assignment
+    decision_variables: assign[worker, shift] の 0/1。
+    objective: 希望違反と不足ペナルティを減らす。
+    constraints: 必要人数、休暇、スキル、連勤、同時勤務不可。
+    uncertainty_or_time_structure: 週次の静的スケジュール。
     candidate_algorithms: [constraint_propagation, branch_and_bound]
     candidate_solvers: [ortools, z3]
-    visual_trace_id: cpsat_shift_grid_trace
-    pseudo_code: |
-      create binary variables x[w,s]
-      add coverage constraints
-      add at-most-one constraints per worker/time
-      add skill and vacation constraints
-      minimize penalty terms
-      solve with CP-SAT
-    interpretation:
-      - 表のセルが0/1変数に対応する。
-      - 制約違反を可視化すると、なぜその割当が不可能か分かりやすい。
-      - 線形目的より制約充足が主役ならCP-SATが候補になる。
-    ai_coding_brief: |
-      OR-Tools CP-SATのシフト割当サンプルを作ってください。
-      小規模データとしてworkers 4人、shifts 4枠を使い、coverage, at-most-one, unavailable制約を入れてください。
-      可視化用にassignment gridとviolationsをJSONで返してください。
-    sources:
-      - https://developers.google.com/optimization/cp/cp_solver
-
-  - id: bo_experiment_story
-    title: Bayesian Optimizationで高価な実験を順に選ぶ
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["worker と shift を index 化する", "hard constraints を先に入れる", "soft violation を目的に足す", "割当表と違反を出す"]
+    interpretation: feasibility と soft penalty を分けると、解なしと低品質解を区別できる。
+    ai_coding_brief_id: brief_story_cpsat_shift_assignment
+    sources: [constraint_programming_sat_smt]
+  - id: story_shortest_path_network
+    title: 最短経路をグラフ最適化として読む
+    case_id: shortest_path
+    domain: network
+    primary_problem_class: network_flow_graph_optimization
+    secondary_problem_classes: [combinatorial_optimization, linear_programming, dynamic_programming_rl]
+    modeling_pattern: network_flow
+    decision_variables: edge を通るかどうか、または各 edge の流量。
+    objective: 総距離またはコストを最小化する。
+    constraints: flow conservation と start/end 条件。
+    uncertainty_or_time_structure: 静的グラフ。
+    candidate_algorithms: [dynamic_programming, column_generation]
+    candidate_solvers: [ortools, pyomo]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["node と edge を作る", "距離を weight にする", "flow conservation を置く", "経路を復元する"]
+    interpretation: 小さい問題は専用アルゴリズム、大きな制約つき問題は MILP/flow として扱える。
+    ai_coding_brief_id: brief_story_shortest_path_network
+    sources: [combinatorial_optimization]
+  - id: story_inventory_saa
+    title: 需要不確実な在庫を SAA で決める
+    case_id: uncertain_inventory
+    domain: supply_chain
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [robust_optimization, distributionally_robust_optimization]
+    modeling_pattern: scenario_modeling
+    decision_variables: 初期発注量とシナリオ別 recourse。
+    objective: 発注、保管、欠品の期待コストを最小化する。
+    constraints: シナリオ別需要充足と在庫バランス。
+    uncertainty_or_time_structure: 需要シナリオを有限集合で扱う。
+    candidate_algorithms: [sample_average_approximation, benders]
+    candidate_solvers: [pyomo, gurobi, cplex]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["需要シナリオを読む", "first-stage 発注を置く", "recourse cost をシナリオ別に計算する", "期待値を最小化する"]
+    interpretation: 平均的な良さを見るため、最悪ケース保証とは別の判断になる。
+    ai_coding_brief_id: brief_story_inventory_saa
+    sources: [stochastic_programming]
+  - id: story_robust_staffing
+    title: 欠勤リスクを見込んだ staffing
+    case_id: robust_staffing_plan
+    domain: staffing
+    primary_problem_class: robust_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming, stochastic_programming]
+    modeling_pattern: robust_counterpart_pattern
+    decision_variables: 通常配置と余裕 buffer。
+    objective: 配置コストと余裕コストを最小化する。
+    constraints: 欠勤・需要上振れの範囲内で必要人数を満たす。
+    uncertainty_or_time_structure: 不確実集合で最悪側を守る。
+    candidate_algorithms: [robust_counterpart, branch_and_bound]
+    candidate_solvers: [gurobi, cvxpy, pyomo]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["需要幅を不確実集合にする", "全ケース制約を robust counterpart に変換する", "nominal 解と比較する", "保守コストを表示する"]
+    interpretation: 平均ではなく破綻回避が主目的なら robust が読みやすい。
+    ai_coding_brief_id: brief_story_robust_staffing
+    sources: [robust_optimization]
+  - id: story_dro_tail_risk_portfolio
+    title: tail-risk portfolio を DRO で守る
+    case_id: tail_risk_portfolio
+    domain: finance
+    primary_problem_class: distributionally_robust_optimization
+    secondary_problem_classes: [robust_optimization, quadratic_programming]
+    modeling_pattern: risk_tradeoff
+    decision_variables: 資産 weight w[i]。
+    objective: ambiguity set 内の悪い分布での損失を抑える。
+    constraints: weight 合計、上下限、リスク制約。
+    uncertainty_or_time_structure: 分布の曖昧さを ambiguity set で扱う。
+    candidate_algorithms: [robust_counterpart, sample_average_approximation]
+    candidate_solvers: [cvxpy, mosek, gurobi]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["履歴分布を作る", "ambiguity radius を決める", "worst-case risk を目的に入れる", "nominal QP と比較する"]
+    interpretation: 推定分布を信じ切れないとき、平均最適より守りを厚くする。
+    ai_coding_brief_id: brief_story_dro_tail_risk_portfolio
+    sources: [distributionally_robust_optimization]
+  - id: story_bo_experiment_design
+    title: 高価な実験条件を BO で選ぶ
     case_id: experiment_design
-    domain: experimentation
+    domain: experiment
     primary_problem_class: bayesian_optimization_problem
     secondary_problem_classes: [blackbox_derivative_free, simulation_optimization]
-    modeling_pattern: experimental_design
-    decision_variables:
-      - 実験条件 x
-    objective: 観測される反応値を最大化する。
-    constraints:
-      - 実験可能な範囲内で条件を選ぶ
-      - 安全上試せない領域は除外する
-    uncertainty_or_time_structure: 1回ずつ観測しながら次の候補を選ぶ逐次最適化として扱う。
+    modeling_pattern: surrogate_modeling
+    decision_variables: 次に試す実験条件 x。
+    objective: 観測 objective を最大化する。
+    constraints: 実験可能範囲と安全範囲。
+    uncertainty_or_time_structure: trial ごとに観測が増える逐次探索。
     candidate_algorithms: [bayesian_optimization, upper_confidence_bound]
     candidate_solvers: [botorch, optuna]
-    visual_trace_id: bo_experiment_trial_trace
-    pseudo_code: |
-      start with a few initial trials
-      fit surrogate model
-      choose next x by acquisition function
-      evaluate black-box objective
-      update best-so-far
-    interpretation:
-      - 評価が高価なとき、全探索ではなく次に試す点を慎重に選ぶ。
-      - best-so-farを見ると探索の進行が分かる。
-      - 高次元や強い制約では工夫が必要。
-    ai_coding_brief: |
-      Optuna風のtoy Bayesian optimization traceを作ってください。
-      各trialにx, objective, best_so_far, noteを持たせてください。
-      UIではtrial historyとbest-so-far curveをstep再生してください。
-    sources:
-      - https://botorch.org/docs/introduction
-      - https://optuna.readthedocs.io/
-
-  - id: bandit_ab_allocation_story
-    title: BanditでA/B配分を更新する
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["初期 trial を評価する", "surrogate を更新する", "acquisition で次候補を選ぶ", "best-so-far を記録する"]
+    interpretation: 高価な評価では、良さそうな点と不確実な点の両方を試す。
+    ai_coding_brief_id: brief_story_bo_experiment_design
+    sources: [bayesian_optimization_problem]
+  - id: story_blackbox_pde_design
+    title: PDE shape design を black-box として始める
+    case_id: pde_design
+    domain: simulation
+    primary_problem_class: simulation_optimization
+    secondary_problem_classes: [blackbox_derivative_free, bayesian_optimization_problem]
+    modeling_pattern: surrogate_modeling
+    decision_variables: 形状パラメータ theta。
+    objective: シミュレータ出力の損失を下げる。
+    constraints: 製造可能範囲、形状上下限、失敗条件。
+    uncertainty_or_time_structure: 高価な simulator call を逐次評価する。
+    candidate_algorithms: [bayesian_optimization, evolutionary_search]
+    candidate_solvers: [botorch, nevergrad, optuna]
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["形状パラメータを定義する", "simulation wrapper を作る", "失敗時 status を残す", "surrogate または evolutionary search で候補を出す"]
+    interpretation: 勾配がない段階では、まず評価回数と失敗復旧を設計する。
+    ai_coding_brief_id: brief_story_blackbox_pde_design
+    sources: [simulation_optimization]
+  - id: story_bandit_ab_allocation
+    title: A/B 配分を UCB で更新する
     case_id: ab_allocation
-    domain: experimentation
+    domain: growth
     primary_problem_class: online_optimization_bandits
     secondary_problem_classes: [bayesian_optimization_problem, dynamic_programming_rl]
-    modeling_pattern: online_experiment
-    decision_variables:
-      - 各roundで選ぶvariant / arm
-    objective: 累積報酬を大きくし、regretを小さくする。
-    constraints:
-      - 各roundでは1つのarmだけ選ぶ
-      - 観測できるのは選んだarmの結果だけ
-    uncertainty_or_time_structure: bandit feedback を持つ逐次意思決定として扱う。
-    candidate_algorithms: [upper_confidence_bound]
+    modeling_pattern: online_decision
+    decision_variables: 各 round で選ぶ arm または配分。
+    objective: 報酬を増やし regret を抑える。
+    constraints: 最低露出、安全停止、予算。
+    uncertainty_or_time_structure: 観測しながら逐次更新する。
+    candidate_algorithms: [upper_confidence_bound, bayesian_optimization]
     candidate_solvers: [optuna, botorch]
-    visual_trace_id: bandit_ab_ucb_trace
-    pseudo_code: |
-      initialize each arm by trying once
-      for each round:
-        compute upper confidence bound for each arm
-        select arm with largest UCB
-        observe reward
-        update mean and confidence interval
-    interpretation:
-      - 不確実なarmも試すため、短期的には損をすることがある。
-      - 観測が増えると良いarmへ配分が寄る。
-      - BOよりもarm選択や逐次配分の見方に近い。
-    ai_coding_brief: |
-      UCBのtoy traceを作ってください。
-      armsは3つ、roundごとにselected_arm, reward, empirical_mean, confidence_bound, cumulative_regretを保存してください。
-      UIではarm別の棒グラフとregret curveを表示してください。
-    sources:
-      - https://tor-lattimore.com/downloads/book/book.pdf
+    visual_trace_id: bandit_ucb_trace
+    pseudo_code: ["arm ごとの平均と回数を持つ", "UCB を計算する", "最大 UCB の arm を選ぶ", "報酬で推定を更新する"]
+    interpretation: 期待値だけで選ぶと、まだ分からない arm を早く捨てすぎる。
+    ai_coding_brief_id: brief_story_bandit_ab_allocation
+    sources: [online_optimization_bandits]
+  - id: story_mpc_robot_control
+    title: ロボット MPC の horizon を動かす
+    case_id: robot_control
+    domain: control
+    primary_problem_class: optimal_control
+    secondary_problem_classes: [nonlinear_programming, dynamic_programming_rl]
+    modeling_pattern: receding_horizon
+    decision_variables: horizon 上の状態 x[t] と入力 u[t]。
+    objective: tracking error と入力変化を小さくする。
+    constraints: dynamics、入力制限、障害物、安全範囲。
+    uncertainty_or_time_structure: receding horizon で解き直す。
+    candidate_algorithms: [mpc, sequential_quadratic_programming]
+    candidate_solvers: [casadi, ipopt, cvxpy]
+    visual_trace_id: mpc_horizon_trace
+    pseudo_code: ["現在状態を読む", "horizon 問題を作る", "入力列を解く", "先頭入力だけ適用する"]
+    interpretation: 計画を固定せず、観測のたびに未来を組み直す。
+    ai_coding_brief_id: brief_story_mpc_robot_control
+    sources: [optimal_control]
+  - id: story_rl_gridworld_policy
+    title: toy gridworld の方策を更新する
+    synthetic_case: rl_toy_gridworld
+    domain: rl
+    primary_problem_class: dynamic_programming_rl
+    secondary_problem_classes: [optimal_control]
+    modeling_pattern: policy_search
+    decision_variables: 状態ごとの行動確率。
+    objective: 割引累積報酬を最大化する。
+    constraints: 行動集合、壁、終端状態。
+    uncertainty_or_time_structure: episode ごとの逐次意思決定。
+    candidate_algorithms: [dynamic_programming, policy_gradient]
+    candidate_solvers: [stable_baselines3]
+    visual_trace_id: mpc_horizon_trace
+    pseudo_code: ["状態と行動を定義する", "報酬を置く", "rollout を集める", "価値または方策を更新する"]
+    interpretation: 方策品質は単発の解ではなく、試行と報酬設計に強く依存する。
+    ai_coding_brief_id: brief_story_rl_gridworld_policy
+    sources: [dynamic_programming_rl]
+  - id: story_predict_then_optimize
+    title: 予測後の配分損失で学習する
+    case_id: decision_focused_forecast
+    domain: ml
+    primary_problem_class: differentiable_optimization
+    secondary_problem_classes: [convex_optimization, hpo_automl]
+    modeling_pattern: predict_then_optimize
+    decision_variables: 予測モデルのパラメータと下流配分 x。
+    objective: 予測誤差ではなく下流意思決定損失を小さくする。
+    constraints: 配分制約、容量、非負制約。
+    uncertainty_or_time_structure: 学習データを batch として扱う。
+    candidate_algorithms: [differentiable_layer]
+    candidate_solvers: [cvxpy, jaxopt]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["予測モデルを作る", "予測値で最適化問題を解く", "意思決定損失を計算する", "solver layer を通して更新する"]
+    interpretation: 予測が少し外れても、意思決定が良ければ目的に合う。
+    ai_coding_brief_id: brief_story_predict_then_optimize
+    sources: [differentiable_optimization]
+  - id: story_hpo_automl_budget
+    title: 限られた学習予算で HPO する
+    case_id: hyperparameter_tuning
+    domain: ml
+    primary_problem_class: hpo_automl
+    secondary_problem_classes: [bayesian_optimization_problem, blackbox_derivative_free]
+    modeling_pattern: surrogate_modeling
+    decision_variables: learning rate、depth、regularization などの config。
+    objective: validation loss を最小化する。
+    constraints: 学習時間、メモリ、カテゴリ条件。
+    uncertainty_or_time_structure: trial ごとに観測が増える。
+    candidate_algorithms: [bayesian_optimization, evolutionary_search]
+    candidate_solvers: [optuna, botorch]
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["search space を定義する", "trial を実行する", "validation loss を記録する", "sampler が次 config を選ぶ"]
+    interpretation: ML の学習ジョブ自体が高価な評価関数になる。
+    ai_coding_brief_id: brief_story_hpo_automl_budget
+    sources: [hpo_automl]
+  - id: story_branch_and_bound_milp
+    title: Branch-and-Bound tree を読む
+    case_id: facility_location
+    domain: logistics
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [combinatorial_optimization]
+    modeling_pattern: branch_and_bound_search
+    decision_variables: binary 選択と連続割当。
+    objective: 固定費と割当コストを小さくする。
+    constraints: 容量、需要充足、linking。
+    uncertainty_or_time_structure: 静的な探索木。
+    candidate_algorithms: [branch_and_bound, branch_cut]
+    candidate_solvers: [gurobi, scip, highs]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["relaxation を解く", "非整数変数で分岐する", "incumbent を更新する", "bound が悪い枝を閉じる"]
+    interpretation: gap は「いまの解がどれくらい最適に近いか」を見る計器になる。
+    ai_coding_brief_id: brief_story_branch_and_bound_milp
+    sources: [mixed_integer_linear_programming]
+  - id: story_cutting_plane_sequence
+    title: Cutting Plane で緩和を締める
+    synthetic_case: cutting_plane_toy
+    domain: integer_programming
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: relaxation
+    decision_variables: 整数変数 x と連続緩和。
+    objective: 線形目的を最小化する。
+    constraints: 線形制約と追加 cut。
+    uncertainty_or_time_structure: 静的な cut 追加 sequence。
+    candidate_algorithms: [cutting_planes, branch_cut]
+    candidate_solvers: [scip, gurobi, cplex]
+    visual_trace_id: cutting_plane_trace
+    pseudo_code: ["LP 緩和を解く", "分数解を検出する", "有効 cut を追加する", "緩和を再度解く"]
+    interpretation: cut は整数解を消さず、緩和だけが許した余分な解を除く。
+    ai_coding_brief_id: brief_story_cutting_plane_sequence
+    sources: [mixed_integer_linear_programming]
+  - id: story_benders_supply_chain
+    title: サプライチェーン設計を Benders で分ける
+    case_id: robust_supply_chain
+    domain: supply_chain
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: decomposition
+    decision_variables: 拠点開設の master 変数とシナリオ別 recourse。
+    objective: 開設費と期待 recourse cost を最小化する。
+    constraints: capacity、scenario demand、feasibility cut。
+    uncertainty_or_time_structure: 需要シナリオ別 subproblem。
+    candidate_algorithms: [benders, branch_and_bound]
+    candidate_solvers: [pyomo, gurobi, cplex]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["master で拠点を選ぶ", "subproblem で配送可否を見る", "cut を返す", "cut が止まるまで繰り返す"]
+    interpretation: 構造を分けると、一度に巨大モデルを解く負担を減らせる。
+    ai_coding_brief_id: brief_story_benders_supply_chain
+    sources: [stochastic_programming]
+  - id: story_column_generation_shift
+    title: 列生成で巨大シフト候補を扱う
+    case_id: workforce_shift
+    domain: staffing
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: decomposition
+    decision_variables: feasible pattern を使うかどうかの列変数。
+    objective: staffing cost と希望違反を小さくする。
+    constraints: 需要充足、各 worker の pattern 選択。
+    uncertainty_or_time_structure: 週次の静的 schedule。
+    candidate_algorithms: [column_generation, dynamic_programming]
+    candidate_solvers: [gurobi, cplex, pyomo]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["少数 pattern で master を解く", "dual price を pricing に渡す", "改善 pattern を生成する", "列を足して再最適化する"]
+    interpretation: すべてのシフト候補を先に列挙しなくても始められる。
+    ai_coding_brief_id: brief_story_column_generation_shift
+    sources: [combinatorial_optimization]
+  - id: story_robust_vs_stochastic_planning
+    title: Robust と Stochastic を比較して計画する
+    case_id: uncertain_inventory
+    domain: planning
+    primary_problem_class: robust_optimization
+    secondary_problem_classes: [stochastic_programming, distributionally_robust_optimization]
+    modeling_pattern: uncertainty_choice
+    decision_variables: 発注量と safety buffer。
+    objective: 保守コストと欠品リスクの balance。
+    constraints: 需要範囲またはシナリオの制約。
+    uncertainty_or_time_structure: uncertainty set と scenario distribution の比較。
+    candidate_algorithms: [robust_counterpart, sample_average_approximation]
+    candidate_solvers: [cvxpy, pyomo, gurobi]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["同じ入力で scenario と uncertainty set を作る", "robust 解を出す", "stochastic 解を出す", "保守性と平均性能を比較する"]
+    interpretation: 分布が信用できるか、違反をどれだけ嫌うかで選択が変わる。
+    ai_coding_brief_id: brief_story_robust_vs_stochastic_planning
+    sources: [robust_optimization, stochastic_programming]
+  - id: story_multi_objective_tradeoff
+    title: Multi-objective tradeoff を重みで見る
+    case_id: fair_resource_allocation
+    domain: allocation
+    primary_problem_class: multi_objective_optimization
+    secondary_problem_classes: [convex_optimization, linear_programming]
+    modeling_pattern: multi_objective
+    decision_variables: 資源配分 x[group]。
+    objective: 効率、コスト、公平性ペナルティの重み付き和。
+    constraints: 予算、最低配分、上限。
+    uncertainty_or_time_structure: 静的な配分計画。
+    candidate_algorithms: [interior_point, conic_solvers]
+    candidate_solvers: [cvxpy, scipy_linprog]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["目的指標を標準化する", "重みを決める", "複数重みで解く", "Pareto 的な差を表示する"]
+    interpretation: 目的関数が合意できない時は、先に tradeoff を見せる。
+    ai_coding_brief_id: brief_story_multi_objective_tradeoff
+    sources: [convex_optimization]
+  - id: story_chance_constrained_service
+    title: service level を chance constraint として見る
+    synthetic_case: chance_constrained_inventory
+    domain: supply_chain
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [robust_optimization]
+    modeling_pattern: scenario_modeling
+    decision_variables: 発注量 q と不足量 short[s]。
+    objective: 在庫コストと不足コストを小さくする。
+    constraints: service level を一定確率以上で満たす。
+    uncertainty_or_time_structure: 需要分布またはシナリオ。
+    candidate_algorithms: [sample_average_approximation]
+    candidate_solvers: [pyomo, gurobi]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["scenario ごとの不足を計算する", "違反シナリオ数に制限を置く", "service level を確認する", "コストと違反率を出す"]
+    interpretation: すべてを守る robust ではなく、許容違反率を明示する。
+    ai_coding_brief_id: brief_story_chance_constrained_service
+    sources: [stochastic_programming]
+  - id: story_bilevel_pricing
+    title: leader-follower 価格設定の入口
+    synthetic_case: bilevel_pricing_toy
+    domain: revenue
+    primary_problem_class: nonconvex_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: reformulation
+    decision_variables: leader price と follower response。
+    objective: follower の反応を見込んだ利益最大化。
+    constraints: 下位問題の最適性条件、価格範囲。
+    uncertainty_or_time_structure: 静的 bilevel toy。
+    candidate_algorithms: [local_nlp, branch_and_bound]
+    candidate_solvers: [ipopt, scip]
+    visual_trace_id: gradient_descent_toy_trace
+    pseudo_code: ["上位価格を置く", "下位反応問題を定義する", "KKT または列挙で reformulate する", "局所解を比較する"]
+    interpretation: 反応を制約として内包するため、通常の NLP/MILP より扱いが難しい。
+    ai_coding_brief_id: brief_story_bilevel_pricing
+    sources: [nonconvex_optimization]
+  - id: story_minlp_process_design
+    title: MINLP process design の概観
+    synthetic_case: minlp_process_design_toy
+    domain: process
+    primary_problem_class: mixed_integer_nonlinear_programming
+    secondary_problem_classes: [nonconvex_optimization, mixed_integer_linear_programming, nonlinear_programming]
+    modeling_pattern: mixed_discrete_continuous
+    decision_variables: 設備選択 binary と連続運転条件。
+    objective: 設備費と運転費を最小化する。
+    constraints: 物理式、容量、選択ロジック。
+    uncertainty_or_time_structure: 静的設計問題。
+    candidate_algorithms: [branch_and_bound, local_nlp]
+    candidate_solvers: [scip, ipopt]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["binary と continuous を分ける", "非線形物理制約を置く", "relaxation と局所解を比較する", "解の信頼性を記録する"]
+    interpretation: 整数性と非凸性が同時にあるため、完了条件は慎重に置く。
+    ai_coding_brief_id: brief_story_minlp_process_design
+    sources: [nonconvex_optimization]
+  - id: story_admm_decomposition
+    title: ADMM 的に合意制約を分ける
+    synthetic_case: distributed_allocation_toy
+    domain: decomposition
+    primary_problem_class: convex_optimization
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: decomposition
+    decision_variables: 部門ごとの局所配分と合意変数。
+    objective: 局所コストと合意違反 penalty。
+    constraints: 部門別制約、共有資源制約。
+    uncertainty_or_time_structure: batch iteration。
+    candidate_algorithms: [conic_solvers]
+    candidate_solvers: [cvxpy, jaxopt]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["部門別 subproblem を作る", "合意変数を更新する", "dual を更新する", "残差を確認する"]
+    interpretation: 一括で解きにくい構造を、合意へ寄せながら分けて解く。
+    ai_coding_brief_id: brief_story_admm_decomposition
+    sources: [convex_optimization]
+  - id: story_interior_point_path
+    title: Interior Point の central path を見る
+    synthetic_case: interior_point_toy
+    domain: continuous
+    primary_problem_class: convex_optimization
+    secondary_problem_classes: [linear_programming, socp_sdp]
+    modeling_pattern: barrier_method
+    decision_variables: 2D 連続変数。
+    objective: 線形または凸目的を最小化する。
+    constraints: 凸実行可能領域の内部を保つ。
+    uncertainty_or_time_structure: iteration sequence。
+    candidate_algorithms: [interior_point]
+    candidate_solvers: [cvxpy, mosek]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["barrier つき目的を作る", "Newton step を計算する", "barrier を弱める", "KKT 残差を確認する"]
+    interpretation: 最適点へ近づく経路は境界の頂点巡りではなく、内側から寄る。
+    ai_coding_brief_id: brief_story_interior_point_path
+    sources: [convex_optimization]
+  - id: story_policy_gradient_rollout
+    title: Policy Gradient rollout の読み方
+    synthetic_case: policy_gradient_grid_toy
+    domain: rl
+    primary_problem_class: dynamic_programming_rl
+    secondary_problem_classes: [online_optimization_bandits]
+    modeling_pattern: policy_search
+    decision_variables: policy parameter theta。
+    objective: rollout reward の期待値を最大化する。
+    constraints: 行動空間と安全制約。
+    uncertainty_or_time_structure: episode ごとの stochastic rollout。
+    candidate_algorithms: [policy_gradient]
+    candidate_solvers: [stable_baselines3]
+    visual_trace_id: mpc_horizon_trace
+    pseudo_code: ["policy から行動をサンプルする", "reward を集める", "advantage を推定する", "theta を更新する"]
+    interpretation: 方策更新は最適化だが、観測ノイズと探索安全性が主な難しさになる。
+    ai_coding_brief_id: brief_story_policy_gradient_rollout
+    sources: [dynamic_programming_rl]
+  - id: story_bo_vs_blackbox
+    title: Black-box search と BO を比べる
+    case_id: experiment_design
+    domain: experiment
+    primary_problem_class: bayesian_optimization_problem
+    secondary_problem_classes: [blackbox_derivative_free]
+    modeling_pattern: surrogate_modeling
+    decision_variables: 次に評価する候補 x。
+    objective: 高価な評価値を少ない回数で改善する。
+    constraints: search bounds と失敗時の扱い。
+    uncertainty_or_time_structure: trial history。
+    candidate_algorithms: [bayesian_optimization, evolutionary_search]
+    candidate_solvers: [botorch, nevergrad]
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["random/evolutionary の履歴を作る", "BO の履歴を作る", "best-so-far を比較する", "評価回数の価値を説明する"]
+    interpretation: 評価が高価なほど、不確実性を使う BO の意味が出る。
+    ai_coding_brief_id: brief_story_bo_vs_blackbox
+    sources: [bayesian_optimization_problem, blackbox_derivative_free]
+  - id: story_ab_budget_online
+    title: 広告予算を日次で再配分する
+    case_id: ad_budget_online
+    domain: marketing
+    primary_problem_class: online_optimization_bandits
+    secondary_problem_classes: [stochastic_programming, linear_programming]
+    modeling_pattern: online_decision
+    decision_variables: channel ごとの日次配分。
+    objective: CV または利益を増やし regret を抑える。
+    constraints: 総予算、最低露出、channel 上限。
+    uncertainty_or_time_structure: 日次観測で更新する。
+    candidate_algorithms: [upper_confidence_bound, bayesian_optimization]
+    candidate_solvers: [optuna, botorch]
+    visual_trace_id: bandit_ucb_trace
+    pseudo_code: ["channel ごとの報酬推定を持つ", "探索 bonus を計算する", "配分を更新する", "累積 regret を出す"]
+    interpretation: 予算配分が固定で済むなら LP、観測しながら変えるなら bandit に寄る。
+    ai_coding_brief_id: brief_story_ab_budget_online
+    sources: [online_optimization_bandits]
+  - id: story_matching_assignment
+    title: 条件つき matching を割当問題として解く
+    case_id: matching
+    domain: matching
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming, constraint_programming_sat_smt]
+    modeling_pattern: assignment
+    decision_variables: match[i,j] の 0/1。
+    objective: 希望スコアと公平性 penalty を最適化する。
+    constraints: 各参加者の割当数、禁止ペア、公平性条件。
+    uncertainty_or_time_structure: 静的 matching。
+    candidate_algorithms: [branch_and_bound, constraint_propagation]
+    candidate_solvers: [ortools, gurobi, cplex]
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["候補ペアを作る", "禁止ペアを除く", "各人1回制約を置く", "score 最大化で解く"]
+    interpretation: 割当表として見ると、制約違反の位置が分かりやすい。
+    ai_coding_brief_id: brief_story_matching_assignment
+    sources: [combinatorial_optimization]
+  - id: story_config_validation_sat
+    title: 製品構成のルールを SAT/SMT で検査する
+    case_id: config_validation
+    domain: product
+    primary_problem_class: constraint_programming_sat_smt
+    secondary_problem_classes: [combinatorial_optimization]
+    modeling_pattern: logical_constraints
+    decision_variables: option enabled の boolean。
+    objective: まず feasible な構成を探す。
+    constraints: 必須、排他、依存、上限下限。
+    uncertainty_or_time_structure: 静的な可否判定。
+    candidate_algorithms: [constraint_propagation]
+    candidate_solvers: [z3, ortools]
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["option boolean を置く", "依存・排他を論理式にする", "solver で satisfiable を見る", "unsat core を表示する"]
+    interpretation: 目的値より、なぜ構成できないかを返すことが重要。
+    ai_coding_brief_id: brief_story_config_validation_sat
+    sources: [constraint_programming_sat_smt]
+  - id: story_maintenance_scheduling
+    title: 設備メンテナンスをスケジュールする
+    case_id: maintenance_scheduling
+    domain: operations
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [constraint_programming_sat_smt, combinatorial_optimization]
+    modeling_pattern: scheduling
+    decision_variables: job j を period t に入れるかどうか。
+    objective: 停止損失と遅延ペナルティを小さくする。
+    constraints: 技術者、設備停止、期限、同時不可。
+    uncertainty_or_time_structure: 有限 horizon の schedule。
+    candidate_algorithms: [branch_and_bound, constraint_propagation]
+    candidate_solvers: [ortools, gurobi, cplex]
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["job と period を index 化する", "resource 制約を置く", "期限違反 penalty を入れる", "gantt/表で出す"]
+    interpretation: CP-SAT と MILP のどちらでも表せるため、制約の性質で選ぶ。
+    ai_coding_brief_id: brief_story_maintenance_scheduling
+    sources: [mixed_integer_linear_programming]
+  - id: story_supply_chain_network_design
+    title: 倉庫と配送ネットワークを再設計する
+    case_id: supply_chain_network
+    domain: logistics
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [linear_programming, combinatorial_optimization]
+    modeling_pattern: facility_location
+    decision_variables: 倉庫 open binary と配送量。
+    objective: 固定費、輸送費、容量超過 penalty を最小化する。
+    constraints: 需要充足、倉庫容量、open した倉庫だけ使う。
+    uncertainty_or_time_structure: 静的ネットワーク。
+    candidate_algorithms: [branch_and_bound, cutting_planes]
+    candidate_solvers: [gurobi, cplex, scip, pyomo]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["candidate warehouse を置く", "open と flow を link する", "需要地ごとの充足を置く", "開設案と輸送表を出す"]
+    interpretation: ネットワーク量だけなら LP、開設判断が入ると MILP。
+    ai_coding_brief_id: brief_story_supply_chain_network_design
+    sources: [mixed_integer_linear_programming]
+  - id: story_capacity_expansion_stochastic
+    title: 将来需要を見込んだ設備投資
+    case_id: stochastic_capacity_expansion
+    domain: planning
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: scenario_modeling
+    decision_variables: 初期投資量とシナリオ別追加投資。
+    objective: 投資コストと不足ペナルティの期待値。
+    constraints: シナリオ別容量、予算、段階投資。
+    uncertainty_or_time_structure: 2-stage scenario planning。
+    candidate_algorithms: [sample_average_approximation, benders]
+    candidate_solvers: [pyomo, gurobi, cplex]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["シナリオ需要を読む", "first-stage 投資を置く", "second-stage recourse を置く", "期待コストを最小化する"]
+    interpretation: 今決めることと、将来調整できることを分けるのが肝。
+    ai_coding_brief_id: brief_story_capacity_expansion_stochastic
+    sources: [stochastic_programming]
+  - id: story_expensive_ab_variant_search
+    title: 少数の施策案から次の A/B 案を選ぶ
+    case_id: expensive_ab_variant_search
+    domain: growth
+    primary_problem_class: bayesian_optimization_problem
+    secondary_problem_classes: [online_optimization_bandits, hpo_automl]
+    modeling_pattern: surrogate_modeling
+    decision_variables: 次に試す variant。
+    objective: 高い uplift を少ない実験回数で見つける。
+    constraints: 実施コスト、同時テスト数、安全停止。
+    uncertainty_or_time_structure: 実験ごとの逐次探索。
+    candidate_algorithms: [bayesian_optimization, upper_confidence_bound]
+    candidate_solvers: [optuna, botorch]
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["variant features を作る", "観測 uplift を記録する", "uncertainty を使って次案を選ぶ", "best-so-far を出す"]
+    interpretation: arm 数が少なく順次配分なら bandit、連続条件探索なら BO に寄る。
+    ai_coding_brief_id: brief_story_expensive_ab_variant_search
+    sources: [bayesian_optimization_problem]
+  - id: story_multi_stage_pricing
+    title: 在庫と反応を見て価格を何度も更新する
+    case_id: multi_stage_pricing_policy
+    domain: revenue
+    primary_problem_class: online_optimization_bandits
+    secondary_problem_classes: [nonlinear_programming, stochastic_programming]
+    modeling_pattern: online_decision
+    decision_variables: 各時点の価格。
+    objective: 在庫期間全体の利益を最大化する。
+    constraints: 価格範囲、在庫、ブランド制約。
+    uncertainty_or_time_structure: online feedback と有限在庫。
+    candidate_algorithms: [upper_confidence_bound, dynamic_programming]
+    candidate_solvers: [optuna, scipy_optimize]
+    visual_trace_id: bandit_ucb_trace
+    pseudo_code: ["価格候補ごとの反応を記録する", "在庫状態を読む", "探索 bonus を入れて価格を選ぶ", "売上と regret を更新する"]
+    interpretation: 価格反応が毎回観測されるなら、静的 NLP だけでは足りない。
+    ai_coding_brief_id: brief_story_multi_stage_pricing
+    sources: [online_optimization_bandits]
+  - id: story_not_optimization_reporting
+    title: 売上低下はまず診断する
+    case_id: not_optimization_reporting
+    domain: analytics
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [stochastic_programming]
+    modeling_pattern: diagnosis_first
+    decision_variables: まだ未定義。施策候補が決まるまで最適化しない。
+    objective: 原因仮説と意思決定候補を整理する。
+    constraints: データ粒度、期間、比較対象の妥当性。
+    uncertainty_or_time_structure: 過去データ分析。
+    candidate_algorithms: [sample_average_approximation]
+    candidate_solvers: [pyomo]
+    visual_trace_id: null
+    pseudo_code: ["意思決定変数があるか確認する", "原因分析を行う", "動かせる施策候補を定義する", "最適化に進むか判断する"]
+    interpretation: 目的関数がない段階で solver を選んでも、解くべき問題がない。
+    ai_coding_brief_id: brief_story_not_optimization_reporting
+    sources: [linear_programming]
+  - id: story_forecast_first
+    title: 需要予測が先のケースを分ける
+    case_id: not_optimization_forecast_first
+    domain: analytics
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: forecast_first
+    decision_variables: 予測後に発注量や配分を定義する。
+    objective: 予測精度と意思決定に必要な uncertainty を把握する。
+    constraints: データ期間、特徴量、予測粒度。
+    uncertainty_or_time_structure: time series forecast。
+    candidate_algorithms: [sample_average_approximation]
+    candidate_solvers: [pyomo]
+    visual_trace_id: null
+    pseudo_code: ["予測対象を決める", "粒度と期間を確認する", "予測誤差を評価する", "次に最適化する判断を定義する"]
+    interpretation: forecast first と optimization は分けると、責任境界が明確になる。
+    ai_coding_brief_id: brief_story_forecast_first
+    sources: [stochastic_programming]
+  - id: story_objective_alignment_first
+    title: 目的関数の合意を先に作る
+    case_id: not_optimization_alignment
+    domain: product
+    primary_problem_class: convex_optimization
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: objective_alignment
+    decision_variables: 合意後に施策配分や重みを定義する。
+    objective: 売上、利益、満足度の優先順位を明文化する。
+    constraints: ステークホルダー、ガードレール、測定可能性。
+    uncertainty_or_time_structure: 企画段階。
+    candidate_algorithms: [interior_point]
+    candidate_solvers: [cvxpy]
+    visual_trace_id: null
+    pseudo_code: ["目的候補を列挙する", "ガードレールを分ける", "優先順位を合意する", "最適化モデルへ落とす"]
+    interpretation: 合意されていない目的を最適化すると、正しい solver でも間違った答えになる。
+    ai_coding_brief_id: brief_story_objective_alignment_first
+    sources: [convex_optimization]
+  - id: story_socp_sdp_control_lmi
+    title: LMI を SDP として読む
+    synthetic_case: control_lmi_toy
+    domain: control
+    primary_problem_class: socp_sdp
+    secondary_problem_classes: [convex_optimization, optimal_control]
+    modeling_pattern: conic_reformulation
+    decision_variables: 半正定値行列 P と補助変数。
+    objective: 安定性 margin または制御コストを最小化する。
+    constraints: 行列不等式、半正定値制約。
+    uncertainty_or_time_structure: 静的な安定性検証。
+    candidate_algorithms: [conic_solvers, interior_point]
+    candidate_solvers: [mosek, cvxpy, sdpa]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["LMI を定義する", "PSD 変数を置く", "cone solver で解く", "固有値と余裕を確認する"]
+    interpretation: 行列制約は通常の LP/QP より重いが、凸性を保てる。
+    ai_coding_brief_id: brief_story_socp_sdp_control_lmi
+    sources: [socp_sdp]
+  - id: story_conic_robust_portfolio
+    title: robust portfolio を cone で表す
+    synthetic_case: robust_portfolio_conic
+    domain: finance
+    primary_problem_class: socp_sdp
+    secondary_problem_classes: [robust_optimization, quadratic_programming]
+    modeling_pattern: robust_counterpart_pattern
+    decision_variables: weight w と risk 補助変数。
+    objective: worst-case risk と期待収益の tradeoff。
+    constraints: norm ball uncertainty から生まれる cone 制約。
+    uncertainty_or_time_structure: 静的 robust model。
+    candidate_algorithms: [conic_solvers, robust_counterpart]
+    candidate_solvers: [mosek, cvxpy]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["不確実集合を norm ball にする", "robust constraint を cone へ変換する", "SOCP として解く", "nominal と比較する"]
+    interpretation: robust counterpart が cone で書けると、汎用 convex solver に渡せる。
+    ai_coding_brief_id: brief_story_conic_robust_portfolio
+    sources: [socp_sdp, robust_optimization]
+  - id: story_evolutionary_search_population
+    title: population search で非凸設計を探す
+    synthetic_case: nonconvex_design_population
+    domain: design
+    primary_problem_class: blackbox_derivative_free
+    secondary_problem_classes: [nonconvex_optimization]
+    modeling_pattern: local_search
+    decision_variables: 設計パラメータ vector。
+    objective: black-box 評価値を小さくする。
+    constraints: box bounds と失敗時 penalty。
+    uncertainty_or_time_structure: generation ごとの探索。
+    candidate_algorithms: [evolutionary_search]
+    candidate_solvers: [nevergrad]
+    visual_trace_id: gradient_descent_toy_trace
+    pseudo_code: ["初期 population を作る", "評価値を計算する", "elite を残す", "変異で次世代を作る"]
+    interpretation: 勾配がない設計では、多点探索で局所解に閉じにくくする。
+    ai_coding_brief_id: null
+    sources: [blackbox_derivative_free]
+  - id: story_saa_vs_bo_simulation
+    title: simulation optimization で SAA と BO を分ける
+    case_id: pde_design
+    domain: simulation
+    primary_problem_class: simulation_optimization
+    secondary_problem_classes: [bayesian_optimization_problem, stochastic_programming]
+    modeling_pattern: surrogate_modeling
+    decision_variables: simulator input x。
+    objective: noisy output の期待損失を小さくする。
+    constraints: input bounds と失敗条件。
+    uncertainty_or_time_structure: noisy simulation と高価な評価。
+    candidate_algorithms: [bayesian_optimization, sample_average_approximation]
+    candidate_solvers: [botorch, nevergrad, pyomo]
+    visual_trace_id: bayesian_optimization_trial_trace
+    pseudo_code: ["同じ x を複数回評価する", "平均とばらつきを見る", "BO で候補を選ぶ", "SAA で安定性を確認する"]
+    interpretation: noise の扱いと評価コストで、SAA と BO の役割が変わる。
+    ai_coding_brief_id: null
+    sources: [simulation_optimization]
+  - id: story_network_flow_maxflow
+    title: 最大フローを network flow として見る
+    synthetic_case: max_flow_toy
+    domain: network
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: network_flow
+    decision_variables: edge flow f[e]。
+    objective: sink への総流量を最大化する。
+    constraints: edge capacity と flow conservation。
+    uncertainty_or_time_structure: 静的 graph。
+    candidate_algorithms: [dynamic_programming]
+    candidate_solvers: [ortools, scipy_linprog]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["edge capacity を読む", "flow conservation を置く", "source/sink の流量を目的にする", "bottleneck を表示する"]
+    interpretation: グラフ問題は専用アルゴリズムと LP 表現の両方で理解できる。
+    ai_coding_brief_id: null
+    sources: [combinatorial_optimization]
+  - id: story_fair_allocation_lp
+    title: 公平性制約つき資源配分
+    case_id: fair_resource_allocation
+    domain: public_policy
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [convex_optimization, mixed_integer_linear_programming]
+    modeling_pattern: resource_allocation
+    decision_variables: group ごとの配分量。
+    objective: 不足ペナルティと効率損失を小さくする。
+    constraints: 予算、最低保証、公平性上限。
+    uncertainty_or_time_structure: 静的配分。
+    candidate_algorithms: [simplex, interior_point]
+    candidate_solvers: [highs, scipy_linprog, cvxpy]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["group と資源を index 化する", "最低保証を制約にする", "不足 penalty を目的に入れる", "公平性指標を出す"]
+    interpretation: 公平性は目的に混ぜるか、制約として守るかを分けて議論する。
+    ai_coding_brief_id: null
+    sources: [linear_programming, convex_optimization]
+  - id: story_vehicle_routing_milp
+    title: 配送ルートを容量制約つきで決める
+    case_id: vehicle_routing
+    domain: logistics
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: routing
+    decision_variables: vehicle k が edge i-j を通るかどうか。
+    objective: 総移動距離を最小化する。
+    constraints: 各顧客訪問、車両容量、subtour elimination。
+    uncertainty_or_time_structure: 静的 route。
+    candidate_algorithms: [branch_and_bound, column_generation]
+    candidate_solvers: [ortools, gurobi, cplex]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["顧客と車両を index 化する", "edge binary を置く", "容量と訪問制約を置く", "subtour を防ぐ"]
+    interpretation: route は順序構造が本質なので、単なる LP 配分ではない。
+    ai_coding_brief_id: null
+    sources: [combinatorial_optimization]
+  - id: story_supply_chain_robust_network
+    title: 供給途絶に備えた network design
+    case_id: robust_supply_chain
+    domain: supply_chain
+    primary_problem_class: robust_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: robust_counterpart_pattern
+    decision_variables: backup supplier と配送量。
+    objective: 通常コストと backup コストの tradeoff。
+    constraints: 供給途絶シナリオで需要を満たす。
+    uncertainty_or_time_structure: worst-case disruption set。
+    candidate_algorithms: [robust_counterpart, branch_and_bound]
+    candidate_solvers: [gurobi, pyomo, cvxpy]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["途絶パターンを定義する", "各パターンで需要充足を置く", "backup capacity を決める", "保守コストを比較する"]
+    interpretation: resiliency を目的にすると、平常時だけ安い設計とは違う解になる。
+    ai_coding_brief_id: null
+    sources: [robust_optimization]
+  - id: story_tail_risk_saa_portfolio
+    title: tail risk を scenario で確認する
+    case_id: tail_risk_portfolio
+    domain: finance
+    primary_problem_class: distributionally_robust_optimization
+    secondary_problem_classes: [stochastic_programming]
+    modeling_pattern: scenario_modeling
+    decision_variables: 資産 weight。
+    objective: tail scenario の損失を抑える。
+    constraints: weight 合計と risk budget。
+    uncertainty_or_time_structure: historical scenario と stress scenario。
+    candidate_algorithms: [sample_average_approximation, robust_counterpart]
+    candidate_solvers: [cvxpy, gurobi]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["historical scenario を作る", "stress scenario を加える", "tail loss を計算する", "weight と worst scenario を出す"]
+    interpretation: 平均リスクだけでなく、悪い分布ずれに耐えるかを見る。
+    ai_coding_brief_id: null
+    sources: [distributionally_robust_optimization]
+  - id: story_model_training_nonconvex
+    title: ニューラルネットの学習損失を非凸最適化として読む
+    case_id: model_training_loss
+    domain: ml
+    primary_problem_class: nonconvex_optimization
+    secondary_problem_classes: [differentiable_optimization]
+    modeling_pattern: local_search
+    decision_variables: neural network parameters。
+    objective: training loss と regularization。
+    constraints: 通常は制約なし、必要なら clipping。
+    uncertainty_or_time_structure: mini-batch iteration。
+    candidate_algorithms: [local_nlp, evolutionary_search]
+    candidate_solvers: [jaxopt, scipy_optimize]
+    visual_trace_id: gradient_descent_toy_trace
+    pseudo_code: ["mini-batch loss を計算する", "勾配を取る", "optimizer step を行う", "validation と早期停止を見る"]
+    interpretation: 大域最適証明より、汎化と安定した改善が実務上の判断になる。
+    ai_coding_brief_id: null
+    sources: [nonconvex_optimization]
+  - id: story_price_bandit_vs_nlp
+    title: 価格最適化で NLP と Bandit を分ける
+    case_id: price_optimization
+    domain: revenue
+    primary_problem_class: nonlinear_programming
+    secondary_problem_classes: [online_optimization_bandits]
+    modeling_pattern: nonlinear_response
+    decision_variables: 価格 p または候補 arm。
+    objective: 利益最大化。
+    constraints: 価格範囲、在庫、ブランド。
+    uncertainty_or_time_structure: 需要曲線が既知なら静的、観測更新なら online。
+    candidate_algorithms: [local_nlp, upper_confidence_bound]
+    candidate_solvers: [scipy_optimize, optuna]
+    visual_trace_id: bandit_ucb_trace
+    pseudo_code: ["需要曲線の有無を確認する", "既知なら NLP を解く", "未知なら arm/trial を更新する", "選択理由を記録する"]
+    interpretation: 同じ価格問題でも、需要モデルがあるかで問題タイプが変わる。
+    ai_coding_brief_id: null
+    sources: [nonlinear_programming, online_optimization_bandits]
+  - id: story_sqp_robot_local_model
+    title: SQP でロボット軌道の局所モデルを解く
+    case_id: robot_control
+    domain: control
+    primary_problem_class: nonlinear_programming
+    secondary_problem_classes: [optimal_control]
+    modeling_pattern: local_model
+    decision_variables: 軌道点と入力列。
+    objective: 目標誤差と入力コスト。
+    constraints: nonlinear dynamics と制限。
+    uncertainty_or_time_structure: finite horizon trajectory。
+    candidate_algorithms: [sequential_quadratic_programming, local_nlp]
+    candidate_solvers: [casadi, ipopt]
+    visual_trace_id: mpc_horizon_trace
+    pseudo_code: ["現在軌道を線形化する", "QP subproblem を解く", "step を受け入れる", "軌道を更新する"]
+    interpretation: 非線形制約を毎回扱いやすい近似問題へ落とす。
+    ai_coding_brief_id: null
+    sources: [nonlinear_programming, optimal_control]
+  - id: story_cp_propagation_config
+    title: 制約伝播で構成候補を削る
+    case_id: config_validation
+    domain: product
+    primary_problem_class: constraint_programming_sat_smt
+    secondary_problem_classes: [combinatorial_optimization]
+    modeling_pattern: logical_constraints
+    decision_variables: option domain と fixed assignment。
+    objective: まず整合する構成を見つける。
+    constraints: 依存、排他、必須、上限。
+    uncertainty_or_time_structure: interactive configuration。
+    candidate_algorithms: [constraint_propagation]
+    candidate_solvers: [z3, ortools]
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["domain を初期化する", "選択済み option を固定する", "矛盾する値を削る", "残候補を返す"]
+    interpretation: ユーザーが選ぶたびに候補が狭まり、矛盾を早く示せる。
+    ai_coding_brief_id: null
+    sources: [constraint_programming_sat_smt]
+  - id: story_benders_energy_planning
+    title: エネルギー計画を master/subproblem に分ける
+    synthetic_case: energy_capacity_benders
+    domain: energy
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: decomposition
+    decision_variables: 発電設備投資とシナリオ別運用。
+    objective: 投資費と期待運用費を最小化する。
+    constraints: 需要充足、容量、シナリオ別供給。
+    uncertainty_or_time_structure: 需要・再エネ出力シナリオ。
+    candidate_algorithms: [benders]
+    candidate_solvers: [pyomo, gurobi]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["投資 master を解く", "シナリオ運用 subproblem を解く", "cut を返す", "総コストを更新する"]
+    interpretation: 投資と運用を分けると、不確実性のある大規模計画を読みやすくできる。
+    ai_coding_brief_id: null
+    sources: [stochastic_programming]
+  - id: story_column_generation_vehicle_routes
+    title: ルート候補を列生成で増やす
+    case_id: vehicle_routing
+    domain: logistics
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: decomposition
+    decision_variables: route pattern を使うかどうか。
+    objective: route cost の合計を最小化する。
+    constraints: 各顧客を1回訪問、車両数、容量。
+    uncertainty_or_time_structure: 静的 routing。
+    candidate_algorithms: [column_generation]
+    candidate_solvers: [gurobi, cplex, ortools]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["初期 route set を作る", "set partitioning master を解く", "pricing で良い route を探す", "route 列を追加する"]
+    interpretation: route 全列挙が無理な時、必要な候補だけを後から出す。
+    ai_coding_brief_id: null
+    sources: [combinatorial_optimization]
+  - id: story_dynamic_programming_knapsack
+    title: Knapsack を DP table で読む
+    synthetic_case: knapsack_dp_toy
+    domain: planning
+    primary_problem_class: combinatorial_optimization
+    secondary_problem_classes: [dynamic_programming_rl]
+    modeling_pattern: dynamic_programming
+    decision_variables: item を入れるかどうか。
+    objective: 容量内で価値を最大化する。
+    constraints: capacity と item 選択。
+    uncertainty_or_time_structure: item index ごとの段階。
+    candidate_algorithms: [dynamic_programming]
+    candidate_solvers: [ortools]
+    visual_trace_id: cpsat_shift_assignment_trace
+    pseudo_code: ["容量ごとの価値 table を作る", "item を順に見る", "入れる/入れないを比較する", "選択 item を復元する"]
+    interpretation: 部分問題 table にすると指数的な選択を再利用できる。
+    ai_coding_brief_id: null
+    sources: [combinatorial_optimization]
+  - id: story_ucb_recommendation
+    title: 推薦枠を UCB で探索する
+    synthetic_case: recommendation_bandit_toy
+    domain: recommendation
+    primary_problem_class: online_optimization_bandits
+    secondary_problem_classes: [hpo_automl]
+    modeling_pattern: online_decision
+    decision_variables: 表示する item arm。
+    objective: CTR または reward を増やす。
+    constraints: 露出上限、多様性、除外ルール。
+    uncertainty_or_time_structure: user feedback が逐次入る。
+    candidate_algorithms: [upper_confidence_bound]
+    candidate_solvers: [optuna]
+    visual_trace_id: bandit_ucb_trace
+    pseudo_code: ["item ごとの reward mean を持つ", "confidence bonus を計算する", "表示 item を選ぶ", "click で更新する"]
+    interpretation: 表示履歴が偏るため、探索を明示的に入れる。
+    ai_coding_brief_id: null
+    sources: [online_optimization_bandits]
+  - id: story_differentiable_layer_portfolio
+    title: differentiable layer で portfolio loss を学習する
+    synthetic_case: cvxpy_layer_portfolio
+    domain: ml_finance
+    primary_problem_class: differentiable_optimization
+    secondary_problem_classes: [convex_optimization, quadratic_programming]
+    modeling_pattern: predict_then_optimize
+    decision_variables: return predictor と portfolio weight。
+    objective: 下流 portfolio regret を小さくする。
+    constraints: weight 合計、risk limit。
+    uncertainty_or_time_structure: training batch。
+    candidate_algorithms: [differentiable_layer]
+    candidate_solvers: [cvxpy, jaxopt]
+    visual_trace_id: qp_portfolio_trace
+    pseudo_code: ["return を予測する", "QP layer で weight を出す", "実現 return で regret を計算する", "予測器へ勾配を戻す"]
+    interpretation: 予測誤差最小化より、portfolio 判断に効く学習を選ぶ。
+    ai_coding_brief_id: null
+    sources: [differentiable_optimization]
+  - id: story_saa_newsvendor
+    title: Newsvendor を SAA で解く
+    synthetic_case: newsvendor_saa
+    domain: retail
+    primary_problem_class: stochastic_programming
+    secondary_problem_classes: [linear_programming]
+    modeling_pattern: scenario_modeling
+    decision_variables: 発注量 q とシナリオ別不足/余剰。
+    objective: 期待過剰在庫コストと欠品コストを最小化する。
+    constraints: シナリオ別 demand balance。
+    uncertainty_or_time_structure: demand scenario sample。
+    candidate_algorithms: [sample_average_approximation]
+    candidate_solvers: [pyomo, scipy_linprog]
+    visual_trace_id: decomposition_benders_trace
+    pseudo_code: ["需要 sample を読む", "q を置く", "shortage と leftover をシナリオ別に置く", "平均コストを最小化する"]
+    interpretation: シナリオを固定すれば、期待値問題を通常の最適化として解ける。
+    ai_coding_brief_id: null
+    sources: [stochastic_programming]
+  - id: story_robust_counterpart_toy
+    title: Robust Counterpart の保守性を見る
+    synthetic_case: robust_counterpart_toy
+    domain: tutorial
+    primary_problem_class: robust_optimization
+    secondary_problem_classes: [convex_optimization]
+    modeling_pattern: robust_counterpart_pattern
+    decision_variables: 2D の配分量。
+    objective: nominal cost を小さくしつつ悪い係数に耐える。
+    constraints: 不確実係数すべてで容量制約を守る。
+    uncertainty_or_time_structure: uncertainty set。
+    candidate_algorithms: [robust_counterpart, conic_solvers]
+    candidate_solvers: [cvxpy, mosek]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["nominal 制約を置く", "係数揺れ幅を決める", "worst-case 制約へ変換する", "nominal/robust を比較する"]
+    interpretation: 守る範囲を広げるほど、解の自由度は狭くなる。
+    ai_coding_brief_id: null
+    sources: [robust_optimization]
+  - id: story_visual_spec_feasible_region
+    title: LP feasible region demo の仕様を書く
+    synthetic_case: visual_spec_lp_region
+    domain: documentation
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [convex_optimization]
+    modeling_pattern: visual_spec
+    decision_variables: visual state の step と highlighted constraint。
+    objective: 学習者が実行可能領域と最適点を見分ける。
+    constraints: token color、SVG、slider、実データ参照。
+    uncertainty_or_time_structure: static trace replay。
+    candidate_algorithms: [simplex]
+    candidate_solvers: [scipy_linprog]
+    visual_trace_id: lp_production_planning_trace
+    pseudo_code: ["trace schema を書く", "描画対象を列挙する", "step label を用意する", "acceptance check を定義する"]
+    interpretation: AI に実装させる前に、何を学ばせるかを仕様に固定する。
+    ai_coding_brief_id: null
+    sources: [linear_programming]
+  - id: story_visual_spec_branch_tree
+    title: Branch-and-Bound tree demo の仕様を書く
+    synthetic_case: visual_spec_branch_tree
+    domain: documentation
+    primary_problem_class: mixed_integer_linear_programming
+    secondary_problem_classes: [combinatorial_optimization]
+    modeling_pattern: visual_spec
+    decision_variables: node state、edge、current step。
+    objective: 探索木と枝刈りの意味を伝える。
+    constraints: 30 node 以下、状態色、legend、step-by-step。
+    uncertainty_or_time_structure: static trace replay。
+    candidate_algorithms: [branch_and_bound]
+    candidate_solvers: [scip, gurobi]
+    visual_trace_id: branch_and_bound_trace
+    pseudo_code: ["node schema を決める", "status と色の対応を定義する", "step ごとの説明を書く", "copy/export の検査を置く"]
+    interpretation: 探索木は全ログ再現ではなく、見せたい判断を絞る。
+    ai_coding_brief_id: null
+    sources: [mixed_integer_linear_programming]
+  - id: story_ai_brief_problem_type
+    title: ProblemType から AI Coding Brief を作る
+    synthetic_case: ai_brief_problem_type
+    domain: ai_build
+    primary_problem_class: linear_programming
+    secondary_problem_classes: [mixed_integer_linear_programming]
+    modeling_pattern: ai_coding_brief
+    decision_variables: brief の decision_variables 欄。
+    objective: 実装者が迷わない指示へ変換する。
+    constraints: 目的、制約、推奨ライブラリ、注意点、期待出力を必ず含める。
+    uncertainty_or_time_structure: exportable markdown/json。
+    candidate_algorithms: [simplex]
+    candidate_solvers: [pyomo]
+    visual_trace_id: null
+    pseudo_code: ["ProblemType を選ぶ", "brief template を埋める", "Markdown と JSON で出す", "ID 参照を validator で見る"]
+    interpretation: 知識をアプリ内に閉じ込めず、AI 実装へ持ち出せる。
+    ai_coding_brief_id: null
+    sources: [linear_programming]

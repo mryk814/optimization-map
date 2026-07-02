@@ -1,0 +1,689 @@
+ai_coding_briefs:
+  - id: brief_problem_linear_programming
+    target_type: problem_class
+    target_id: linear_programming
+    title: 生産計画を LP で解く
+    decision_variables: 製品ごとの生産量 x[p] を連続変数として定義する。
+    objective: 利益最大化またはコスト最小化を線形式で置く。
+    constraints: 材料、設備時間、需要上限、非負制約を線形式で入れる。
+    recommended_libraries: [scipy_linprog, highs, pyomo]
+    implementation_plan:
+      - 入力表を製品、資源、係数に分ける。
+      - c, A_ub, b_ub, bounds を作る。
+      - solver result の status と slack を表示する。
+    cautions:
+      - 整数の個数判断が本質なら MILP へ切り替える。
+      - 単位が混ざると係数の意味が崩れる。
+    expected_output: 生産量表、目的値、制約 slack、実行不能時の原因候補。
+  - id: brief_problem_quadratic_programming
+    target_type: problem_class
+    target_id: quadratic_programming
+    title: ポートフォリオを QP で解く
+    decision_variables: 資産ごとの weight w[i] を連続変数として定義する。
+    objective: 分散リスクと期待収益の tradeoff を二次目的にする。
+    constraints: weight 合計、上下限、必要ならセクター制約を置く。
+    recommended_libraries: [cvxpy, mosek]
+    implementation_plan:
+      - 期待収益ベクトルと共分散行列を検証する。
+      - risk_aversion をパラメータ化する。
+      - risk-return 点を複数計算して front を出す。
+    cautions:
+      - 共分散行列が半正定値でない場合は補正する。
+      - 取引単位や銘柄数制約があるなら MIQP/MILP になる。
+    expected_output: weight、期待収益、リスク、制約違反なしの確認。
+  - id: brief_problem_convex_optimization
+    target_type: problem_class
+    target_id: convex_optimization
+    title: 凸最適化として安全に実装する
+    decision_variables: 連続変数 x と補助変数を明示する。
+    objective: 凸関数の和として最小化目的を定義する。
+    constraints: 凸不等式、線形等式、cone 制約を DCP ルールで置く。
+    recommended_libraries: [cvxpy, mosek, jaxopt]
+    implementation_plan:
+      - 関数が凸か、DCP で表せるかを先に確認する。
+      - solver status と dual value を保存する。
+      - 感度を見るパラメータを分ける。
+    cautions:
+      - 凸でない式を凸 solver に渡さない。
+      - スケールが悪いと収束判定が不安定になる。
+    expected_output: optimal value、primal solution、dual/slack、DCP 検査結果。
+  - id: brief_problem_milp
+    target_type: problem_class
+    target_id: mixed_integer_linear_programming
+    title: 割当・選択を MILP で解く
+    decision_variables: binary y[i] と連続量 x[i] を分けて定義する。
+    objective: 固定費、変動費、ペナルティを線形式で合算する。
+    constraints: 容量、需要充足、linking constraint、logical condition を線形化する。
+    recommended_libraries: [gurobi, cplex, scip, ortools, pyomo]
+    implementation_plan:
+      - set/index を先に定義する。
+      - big-M が必要な箇所は上限根拠を持たせる。
+      - gap、incumbent、time limit を出力に含める。
+    cautions:
+      - M が大きすぎると性能と数値が崩れる。
+      - 解なしの時は IIS や制約グループで切り分ける。
+    expected_output: 選択表、割当表、目的値、gap、制約違反なしの確認。
+  - id: brief_problem_cp_sat
+    target_type: problem_class
+    target_id: constraint_programming_sat_smt
+    title: 人員シフトを CP-SAT で解く
+    decision_variables: assign[worker, shift] を 0/1 変数として定義する。
+    objective: 希望違反、人数不足、連勤ペナルティを最小化する。
+    constraints: 各 shift の必要人数、同時勤務不可、休暇、スキル、連勤を入れる。
+    recommended_libraries: [ortools, z3]
+    implementation_plan:
+      - hard constraint と soft penalty を分ける。
+      - violation を出力できる補助変数を置く。
+      - feasible solution と objective improvement を保存する。
+    cautions:
+      - すべてを hard にすると解なしになりやすい。
+      - 時間制限時は feasible か optimal かを明示する。
+    expected_output: シフト表、違反一覧、目的値、solver status。
+  - id: brief_problem_stochastic_programming
+    target_type: problem_class
+    target_id: stochastic_programming
+    title: 需要シナリオで在庫計画を解く
+    decision_variables: first-stage 発注量と scenario ごとの recourse 量を定義する。
+    objective: 初期コストと期待 recourse cost を最小化する。
+    constraints: シナリオごとの需要充足、在庫、欠品ペナルティを置く。
+    recommended_libraries: [pyomo, gurobi, cplex]
+    implementation_plan:
+      - シナリオ、確率、需要を table として読む。
+      - first-stage と second-stage の変数を分ける。
+      - シナリオ別コストを出す。
+    cautions:
+      - シナリオ確率が合計 1 か確認する。
+      - サンプル外評価を別に行う。
+    expected_output: 初期判断、シナリオ別 recourse、期待コスト。
+  - id: brief_problem_robust_optimization
+    target_type: problem_class
+    target_id: robust_optimization
+    title: 欠勤リスクを robust に守る
+    decision_variables: 基本配置 x と余裕 buffer を定義する。
+    objective: 配置コストと余裕コストを最小化する。
+    constraints: uncertainty set 内の需要上振れに対して必要人数を満たす。
+    recommended_libraries: [cvxpy, gurobi, mosek]
+    implementation_plan:
+      - 不確実集合の幅をパラメータにする。
+      - nominal と robust の解を比較する。
+      - protection level ごとのコスト差を出す。
+    cautions:
+      - 不確実集合の根拠を説明できるようにする。
+      - 保守的すぎる場合は stochastic と比較する。
+    expected_output: robust 配置、保守コスト、守れる需要範囲。
+  - id: brief_problem_bayesian_optimization
+    target_type: problem_class
+    target_id: bayesian_optimization_problem
+    title: 高価な実験条件を BO で選ぶ
+    decision_variables: 次に評価する候補 x を search space 内で選ぶ。
+    objective: 観測 objective の最大化または最小化。
+    constraints: 実験可能範囲、カテゴリ条件、安全範囲を search space に入れる。
+    recommended_libraries: [botorch, optuna]
+    implementation_plan:
+      - 初期 trial と観測値を table にする。
+      - surrogate と acquisition を更新する。
+      - 次候補、理由、best-so-far を保存する。
+    cautions:
+      - 高次元や強い制約では探索効率が落ちる。
+      - live 実行しない場合は trace として固定する。
+    expected_output: trial history、次候補、best-so-far、探索/活用メモ。
+  - id: brief_problem_optimal_control
+    target_type: problem_class
+    target_id: optimal_control
+    title: MPC で制約つき制御を実装する
+    decision_variables: horizon 上の制御入力 u[t] と状態 x[t] を定義する。
+    objective: tracking error、入力変化、制約違反ペナルティを最小化する。
+    constraints: dynamics、入力上下限、状態制約、終端条件を置く。
+    recommended_libraries: [casadi, ipopt, cvxpy]
+    implementation_plan:
+      - 離散時間 dynamics を関数化する。
+      - horizon ごとに問題を解き直す。
+      - applied control と predicted states を記録する。
+    cautions:
+      - モデル誤差とリアルタイム性を確認する。
+      - 安全制約を soft にするか hard にするか決める。
+    expected_output: 入力列、予測軌道、適用入力、制約余裕。
+  - id: brief_problem_bandit
+    target_type: problem_class
+    target_id: online_optimization_bandits
+    title: UCB で A/B 配分を更新する
+    decision_variables: 各 round で選ぶ arm または配分比率を定義する。
+    objective: cumulative reward を増やし、regret を抑える。
+    constraints: 最低配信量、予算、倫理・安全制約を守る。
+    recommended_libraries: [optuna, botorch]
+    implementation_plan:
+      - arm ごとの試行数、平均報酬、信頼上限を持つ。
+      - round ごとに最大 UCB の arm を選ぶ。
+      - regret と選択履歴を可視化する。
+    cautions:
+      - 短期売上だけで安全性や公平性を壊さない。
+      - 統計的検定と意思決定を混同しない。
+    expected_output: arm 選択履歴、平均報酬、信頼区間、累積 regret。
+  - id: brief_story_lp_production_planning
+    target_type: solve_story
+    target_id: story_lp_production_planning
+    title: SolveStory を LP 実装指示へ変換する
+    decision_variables: Story の decision_variables をそのまま index つき変数へ落とす。
+    objective: Story の objective を solver の目的関数にする。
+    constraints: Story の constraints を hard constraints として実装する。
+    recommended_libraries: [scipy_linprog, highs, pyomo]
+    implementation_plan: [入力表を定義する, 変数と制約を作る, solver status と slack を出す]
+    cautions: [単位と上限値を先に検証する, 整数判断があれば MILP に切り替える]
+    expected_output: 解表、目的値、制約 slack、実行不能時の原因候補。
+  - id: brief_story_lp_transportation
+    target_type: solve_story
+    target_id: story_lp_transportation
+    title: 輸送 LP の実装 brief
+    decision_variables: x[source,destination] を輸送量として置く。
+    objective: cost[source,destination] と輸送量の積和を最小化する。
+    constraints: 供給上限、需要充足、非負制約。
+    recommended_libraries: [highs, scipy_linprog, pyomo]
+    implementation_plan: [供給地と需要地を index 化する, cost matrix を検証する, 輸送表を出力する]
+    cautions: [需要と供給の合計差を確認する, 固定費があれば MILP になる]
+    expected_output: 輸送量 matrix、総コスト、余剰供給。
+  - id: brief_story_qp_portfolio
+    target_type: solve_story
+    target_id: story_qp_portfolio
+    title: Portfolio QP の実装 brief
+    decision_variables: asset weight w[i]。
+    objective: risk_aversion * variance - expected_return を最小化する。
+    constraints: weight 合計、上下限、必要な exposure 制約。
+    recommended_libraries: [cvxpy, mosek]
+    implementation_plan: [共分散行列を検証する, risk_aversion を変えて複数解く, risk-return 表を出す]
+    cautions: [共分散の半正定値性を確認する, 取引単位は別 issue にする]
+    expected_output: weight、risk、return、frontier table。
+  - id: brief_story_convex_regularization
+    target_type: solve_story
+    target_id: story_convex_regularization
+    title: Regularization demo の実装 brief
+    decision_variables: coefficient beta。
+    objective: loss + lambda * penalty を最小化する。
+    constraints: 必要なら係数範囲や単調制約を置く。
+    recommended_libraries: [cvxpy, jaxopt]
+    implementation_plan: [lambda grid を用意する, L1/L2 を切り替える, 係数と誤差を表示する]
+    cautions: [scale されていない特徴量で penalty を比較しない]
+    expected_output: lambda 別の係数、損失、疎性。
+  - id: brief_story_nlp_pricing
+    target_type: solve_story
+    target_id: story_nlp_price_optimization
+    title: Nonlinear pricing の実装 brief
+    decision_variables: product price p[i]。
+    objective: margin(p) * demand(p) を最大化する。
+    constraints: 価格上下限、在庫、ブランドガードレール。
+    recommended_libraries: [ipopt, scipy_optimize, casadi]
+    implementation_plan: [需要曲線を関数化する, 初期値を複数試す, 局所解と制約余裕を出す]
+    cautions: [需要推定の範囲外へ外挿しない, 大域最適保証を言い切らない]
+    expected_output: 価格案、利益、制約余裕、初期値別の結果。
+  - id: brief_story_gradient_descent_toy
+    target_type: solve_story
+    target_id: story_gradient_descent_toy
+    title: Gradient Descent trace の実装 brief
+    decision_variables: 2D parameter theta。
+    objective: toy objective value を下げる。
+    constraints: 表示範囲と step 数を固定する。
+    recommended_libraries: [jaxopt, scipy_optimize]
+    implementation_plan: [iteration table を読む, contour と点列を描く, objective meter を同期する]
+    cautions: [大域最適の説明にしない, step size の違いを注釈に出す]
+    expected_output: iteration trace、目的値、勾配 norm、現在点。
+  - id: brief_story_facility_location_milp
+    target_type: solve_story
+    target_id: story_facility_location_milp
+    title: Facility location MILP の実装 brief
+    decision_variables: open[j] binary と assign[i,j]。
+    objective: fixed_cost と shipping_cost の合計を最小化する。
+    constraints: 需要割当、容量、linking constraint。
+    recommended_libraries: [gurobi, cplex, scip, ortools]
+    implementation_plan: [候補拠点と顧客を index 化する, linking を入れる, gap と incumbent を出す]
+    cautions: [big-M の根拠を明示する, 解なし時の制約グループを残す]
+    expected_output: 開設拠点、割当、総コスト、gap。
+  - id: brief_story_cpsat_shift_assignment
+    target_type: solve_story
+    target_id: story_cpsat_shift_assignment
+    title: CP-SAT shift の実装 brief
+    decision_variables: assign[worker,shift] の boolean。
+    objective: 希望違反と不足 penalty を最小化する。
+    constraints: 必要人数、休暇、スキル、連勤、同時勤務不可。
+    recommended_libraries: [ortools, z3]
+    implementation_plan: [hard/soft を分ける, violation 変数を作る, 割当表と違反一覧を出す]
+    cautions: [全制約 hard にしない, feasible と optimal を区別する]
+    expected_output: シフト表、違反一覧、目的値、status。
+  - id: brief_story_shortest_path_network
+    target_type: solve_story
+    target_id: story_shortest_path_network
+    title: Shortest path network の実装 brief
+    decision_variables: edge flow または path predecessor。
+    objective: path cost を最小化する。
+    constraints: start/end と flow conservation。
+    recommended_libraries: [ortools, scipy_linprog]
+    implementation_plan: [node/edge table を作る, weight を検証する, path を復元する]
+    cautions: [負閉路や到達不能を状態として扱う]
+    expected_output: 経路、総距離、通過 edge。
+  - id: brief_story_inventory_saa
+    target_type: solve_story
+    target_id: story_inventory_saa
+    title: Inventory SAA の実装 brief
+    decision_variables: first-stage order と scenario recourse。
+    objective: 期待在庫コストと欠品コストを最小化する。
+    constraints: シナリオ別 demand balance。
+    recommended_libraries: [pyomo, gurobi, cplex]
+    implementation_plan: [scenario table を読む, 確率合計を検証する, recourse cost を出す]
+    cautions: [サンプル外評価を同じ表に混ぜない]
+    expected_output: 発注量、シナリオ別不足/余剰、期待コスト。
+  - id: brief_story_robust_staffing
+    target_type: solve_story
+    target_id: story_robust_staffing
+    title: Robust staffing の実装 brief
+    decision_variables: base staffing と buffer。
+    objective: staffing cost と buffer cost を最小化する。
+    constraints: uncertainty set 内の必要人数を満たす。
+    recommended_libraries: [gurobi, cvxpy, pyomo]
+    implementation_plan: [需要幅を入力する, robust counterpart を作る, nominal 解と比較する]
+    cautions: [保守性の理由を表示する, 不確実集合を説明なしに広げない]
+    expected_output: 配置表、buffer、保守コスト、守れる需要範囲。
+  - id: brief_story_dro_tail_risk_portfolio
+    target_type: solve_story
+    target_id: story_dro_tail_risk_portfolio
+    title: DRO portfolio の実装 brief
+    decision_variables: asset weight。
+    objective: ambiguity set 内の worst-case loss を抑える。
+    constraints: weight 合計、risk budget、上下限。
+    recommended_libraries: [cvxpy, mosek, gurobi]
+    implementation_plan: [ambiguity radius を決める, nominal と DRO を比較する, tail scenario を出す]
+    cautions: [radius の根拠を記録する]
+    expected_output: weight、worst-case risk、nominal との差。
+  - id: brief_story_bo_experiment_design
+    target_type: solve_story
+    target_id: story_bo_experiment_design
+    title: BO experiment の実装 brief
+    decision_variables: next candidate x。
+    objective: observed objective を最大化する。
+    constraints: 実験範囲、安全範囲、カテゴリ条件。
+    recommended_libraries: [botorch, optuna]
+    implementation_plan: [trial table を読む, best-so-far を更新する, next candidate と理由を出す]
+    cautions: [live solver ではなく static trace として扱う]
+    expected_output: trial history、best-so-far、次候補、探索/活用メモ。
+  - id: brief_story_blackbox_pde_design
+    target_type: solve_story
+    target_id: story_blackbox_pde_design
+    title: PDE black-box search の実装 brief
+    decision_variables: shape parameter theta。
+    objective: simulator loss を下げる。
+    constraints: 形状 bounds、失敗時 status、安全範囲。
+    recommended_libraries: [botorch, nevergrad, optuna]
+    implementation_plan: [simulation wrapper を作る, 失敗を保存する, trial history を出す]
+    cautions: [評価失敗で既存データを消さない]
+    expected_output: 候補履歴、評価値、失敗理由、best-so-far。
+  - id: brief_story_bandit_ab_allocation
+    target_type: solve_story
+    target_id: story_bandit_ab_allocation
+    title: A/B bandit の実装 brief
+    decision_variables: round ごとの selected arm。
+    objective: reward を増やし regret を抑える。
+    constraints: 最低露出、安全停止、予算。
+    recommended_libraries: [optuna, botorch]
+    implementation_plan: [arm 統計を持つ, UCB を計算する, round history を可視化する]
+    cautions: [統計検定結果として誤表示しない]
+    expected_output: 選択履歴、平均報酬、信頼上限、regret。
+  - id: brief_story_mpc_robot_control
+    target_type: solve_story
+    target_id: story_mpc_robot_control
+    title: MPC horizon の実装 brief
+    decision_variables: horizon 上の state と control。
+    objective: tracking error と control effort を小さくする。
+    constraints: dynamics、入力制限、状態制約。
+    recommended_libraries: [casadi, ipopt, cvxpy]
+    implementation_plan: [現在状態を読む, horizon を解く, 先頭入力だけ適用し trace に残す]
+    cautions: [モデル誤差とリアルタイム性を明記する]
+    expected_output: predicted path、applied control、制約余裕。
+  - id: brief_story_rl_gridworld_policy
+    target_type: solve_story
+    target_id: story_rl_gridworld_policy
+    title: RL gridworld の実装 brief
+    decision_variables: policy parameter または value table。
+    objective: expected return を最大化する。
+    constraints: action set、wall、terminal state。
+    recommended_libraries: [stable_baselines3]
+    implementation_plan: [state/action を定義する, reward を置く, rollout と更新を表示する]
+    cautions: [本番探索の安全性を別問題として扱う]
+    expected_output: rollout、reward、policy arrows、episode summary。
+  - id: brief_story_predict_then_optimize
+    target_type: solve_story
+    target_id: story_predict_then_optimize
+    title: Predict-then-optimize の実装 brief
+    decision_variables: prediction parameter と downstream decision。
+    objective: decision loss を小さくする。
+    constraints: downstream allocation constraints。
+    recommended_libraries: [cvxpy, jaxopt]
+    implementation_plan: [予測値を出す, optimization layer を通す, decision loss を戻す]
+    cautions: [予測精度と意思決定損失を混同しない]
+    expected_output: prediction、decision、loss、gradient signal。
+  - id: brief_story_hpo_automl_budget
+    target_type: solve_story
+    target_id: story_hpo_automl_budget
+    title: HPO budget の実装 brief
+    decision_variables: hyperparameter config。
+    objective: validation loss を最小化する。
+    constraints: training budget、memory、categorical conditions。
+    recommended_libraries: [optuna, botorch]
+    implementation_plan: [search space を定義する, trial を記録する, best-so-far を表示する]
+    cautions: [seed と評価ノイズを記録する]
+    expected_output: trial table、best config、loss curve。
+  - id: brief_story_branch_and_bound_milp
+    target_type: solve_story
+    target_id: story_branch_and_bound_milp
+    title: Branch-and-Bound trace の実装 brief
+    decision_variables: node state と incumbent。
+    objective: MILP の incumbent/gap を見せる。
+    constraints: node parent、bound、branch condition。
+    recommended_libraries: [gurobi, scip, highs]
+    implementation_plan: [node list を読む, tree を描く, active/pruned/incumbent を状態色で出す]
+    cautions: [solver 内部ログの完全再現とは言わない]
+    expected_output: 探索木、incumbent、bound、gap。
+  - id: brief_story_cutting_plane_sequence
+    target_type: solve_story
+    target_id: story_cutting_plane_sequence
+    title: Cutting plane sequence の実装 brief
+    decision_variables: LP solution と追加 cut。
+    objective: relaxation を締める動きを見せる。
+    constraints: cut line、integer feasible point、LP solution。
+    recommended_libraries: [scip, gurobi, cplex]
+    implementation_plan: [cut sequence を読む, polygon に cut を重ねる, LP 解を更新する]
+    cautions: [整数解を切っていないことを注釈に出す]
+    expected_output: cut step、LP 解、目的値。
+  - id: brief_story_benders_supply_chain
+    target_type: solve_story
+    target_id: story_benders_supply_chain
+    title: Benders supply chain の実装 brief
+    decision_variables: master decision と subproblem recourse。
+    objective: investment/opening cost と recourse cost。
+    constraints: feasibility/optimality cut。
+    recommended_libraries: [pyomo, gurobi, cplex]
+    implementation_plan: [master/subproblem を分ける, cut history を保存する, iteration 表を出す]
+    cautions: [cut の意味を日本語で表示する]
+    expected_output: iteration、master 解、subproblem status、cuts。
+  - id: brief_story_column_generation_shift
+    target_type: solve_story
+    target_id: story_column_generation_shift
+    title: Column generation shift の実装 brief
+    decision_variables: pattern column use。
+    objective: staffing cost と希望違反。
+    constraints: demand coverage、worker pattern choice。
+    recommended_libraries: [gurobi, cplex, pyomo]
+    implementation_plan: [初期列を作る, reduced cost を計算する, 新列を table に追加する]
+    cautions: [全候補列挙ではないことを示す]
+    expected_output: column table、reduced cost、objective。
+  - id: brief_story_robust_vs_stochastic_planning
+    target_type: solve_story
+    target_id: story_robust_vs_stochastic_planning
+    title: Robust vs Stochastic comparison brief
+    decision_variables: shared decision x。
+    objective: worst-case cost と expected cost を比較する。
+    constraints: uncertainty set または scenario constraints。
+    recommended_libraries: [cvxpy, pyomo, gurobi]
+    implementation_plan: [同じ入力で2モデルを解く, コストと違反リスクを並べる, 判断軸を出す]
+    cautions: [どちらが正しいかではなく前提差として示す]
+    expected_output: 2モデルの解、平均性能、保守性。
+  - id: brief_story_multi_objective_tradeoff
+    target_type: solve_story
+    target_id: story_multi_objective_tradeoff
+    title: Multi-objective tradeoff brief
+    decision_variables: allocation x。
+    objective: 複数目的の重み付き和。
+    constraints: budget、minimum guarantee、fairness guardrail。
+    recommended_libraries: [cvxpy, scipy_linprog]
+    implementation_plan: [目的を標準化する, 重み grid を作る, tradeoff 表を出す]
+    cautions: [重みの単位差を放置しない]
+    expected_output: weight 別の解、目的値、tradeoff。
+  - id: brief_story_chance_constrained_service
+    target_type: solve_story
+    target_id: story_chance_constrained_service
+    title: Chance constrained service brief
+    decision_variables: order q と shortage flags。
+    objective: inventory cost と shortage penalty。
+    constraints: service level chance constraint。
+    recommended_libraries: [pyomo, gurobi]
+    implementation_plan: [scenario violation を数える, 許容違反率を置く, service level を出す]
+    cautions: [確率推定の根拠を別に残す]
+    expected_output: order、violation rate、expected cost。
+  - id: brief_story_bilevel_pricing
+    target_type: solve_story
+    target_id: story_bilevel_pricing
+    title: Bilevel pricing toy brief
+    decision_variables: leader price と follower response。
+    objective: follower 反応込みの利益。
+    constraints: follower optimality condition と price bounds。
+    recommended_libraries: [ipopt, scip]
+    implementation_plan: [上位/下位問題を分ける, reformulation を明記する, 複数初期値で比較する]
+    cautions: [大域最適保証を安易に主張しない]
+    expected_output: leader price、follower response、profit。
+  - id: brief_story_minlp_process_design
+    target_type: solve_story
+    target_id: story_minlp_process_design
+    title: MINLP process design brief
+    decision_variables: equipment binary と operation continuous。
+    objective: CAPEX と OPEX。
+    constraints: nonlinear physics、capacity、logic。
+    recommended_libraries: [scip, ipopt]
+    implementation_plan: [binary/continuous を分ける, relaxation を確認する, 局所解を比較する]
+    cautions: [非凸性と整数性の両方を報告する]
+    expected_output: equipment choice、operation point、status。
+  - id: brief_story_admm_decomposition
+    target_type: solve_story
+    target_id: story_admm_decomposition
+    title: ADMM decomposition brief
+    decision_variables: local variables と consensus variable。
+    objective: local cost と consensus penalty。
+    constraints: shared resource と local constraints。
+    recommended_libraries: [cvxpy, jaxopt]
+    implementation_plan: [subproblem を分ける, residual を記録する, consensus update を表示する]
+    cautions: [収束条件と停止理由を出す]
+    expected_output: iteration、primal/dual residual、consensus。
+  - id: brief_story_interior_point_path
+    target_type: solve_story
+    target_id: story_interior_point_path
+    title: Interior point path brief
+    decision_variables: 2D continuous point。
+    objective: convex objective。
+    constraints: feasible region の内部を保つ。
+    recommended_libraries: [cvxpy, mosek]
+    implementation_plan: [path_points を読む, barrier step をラベル化する, 最適点を強調する]
+    cautions: [simplex の頂点移動と混同させない]
+    expected_output: central path、barrier label、objective value。
+  - id: brief_story_policy_gradient_rollout
+    target_type: solve_story
+    target_id: story_policy_gradient_rollout
+    title: Policy gradient rollout brief
+    decision_variables: policy parameter。
+    objective: expected return。
+    constraints: action space と安全制約。
+    recommended_libraries: [stable_baselines3]
+    implementation_plan: [rollout を保存する, reward marker を表示する, policy update を注釈にする]
+    cautions: [本番探索には使わない前提を明記する]
+    expected_output: rollout、reward、policy update。
+  - id: brief_story_bo_vs_blackbox
+    target_type: solve_story
+    target_id: story_bo_vs_blackbox
+    title: BO vs black-box brief
+    decision_variables: candidate x。
+    objective: best-so-far を少ない評価で改善する。
+    constraints: search bounds と failure handling。
+    recommended_libraries: [botorch, nevergrad]
+    implementation_plan: [2つの履歴を用意する, best-so-far curve を比較する, 評価回数を表示する]
+    cautions: [評価が安いケースでは BO 優位と言い切らない]
+    expected_output: trial comparison、best curve、判断メモ。
+  - id: brief_story_ab_budget_online
+    target_type: solve_story
+    target_id: story_ab_budget_online
+    title: Ad budget bandit brief
+    decision_variables: channel allocation。
+    objective: reward を増やし regret を抑える。
+    constraints: daily budget、minimum exposure、channel cap。
+    recommended_libraries: [optuna, botorch]
+    implementation_plan: [channel stats を持つ, UCB を計算する, 配分履歴を出す]
+    cautions: [広告配信の安全制約を守る]
+    expected_output: channel allocation、reward、regret。
+  - id: brief_story_matching_assignment
+    target_type: solve_story
+    target_id: story_matching_assignment
+    title: Matching assignment brief
+    decision_variables: match[i,j] binary。
+    objective: score と fairness penalty。
+    constraints: each participant assigned once、forbidden pairs。
+    recommended_libraries: [ortools, gurobi, cplex]
+    implementation_plan: [候補ペアを作る, 禁止ペアを除く, assignment table を出す]
+    cautions: [公平性制約と目的を混同しない]
+    expected_output: matching table、score、violations。
+  - id: brief_story_config_validation_sat
+    target_type: solve_story
+    target_id: story_config_validation_sat
+    title: Config SAT brief
+    decision_variables: option enabled boolean。
+    objective: feasible configuration を探す。
+    constraints: required、exclusive、dependency。
+    recommended_libraries: [z3, ortools]
+    implementation_plan: [option を boolean 化する, ルールを論理式にする, unsat core を出す]
+    cautions: [目的最適化ではなく可否判定であることを示す]
+    expected_output: satisfiable status、selected options、conflict hints。
+  - id: brief_story_maintenance_scheduling
+    target_type: solve_story
+    target_id: story_maintenance_scheduling
+    title: Maintenance scheduling brief
+    decision_variables: job-period assignment。
+    objective: downtime と delay penalty。
+    constraints: technician、equipment、deadline、no-overlap。
+    recommended_libraries: [ortools, gurobi, cplex]
+    implementation_plan: [job と period を index 化する, resource constraints を置く, schedule table を出す]
+    cautions: [解なし時の制約グループを残す]
+    expected_output: schedule、violations、objective。
+  - id: brief_story_supply_chain_network_design
+    target_type: solve_story
+    target_id: story_supply_chain_network_design
+    title: Supply chain MILP brief
+    decision_variables: warehouse open binary と flow。
+    objective: fixed cost と transport cost。
+    constraints: capacity、demand、open-flow linking。
+    recommended_libraries: [gurobi, cplex, scip, pyomo]
+    implementation_plan: [candidate warehouse を読む, flow constraints を置く, network table を出す]
+    cautions: [固定費があるので LP と区別する]
+    expected_output: open warehouses、flow、total cost、gap。
+  - id: brief_story_capacity_expansion_stochastic
+    target_type: solve_story
+    target_id: story_capacity_expansion_stochastic
+    title: Capacity expansion stochastic brief
+    decision_variables: first-stage capacity と scenario recourse。
+    objective: investment cost と expected penalty。
+    constraints: scenario demand、budget、capacity balance。
+    recommended_libraries: [pyomo, gurobi, cplex]
+    implementation_plan: [scenario を読む, first/second stage を分ける, expected cost を出す]
+    cautions: [scenario probability を検証する]
+    expected_output: investment plan、scenario recourse、expected cost。
+  - id: brief_story_expensive_ab_variant_search
+    target_type: solve_story
+    target_id: story_expensive_ab_variant_search
+    title: Expensive A/B variant BO brief
+    decision_variables: next variant。
+    objective: uplift を改善する。
+    constraints: test budget、safety stop、parallel limit。
+    recommended_libraries: [optuna, botorch]
+    implementation_plan: [variant features を作る, uplift history を保存する, next candidate を出す]
+    cautions: [施策の安全条件を別欄で保持する]
+    expected_output: variant history、best uplift、next test。
+  - id: brief_story_multi_stage_pricing
+    target_type: solve_story
+    target_id: story_multi_stage_pricing
+    title: Multi-stage pricing brief
+    decision_variables: time-indexed price。
+    objective: total profit over inventory horizon。
+    constraints: price bounds、inventory、brand guardrail。
+    recommended_libraries: [optuna, scipy_optimize]
+    implementation_plan: [価格 arm を作る, inventory state を更新する, reward/regret を表示する]
+    cautions: [静的 NLP と online bandit の前提差を出す]
+    expected_output: price history、inventory、profit、regret。
+  - id: brief_story_not_optimization_reporting
+    target_type: not_optimization
+    target_id: story_not_optimization_reporting
+    title: 最適化前の原因分析 brief
+    decision_variables: 未定義。まず意思決定候補を作る。
+    objective: 原因仮説と次の意思決定を明確にする。
+    constraints: データ粒度、期間、比較対象。
+    recommended_libraries: []
+    implementation_plan: [意思決定変数の有無を確認する, 原因分析を行う, 最適化へ進む条件を書く]
+    cautions: [solver を先に選ばない]
+    expected_output: 原因仮説、必要データ、次の判断候補。
+  - id: brief_story_forecast_first
+    target_type: not_optimization
+    target_id: story_forecast_first
+    title: Forecast first brief
+    decision_variables: 予測後に決める発注量や配分。
+    objective: 予測対象と不確実性を整理する。
+    constraints: データ期間、特徴量、粒度。
+    recommended_libraries: []
+    implementation_plan: [予測対象を決める, 誤差を評価する, 最適化へ渡す uncertainty を出す]
+    cautions: [予測精度と意思決定品質を分ける]
+    expected_output: forecast target、error summary、optimization handoff。
+  - id: brief_story_objective_alignment_first
+    target_type: not_optimization
+    target_id: story_objective_alignment_first
+    title: Objective alignment brief
+    decision_variables: 合意後に定義する施策変数。
+    objective: 優先する目的と guardrail を明文化する。
+    constraints: stakeholder、metric definition、測定可能性。
+    recommended_libraries: []
+    implementation_plan: [目的候補を列挙する, guardrail を分ける, 合意済み目的を model brief に渡す]
+    cautions: [合意前に最適化モデルへ進まない]
+    expected_output: 目的関数候補、guardrail、未決事項。
+  - id: brief_story_socp_sdp_control_lmi
+    target_type: solve_story
+    target_id: story_socp_sdp_control_lmi
+    title: SDP/LMI brief
+    decision_variables: PSD matrix P と補助変数。
+    objective: stability margin または cost。
+    constraints: matrix inequality、PSD constraint。
+    recommended_libraries: [mosek, cvxpy, sdpa]
+    implementation_plan: [PSD 変数を置く, LMI を定義する, eigenvalue margin を表示する]
+    cautions: [行列サイズと数値スケールを確認する]
+    expected_output: P、objective、minimum eigenvalue、status。
+  - id: brief_story_conic_robust_portfolio
+    target_type: solve_story
+    target_id: story_conic_robust_portfolio
+    title: Conic robust portfolio brief
+    decision_variables: weight と cone 補助変数。
+    objective: worst-case risk と return tradeoff。
+    constraints: norm-ball uncertainty 由来の cone constraint。
+    recommended_libraries: [mosek, cvxpy]
+    implementation_plan: [uncertainty set を cone へ変換する, SOCP として解く, nominal と比較する]
+    cautions: [robust radius の根拠を表示する]
+    expected_output: weights、robust risk、nominal difference。
+  - id: brief_visual_branch_and_bound
+    target_type: algorithm_visual
+    target_id: visual_branch_and_bound_tree
+    title: Branch-and-Bound visual 実装 brief
+    decision_variables: current step と highlighted node。
+    objective: 探索木、bound、incumbent、prune 理由を見せる。
+    constraints: 30 node 以下、状態色、legend、reduced motion 対応。
+    recommended_libraries: [ortools]
+    implementation_plan: [trace node list を読む, SVG tree を描く, step control と autoplay を付ける]
+    cautions: [solver 内部ログの完全再現とは書かない]
+    expected_output: 動く探索木、node detail、TSV/JSON export。
+  - id: brief_solver_ortools_cpsat
+    target_type: solver_usage
+    target_id: ortools
+    title: OR-Tools CP-SAT usage brief
+    decision_variables: BoolVar / IntVar を index ごとに作る。
+    objective: soft penalty を AddMinimize に渡す。
+    constraints: AddExactlyOne、AddAtMostOne、linear constraints を使う。
+    recommended_libraries: [ortools]
+    implementation_plan: [モデル生成関数を分ける, status を文字列化する, solution printer を用意する]
+    cautions: [renderer で solver を直接動かさない]
+    expected_output: status、objective、assignment、violations。
+  - id: brief_pattern_decomposition
+    target_type: modeling_pattern
+    target_id: decomposition
+    title: Decomposition pattern brief
+    decision_variables: master decision と subproblem decision。
+    objective: global objective を master/subproblem に分けて評価する。
+    constraints: linking constraints と generated cuts。
+    recommended_libraries: [pyomo, gurobi]
+    implementation_plan: [責任境界を分ける, iteration log を保存する, cut を explanation つきで出す]
+    cautions: [一括モデルと二重実装にしない]
+    expected_output: iteration log、cuts、objective convergence。

@@ -19,7 +19,12 @@ export function DiagnosisView() {
   return (
     <div className="view-stack">
       <PageHeader
-        action={<Badge tone={answered ? "active" : "idle"}>{answered} / {data.diagnosisQuestions.length}</Badge>}
+        action={
+          <div className="inline-actions">
+            <Badge tone={answered ? "active" : "idle"}>{answered} / {data.diagnosisQuestions.length}</Badge>
+            <ButtonLink href="#/wizard">Wizard</ButtonLink>
+          </div>
+        }
         eyebrow="Diagnosis"
         title="条件から候補を出す"
       >
